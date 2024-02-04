@@ -60,6 +60,9 @@
 #define SUCCESS_RETURN 0
 #define ERROR_RETURN -1
 
+// Hash Digest
+#define SHA256_DIGEST_LENGTH 32
+
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
 // Params allows for up to MAX_I2C_MESSAGE_LEN - 1 bytes to be send
@@ -69,6 +72,13 @@ typedef struct {
     uint8_t opcode;
     uint8_t params[MAX_I2C_MESSAGE_LEN-1];
 } command_message;
+
+//struct for encryption
+typedef struct {
+    struct command_message e_message;
+    size_t counter;
+    uint8_t hash[SHA256_DIGEST_LENGTH];
+} encrypted_message;
 
 // Data type for receiving a validate message
 typedef struct {
