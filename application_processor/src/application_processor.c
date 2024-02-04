@@ -74,11 +74,16 @@ typedef struct {
 } command_message;
 
 //struct for encryption
+// typedef struct {
+//     struct command_message e_message;
+//     size_t counter;
+//     uint8_t hash[SHA256_DIGEST_LENGTH];
+// } encrypted_message;
+
+// outer layer struct for test purposes
 typedef struct {
-    struct command_message e_message;
-    size_t counter;
-    uint8_t hash[SHA256_DIGEST_LENGTH];
-} encrypted_message;
+    command_message c_message;
+} outer_layer;
 
 // Data type for receiving a validate message
 typedef struct {
@@ -260,8 +265,13 @@ int validate_components() {
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
-        command_message* command = (command_message*) transmit_buffer;
-        command->opcode = COMPONENT_CMD_VALIDATE;
+        // command_message* command = (command_message*) transmit_buffer;
+        // command->opcode = COMPONENT_CMD_VALIDATE;
+        
+        outer_layer* outerl = (outer_layer*) transmit_buffer;
+        command_message command;
+        command.opcode = COMPONENT_CMD_VALIDATE;
+        outerl->c_message = command;
         
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
@@ -375,20 +385,20 @@ void boot() {
     #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
     #endif
 }
 
@@ -423,24 +433,24 @@ void attempt_boot() {
         return;
     }
     print_debug("All Components validated\n");
-    if (boot_components()) {
-        print_error("Failed to boot all components\n");
-        return;
-    }
-    // Reference design flag
-    // Remove this in your design
-    char flag[37];
-    for (int i = 0; aseiFuengleR[i]; i++) {
-        flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
-        flag[i+1] = 0;
-    }
-    print_debug("%s\n", flag);
-    // Print boot message
-    // This always needs to be printed when booting
-    print_info("AP>%s\n", AP_BOOT_MSG);
-    print_success("Boot\n");
-    // Boot
-    boot();
+    // if (boot_components()) {
+    //     print_error("Failed to boot all components\n");
+    //     return;
+    // }
+    // // Reference design flag
+    // // Remove this in your design
+    // char flag[37];
+    // for (int i = 0; aseiFuengleR[i]; i++) {
+    //     flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
+    //     flag[i+1] = 0;
+    // }
+    // print_debug("%s\n", flag);
+    // // Print boot message
+    // // This always needs to be printed when booting
+    // print_info("AP>%s\n", AP_BOOT_MSG);
+    // print_success("Boot\n");
+    // // Boot
+    // boot();
 }
 
 // Replace a component if the PIN is correct
@@ -514,6 +524,7 @@ int main() {
         if (!strcmp(buf, "list")) {
             scan_components();
         } else if (!strcmp(buf, "boot")) {
+                                                    //TODO:  Check if secure boot has been enabled before proceding
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {
             attempt_replace();

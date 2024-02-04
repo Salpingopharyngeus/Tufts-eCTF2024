@@ -72,6 +72,9 @@ typedef struct {
     uint32_t component_id;
 } scan_message;
 
+typedef struct {
+    command_message c_message;
+} outer_layer;
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
 void component_process_cmd(void);
@@ -149,10 +152,13 @@ void boot() {
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    command_message* command = (command_message*) receive_buffer;
+    outer_layer* outer = (outer_layer*) receive_buffer;
+    command_message command = outer->c_message;
+
+    //command_message* command = (command_message*) receive_buffer;
 
     // Output to application processor dependent on command received
-    switch (command->opcode) {
+    switch (command.opcode) {
     case COMPONENT_CMD_BOOT:
         process_boot();
         break;
@@ -166,7 +172,7 @@ void component_process_cmd() {
         process_attest();
         break;
     default:
-        printf("Error: Unrecognized command received %d\n", command->opcode);
+        printf("Error: Unrecognized command received %d\n", command.opcode);
         break;
     }
 }
@@ -218,7 +224,6 @@ int main(void) {
 
     while (1) {
         wait_and_receive_packet(receive_buffer);
-
         component_process_cmd();
     }
 }
