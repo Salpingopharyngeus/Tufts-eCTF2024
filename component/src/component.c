@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include "host_messaging.h"
 
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
@@ -151,31 +152,44 @@ void boot() {
     #endif
 }
 
+bool valid_packet(uint8_t* receive_buffer){
+    print_info("Validating received packet");    
+    outer_layer* outer = (outer_layer*) receive_buffer;
+    char *received_key = outer->auth_key;
+    return strcmp(received_key, KEY) == 0;
+}
+
 // Handle a transaction from the AP
 void component_process_cmd() {
-    outer_layer* outer = (outer_layer*) receive_buffer;
-    command_message command = outer->c_message;
+    print_info("processing command packet");
+    if (valid_packet(receive_buffer)) {
+        outer_layer* outer = (outer_layer*) receive_buffer;
+        command_message command = outer->c_message;
 
-    //command_message* command = (command_message*) receive_buffer;
+        //command_message* command = (command_message*) receive_buffer;
 
-    // Output to application processor dependent on command received
-    switch (command.opcode) {
-    case COMPONENT_CMD_BOOT:
-        process_boot();
-        break;
-    case COMPONENT_CMD_SCAN:
-        process_scan();
-        break;
-    case COMPONENT_CMD_VALIDATE:
-        process_validate();
-        break;
-    case COMPONENT_CMD_ATTEST:
-        process_attest();
-        break;
-    default:
-        printf("Error: Unrecognized command received %d\n", command.opcode);
-        break;
+        // Output to application processor dependent on command received
+        switch (command.opcode) {
+        case COMPONENT_CMD_BOOT:
+            process_boot();
+            break;
+        case COMPONENT_CMD_SCAN:
+            process_scan();
+            break;
+        case COMPONENT_CMD_VALIDATE:
+            process_validate();
+            break;
+        case COMPONENT_CMD_ATTEST:
+            process_attest();
+            break;
+        default:
+            printf("Error: Unrecognized command received %d\n", command.opcode);
+            break;
+        }
+    }else {
+        print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
     }
+    
 }
 
 void process_boot() {
