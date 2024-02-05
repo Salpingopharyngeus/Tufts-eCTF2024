@@ -7,8 +7,8 @@ __check_defined = \
 	$(if $(value $1),, \
 		$(error Undefined $1))
 
-all:
-	echo "#define SECRET 1234" > global_secrets.h
+# all:
+# 	echo "#define SECRET 1234" > global_secrets.h
 
-clean:
-	rm -f global_secrets.h
+# clean:
+# 	rm -f global_secrets.h

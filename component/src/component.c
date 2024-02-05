@@ -74,6 +74,7 @@ typedef struct {
 
 typedef struct {
     command_message c_message;
+    char *auth_key;
 } outer_layer;
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions

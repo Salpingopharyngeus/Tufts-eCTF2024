@@ -83,6 +83,9 @@ typedef struct {
 // outer layer struct for test purposes
 typedef struct {
     command_message c_message;
+    char *auth_key; 
+    // uint8_t key[KEY_LENGTH];
+
 } outer_layer;
 
 // Data type for receiving a validate message
@@ -253,6 +256,13 @@ int scan_components() {
     print_success("List\n");
     return SUCCESS_RETURN;
 }
+uint8_t* secure_wrapper(command_message c_message, uint8_t* transmit_buffer) {
+
+    outer_layer* outerl = (outer_layer*) transmit_buffer;
+    outerl->c_message = c_message;
+    outerl->auth_key = KEY; 
+    return transmit_buffer;
+}
 
 int validate_components() {
     // Buffers for board link communication
@@ -268,13 +278,13 @@ int validate_components() {
         // command_message* command = (command_message*) transmit_buffer;
         // command->opcode = COMPONENT_CMD_VALIDATE;
         
-        outer_layer* outerl = (outer_layer*) transmit_buffer;
+        // outer_layer* outerl = (outer_layer*) transmit_buffer;
         command_message command;
         command.opcode = COMPONENT_CMD_VALIDATE;
-        outerl->c_message = command;
+        //outerl->c_message = command;
         
         // Send out command and receive result
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
         if (len == ERROR_RETURN) {
             print_error("Could not validate component\n");
             return ERROR_RETURN;
@@ -286,6 +296,7 @@ int validate_components() {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
             return ERROR_RETURN;
         }
+        print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
     return SUCCESS_RETURN;
 }
@@ -385,20 +396,20 @@ void boot() {
     #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    // while (1) {
-    //     LED_On(LED1);
-    //     MXC_Delay(500000);
-    //     LED_On(LED2);
-    //     MXC_Delay(500000);
-    //     LED_On(LED3);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED1);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED2);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED3);
-    //     MXC_Delay(500000);
-    // }
+    while (1) {
+        LED_On(LED1);
+        MXC_Delay(500000);
+        LED_On(LED2);
+        MXC_Delay(500000);
+        LED_On(LED3);
+        MXC_Delay(500000);
+        LED_Off(LED1);
+        MXC_Delay(500000);
+        LED_Off(LED2);
+        MXC_Delay(500000);
+        LED_Off(LED3);
+        MXC_Delay(500000);
+    }
     #endif
 }
 
@@ -433,24 +444,24 @@ void attempt_boot() {
         return;
     }
     print_debug("All Components validated\n");
-    // if (boot_components()) {
-    //     print_error("Failed to boot all components\n");
-    //     return;
-    // }
-    // // Reference design flag
-    // // Remove this in your design
-    // char flag[37];
-    // for (int i = 0; aseiFuengleR[i]; i++) {
-    //     flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
-    //     flag[i+1] = 0;
-    // }
-    // print_debug("%s\n", flag);
-    // // Print boot message
-    // // This always needs to be printed when booting
-    // print_info("AP>%s\n", AP_BOOT_MSG);
-    // print_success("Boot\n");
-    // // Boot
-    // boot();
+    if (boot_components()) {
+        print_error("Failed to boot all components\n");
+        return;
+    }
+    // Reference design flag
+    // Remove this in your design
+    char flag[37];
+    for (int i = 0; aseiFuengleR[i]; i++) {
+        flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
+        flag[i+1] = 0;
+    }
+    print_debug("%s\n", flag);
+    // Print boot message
+    // This always needs to be printed when booting
+    print_info("AP>%s\n", AP_BOOT_MSG);
+    print_success("Boot\n");
+    // Boot
+    boot();
 }
 
 // Replace a component if the PIN is correct
@@ -534,7 +545,6 @@ int main() {
             print_error("Unrecognized command '%s'\n", buf);
         }
     }
-
     // Code never reaches here
     return 0;
 }
