@@ -418,25 +418,14 @@ void boot() {
 // Compare the entered PIN to the correct PIN
 int validate_pin() {
     char buf[50];
-
-    // Prompt for the PIN input
-    recv_input("Enter pin: ", pin_input, sizeof(pin_input)); // Ensure recv_input does not overflow this buffer
-    pin_input[sizeof(pin_input) - 1] = '\0'; // Ensure null-termination
-
-    start_time = clock();
-
-    // Use bcrypt_checkpw to compare the plaintext PIN against the stored hash
-    if (bcrypt_checkpw(pin_input, AP_PIN_HASH) == 0) {
-        // PIN verification successful
-        end_time = clock();
-        printf("Pin Accepted!\n");
-        printf("Verification time: %f seconds\n", (double)(end_time - start_time) / CLOCKS_PER_SEC);
+    
+    recv_input("Enter pin: ", buf);
+    if (!strcmp(buf, AP_PIN)) {
+        print_debug("Pin Accepted!\n");
         return SUCCESS_RETURN;
-    } else {
-        // PIN verification failed
-        printf("Invalid PIN!\n");
-        return ERROR_RETURN;
     }
+    print_error("Invalid PIN!\n");
+    return ERROR_RETURN;
 }
 
 // Function to validate the replacement token
