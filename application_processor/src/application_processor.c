@@ -35,12 +35,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "bcrypt.h"
-#include <time.h>
 #endif
 
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
+#include <time.h>
 
 /********************************* CONSTANTS **********************************/
 
