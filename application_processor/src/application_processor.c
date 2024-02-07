@@ -417,14 +417,23 @@ void boot() {
 
 // Compare the entered PIN to the correct PIN
 int validate_pin() {
+    clock_t start_time, end_time;
+    //Starts the clock
+    start_time = clock();
+
     char buf[50];
     
     recv_input("Enter pin: ", buf);
+    print_debug("Verifying PIN...\n");
     if (!strcmp(buf, AP_PIN)) {
         print_debug("Pin Accepted!\n");
         return SUCCESS_RETURN;
     }
     print_error("Invalid PIN!\n");
+    if(bcrypt_checkpw(buf, AP_PIN)==0){
+        print_debug("Pin Accepted!\n");
+        return SUCCESS_RETURN;
+    }
     return ERROR_RETURN;
 }
 
