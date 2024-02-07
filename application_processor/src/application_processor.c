@@ -204,6 +204,13 @@ void init() {
     board_link_init();
 }
 
+uint8_t* secure_wrapper(command_message c_message, uint8_t* transmit_buffer) {
+    outer_layer* outerl = (outer_layer*) transmit_buffer;
+    outerl->c_message = c_message;
+    outerl->auth_key = KEY; 
+    return transmit_buffer;
+}
+
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     // Send message
@@ -213,6 +220,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     }
     
     // Receive message
+    print_debug("BEFORE: poll_and_receive_packet %#x\n", addr);
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
         return ERROR_RETURN;
@@ -241,11 +249,13 @@ int scan_components() {
         }
 
         // Create command message 
-        command_message* command = (command_message*) transmit_buffer;
-        command->opcode = COMPONENT_CMD_SCAN;
+        // command_message* command = (command_message*) transmit_buffer;
+        // command->opcode = COMPONENT_CMD_SCAN;
+        command_message command;
+        command.opcode = COMPONENT_CMD_SCAN;
         
         // Send out command and receive result
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
 
         // Success, device is present
         if (len > 0) {
@@ -255,13 +265,6 @@ int scan_components() {
     }
     print_success("List\n");
     return SUCCESS_RETURN;
-}
-uint8_t* secure_wrapper(command_message c_message, uint8_t* transmit_buffer) {
-
-    outer_layer* outerl = (outer_layer*) transmit_buffer;
-    outerl->c_message = c_message;
-    outerl->auth_key = KEY; 
-    return transmit_buffer;
 }
 
 int validate_components() {
@@ -396,20 +399,20 @@ void boot() {
     #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
     #endif
 }
 
@@ -439,6 +442,7 @@ int validate_token() {
 
 // Boot the components and board if the components validate
 void attempt_boot() {
+    print_info("Attempting to boot AP!\n");
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -530,7 +534,7 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-
+        print_debug("user command: %s", buf);
         // Execute requested command
         if (!strcmp(buf, "list")) {
             scan_components();

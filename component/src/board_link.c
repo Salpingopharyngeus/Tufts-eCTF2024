@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "board_link.h"
+#include "host_messaging.h"
 
 /**
  * @brief Initialize the board link interface
@@ -70,6 +71,5 @@ uint8_t wait_and_receive_packet(uint8_t* packet) {
 
     uint8_t len = I2C_REGS[RECEIVE_LEN][0];
     memcpy(packet, (void*)I2C_REGS[RECEIVE], len);
-
     return len;
 }

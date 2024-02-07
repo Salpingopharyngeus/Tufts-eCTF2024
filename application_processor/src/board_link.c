@@ -15,6 +15,7 @@
 
 #include "board_link.h"
 #include "mxc_delay.h"
+#include "host_messaging.h"
 
 /******************************** FUNCTION DEFINITIONS ********************************/
 /**
@@ -76,10 +77,10 @@ int send_packet(i2c_addr_t address, uint8_t len, uint8_t* packet) {
  * @return int: size of data received, ERROR_RETURN if error
 */
 int poll_and_receive_packet(i2c_addr_t address, uint8_t* packet) {
-
     int result = SUCCESS_RETURN;
     while (true) {
         result = i2c_simple_read_transmit_done(address);
+
         if (result < SUCCESS_RETURN) {
             return ERROR_RETURN;
         }
@@ -88,7 +89,6 @@ int poll_and_receive_packet(i2c_addr_t address, uint8_t* packet) {
         }
         MXC_Delay(50);
     }
-
     int len = i2c_simple_read_transmit_len(address);
     if (len < SUCCESS_RETURN) {
         return ERROR_RETURN;
@@ -101,6 +101,5 @@ int poll_and_receive_packet(i2c_addr_t address, uint8_t* packet) {
     if (result < SUCCESS_RETURN) {
         return ERROR_RETURN;
     }
-
     return len;
 }
