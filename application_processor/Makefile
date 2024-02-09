@@ -210,7 +210,7 @@ endif
 
 # Custom rule for compiling crypt_blowfish.c
 application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
-    $(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
+	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
 
 # Collapse SRCS before passing them on to the next stage
 SRCS := $(SRCS)
