@@ -22,10 +22,38 @@ jobs:
       run: |
         nix-env --version
 
+    - name: Cache Nix store
+      uses: xxxxxxxxxxxxx@xx
+      with:
+        path: /nix/store
+        key: ${{ runner.os }}-nix-${{ hashFiles('**/nix.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-nix-
+       
+
     - name: Setup project with shell.nix
       run: |
         . ~/.nix-profile/etc/profile.d/nix.sh
         nix-shell shell.nix --run "echo Nix shell environment setup complete"
+    
+    - name: Update Poetry Lock
+      run: |
+        . ~/.nix-profile/etc/profile.d/nix.sh
+        nix-shell shell.nix --run "poetry lock --no-update"
+       
+    
+    - name: Install Poetry
+      run: |
+        . ~/.nix-profile/etc/profile.d/nix.sh
+        nix-shell shell.nix --run "poetry install"
+    
+    - name: Cache Poetry packages
+      uses: xxxxxxxxxxxxx@xx
+      with:
+        path: ~/.cache/pypoetry
+        key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-
 
     # Your build commands or scripts that require the environment set up by shell.nix
     - name: Build with Nix environment
