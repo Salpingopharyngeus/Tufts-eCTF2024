@@ -200,7 +200,7 @@ SRCS += $(wildcard $(addsuffix /*.c, $(VPATH)))
 SRCS += application_processor/crypt_blowfish/crypt_blowfish.c
 SRCS += application_processor/crypt_blowfish/ow-crypt.h
 # Add crypt_blowfish source files to SRCS
-SRCS += crypt_blowfish/crypt_blowfish.c crypt_blowfish/x86.S
+SRCS += application_processor/crypt_blowfish/x86.S
 
 $(info SRCS is $(SRCS))
 
