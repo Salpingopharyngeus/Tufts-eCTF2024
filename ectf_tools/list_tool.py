@@ -30,6 +30,7 @@ logger.add(sys.stdout, format=fmt)
 
 # List function
 def list(args):
+    print("HERE 1\n")
     ser = serial.Serial(
         port=args.application_processor,
         baudrate=115200,
@@ -37,15 +38,19 @@ def list(args):
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
     )
-
+    print("HERE 2\n")
     # Send command
     ser.write(b"list\r")
     logger.bind(extra="INPUT").debug("list\r")
     output = ""
     # Receive messages until done
+    print("HERE 3\n")
     while True:
+        print("HERE 4\n")
         byte = ser.read()
+        print("HERE 5\n")
         char = byte.decode("utf-8")
+        print(f"Received messages: {char}\n")
         output += char
         output = process_output(output)
 

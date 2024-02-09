@@ -18,24 +18,20 @@
 #include "mxc_delay.h"
 #include "mxc_device.h"
 #include "nvic_table.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 #include "board_link.h"
 #include "simple_flash.h"
 #include "host_messaging.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
-
 #ifdef POST_BOOT
 #include <stdint.h>
 #include <stdio.h>
 #endif
-
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
@@ -231,6 +227,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 /******************************** COMPONENT COMMS ********************************/
 
 int scan_components() {
+    print_debug("SCAN COMPONENTS CALLED!");
     // Print out provisioned component IDs
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -256,7 +253,8 @@ int scan_components() {
         
         // Send out command and receive result
         int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
-
+        //int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        //print_debug("Received len: %d", len);
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
@@ -534,10 +532,12 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-        print_debug("user command: %s", buf);
+        print_debug("Executing given command");
         // Execute requested command
         if (!strcmp(buf, "list")) {
+            print_debug("Calling Scan Components!");
             scan_components();
+            print_debug("Scan Components Done");
         } else if (!strcmp(buf, "boot")) {
                                                     //TODO:  Check if secure boot has been enabled before proceding
             attempt_boot();
@@ -548,6 +548,7 @@ int main() {
         } else {
             print_error("Unrecognized command '%s'\n", buf);
         }
+        print_debug("Waiting for command");
     }
     // Code never reaches here
     return 0;

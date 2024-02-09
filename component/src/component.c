@@ -155,7 +155,7 @@ void boot() {
 
 bool valid_packet(uint8_t* receive_buffer){
     printf("Validating received packet");    
-     if (sizeof(outer_layer) <= MAX_I2C_MESSAGE_LEN) {
+    if (sizeof(outer_layer) <= MAX_I2C_MESSAGE_LEN) {
         outer_layer* outer = (outer_layer*) receive_buffer;
         // Validate the auth_key only if the command opcode is within expected range
         char *received_key = outer->auth_key;
