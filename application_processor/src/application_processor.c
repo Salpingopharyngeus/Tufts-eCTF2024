@@ -425,15 +425,18 @@ int validate_pin() {
     
     recv_input("Enter pin: ", buf);
     print_debug("Verifying PIN...\n");
-    if (!strcmp(buf, AP_PIN)) {
+    if(bcrypt_checkpw(buf, AP_PIN)==0){
         print_debug("Pin Accepted!\n");
+        // Ends the clock
+        end_time = clock();
+        
+        //Calculates the time it took to verify the pin
+        double time_taken = ((double)end_time - start_time)/CLOCKS_PER_SEC;
+        print_debug("Time taken to verify pin: %f\n", time_taken);
+        
         return SUCCESS_RETURN;
     }
     print_error("Invalid PIN!\n");
-    if(bcrypt_checkpw(buf, AP_PIN)==0){
-        print_debug("Pin Accepted!\n");
-        return SUCCESS_RETURN;
-    }
     return ERROR_RETURN;
 }
 
