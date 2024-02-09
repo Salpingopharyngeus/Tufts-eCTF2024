@@ -170,6 +170,9 @@ export CMSIS_ROOT
 # Where to find source files for this project.
 VPATH += .
 VPATH += src
+# Adds crypt_blowfish to the VPATH
+VPATH += application_processor/crypt_blowfish
+
 
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
@@ -181,6 +184,8 @@ VPATH := $(VPATH)
 # Where to find header files for this project
 IPATH += .
 IPATH += include
+# Adds crypt_blowfish to the IPATH
+IPATH += application_processor/crypt_blowfish
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
 IPATH += wolfssl
@@ -191,6 +196,14 @@ AUTOSEARCH ?= 1
 ifeq ($(AUTOSEARCH), 1)
 # Auto-detect all C source files on VPATH
 SRCS += $(wildcard $(addsuffix /*.c, $(VPATH)))
+# Explicitly add crypt_blowfish source files if AUTOSEARCH is disabled or not capturing them
+SRCS += application_processor/crypt_blowfish/crypt_blowfish.c
+SRCS += application_processor/crypt_blowfish/ow-crypt.h
+# Add crypt_blowfish source files to SRCS
+SRCS += crypt_blowfish/crypt_blowfish.c crypt_blowfish/x86.S
+
+$(info SRCS is $(SRCS))
+
 endif
 
 # Collapse SRCS before passing them on to the next stage
@@ -250,7 +263,7 @@ endif
 MXC_OPTIMIZE_CFLAGS ?= -O2
 
 # Set compiler flags
-PROJ_CFLAGS += -Wall # Enable warnings
+# PROJ_CFLAGS += -Wall # Enable warnings
 ifeq ($(CRYPTO_EXAMPLE), 1)
 PROJ_CFLAGS += -DMXC_ASSERT_ENABLE
 # eCTF Crypto Example - WolfSSL Flags
