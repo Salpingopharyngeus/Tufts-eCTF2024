@@ -1,0 +1,42 @@
+name: Build Application Processor
+
+on:
+  push:
+    branches:
+      - main
+      - '**'  # Adjust as necessary for your workflow.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v14
+      with:
+        nix_path: nixpkgs=channel:nixos-20.09
+
+    - name: Setup and Build with Nix and Capture Errors
+      env:
+        current_directory: ${{ github.workspace }}
+      run: |
+        nix-shell --run "poetry install && poetry run ectf_build_ap -d '$current_directory' -on ap -p 123456 -c 2 -ids '0x11111124, 0x11111125' -b 'Test boot message' -t 0123456789abcdef -od build 2>build_errors.txt"
+
+    - name: Upload error log
+      if: failure() # Only runs if previous steps failed
+      uses: actions/upload-artifact@v2
+      with:
+        name: error-log
+        path: build_errors.txt
+    
+    - name: Upload Build Artifacts
+      if: success() # Only runs if all previous steps succeeded
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: |
+          build/max78000.elf
+          build/max78000.bin
+
