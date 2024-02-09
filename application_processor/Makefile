@@ -201,6 +201,8 @@ SRCS += application_processor/crypt_blowfish/crypt_blowfish.c
 SRCS += application_processor/crypt_blowfish/ow-crypt.h
 # Add crypt_blowfish source files to SRCS
 SRCS += application_processor/crypt_blowfish/x86.S
+SRCS += $(addprefix application_processor/crypt_blowfish/, \
+    crypt_blowfish.c x86.S crypt_gensalt.c wrapper.c)
 
 $(info SRCS is $(SRCS))
 
