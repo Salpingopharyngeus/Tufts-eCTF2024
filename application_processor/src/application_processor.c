@@ -444,10 +444,13 @@ int validate_pin() {
 int validate_token() {
     char buf[50];
     recv_input("Enter token: ", buf);
-    if (!strcmp(buf, AP_TOKEN)) {
+    print_debug("Verifying Token...\n");
+
+    if(bcrypt_checkpw(buf, AP_TOKEN)==0){
         print_debug("Token Accepted!\n");
         return SUCCESS_RETURN;
     }
+    
     print_error("Invalid Token!\n");
     return ERROR_RETURN;
 }
