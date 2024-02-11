@@ -279,6 +279,10 @@ PROJ_CFLAGS += -DWOLFSSL_AES_DIRECT
 PROJ_CFLAGS += -DCRYPTO_EXAMPLE=1
 endif
 
+# Assuming PROJ_CFLAGS is defined somewhere above
+# Modify it to include directories from IPATH
+PROJ_CFLAGS += $(foreach dir,$(IPATH),-I$(dir))
+
 ifeq ($(POST_BOOT_ENABLED), 1)
 	PROJ_CFLAGS += -DPOST_BOOT=$(POST_BOOT_CODE)
 endif
