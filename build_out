@@ -1,17 +1,4 @@
-/mnt/e/Tufts-eCTF2024
-Loaded project.mk
-SRCS is src//application_processor.c src//bcrypt.c src//board_link.c src//host_messaging.c src//simple_crypto.c src//simple_flash.c src//simple_i2c_controller.c src/application_processor.c src/bcrypt.c src/board_link.c src/host_messaging.c src/simple_crypto.c src/simple_flash.c src/simple_i2c_controller.c application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/ow-crypt.h application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_gensalt.c application_processor/crypt_blowfish/wrapper.c
-Loaded project.mk
-SRCS is src//application_processor.c src//bcrypt.c src//board_link.c src//host_messaging.c src//simple_crypto.c src//simple_flash.c src//simple_i2c_controller.c src/application_processor.c src/bcrypt.c src/board_link.c src/host_messaging.c src/simple_crypto.c src/simple_flash.c src/simple_i2c_controller.c application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/ow-crypt.h application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_gensalt.c application_processor/crypt_blowfish/wrapper.c
-  CC    src/application_processor.c
-  CC    src/bcrypt.c
-  CC    src/board_link.c
-  CC    src/host_messaging.c
-  CC    src/simple_crypto.c
-  CC    src/simple_flash.c
-  CC    src/simple_i2c_controller.c
-
-2024-02-09 05:16:15.612 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+ectf_tools.utils:run_shell:51 - STDERR:
 src/application_processor.c: In function 'validate_pin':
 src/application_processor.c:428:8: warning: implicit declaration of function 'bcrypt_checkpw' [-Wimplicit-function-declaration]
   428 |     if(bcrypt_checkpw(buf, AP_PIN)==0){
@@ -24,6 +11,38 @@ src/application_processor.c: In function 'validate_components':
 src/application_processor.c:272:13: note: object 'transmit_buffer' of size 256
   272 |     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
       |             ^~~~~~~~~~~~~~~
-make: *** No rule to make target '/mnt/e/Tufts-eCTF2024/application_processor/build/crypt_blowfish.o', needed by '/mnt/e/Tufts-eCTF2024/application_processor/build/max78000.elf'.  Stop.
+src/bcrypt.c:22:10: fatal error: crypt_blowfish/ow-crypt.h: No such file or directory
+   22 | #include "crypt_blowfish/ow-crypt.h"
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+make: *** [/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/bcrypt.o] Error 1
 
-2024-02-09 05:16:15.613 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+
+Jake:
+
+ ectf_tools.utils:run_shell:51 - STDERR:
+src/component.c:46:1: error: version control conflict marker in file
+   46 | <<<<<<< HEAD
+      | ^~~~~~~
+src/component.c:51:9: error: invalid suffix "b8ad5a6b7477d13ab1a883fa35c3f4fa8f1" on integer constant
+   51 | >>>>>>> 77504b8ad5a6b7477d13ab1a883fa35c3f4fa8f1
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/component.c:72:3: warning: data definition has no type or storage class
+   72 | } component_cmd_t;
+      |   ^~~~~~~~~~~~~~~
+src/component.c:72:3: warning: type defaults to 'int' in declaration of 'component_cmd_t' [-Wimplicit-int]
+src/component.c: In function 'component_process_cmd':
+src/component.c:190:14: error: 'COMPONENT_CMD_BOOT' undeclared (first use in this function)
+  190 |         case COMPONENT_CMD_BOOT:
+      |              ^~~~~~~~~~~~~~~~~~
+src/component.c:190:14: note: each undeclared identifier is reported only once for each function it appears in
+src/component.c:193:14: error: 'COMPONENT_CMD_SCAN' undeclared (first use in this function)
+  193 |         case COMPONENT_CMD_SCAN:
+      |              ^~~~~~~~~~~~~~~~~~
+src/component.c:196:14: error: 'COMPONENT_CMD_VALIDATE' undeclared (first use in this function)
+  196 |         case COMPONENT_CMD_VALIDATE:
+      |              ^~~~~~~~~~~~~~~~~~~~~~
+src/component.c:199:14: error: 'COMPONENT_CMD_ATTEST' undeclared (first use in this function)
+  199 |         case COMPONENT_CMD_ATTEST:
+      |              ^~~~~~~~~~~~~~~~~~~~
+make: *** [/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/component/build/component.o] Error 1
