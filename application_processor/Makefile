@@ -182,10 +182,11 @@ endif
 VPATH := $(VPATH)
 
 # Where to find header files for this project
-IPATH += .
 IPATH += include
+IPATH += src
 # Adds crypt_blowfish to the IPATH
 IPATH += application_processor/crypt_blowfish
+
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
 IPATH += wolfssl

@@ -34,7 +34,17 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include "mxc_device.h"
+#include "board.h"
+#include "dma.h"
 #endif
+
+// AES encryption related includes
+#include "aes.h"
+#include "aes_regs.h"
+
+// Define the maximum length of encrypted data
+#define MXC_AES_ENC_DATA_LENGTH 256
 
 /********************************* CONSTANTS **********************************/
 
@@ -85,10 +95,14 @@ void process_scan(void);
 void process_validate(void);
 void process_attest(void);
 
+// AES encryption function
+int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
+
 /********************************* GLOBAL VARIABLES **********************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -216,12 +230,46 @@ void process_validate() {
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
+// Modify the process_attest function to encrypt the len variable
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
     uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
                 ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
+
+    // Encrypt the len variable
+    AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
+
     send_packet_and_ack(len, transmit_buffer);
 }
+
+// AES encryption function implementation
+int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
+{
+    mxc_aes_req_t req;
+
+    // Set the length of the input data
+    req.length = (data_length + 3) / 4; // Round up to the nearest word
+
+    // Set the input data and result data pointers
+    req.inputData = (uint32_t *)data;
+    req.resultData = encryptedData;
+
+    // Set the key size and encryption mode
+    req.keySize = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+
+    // Initialize AES
+    MXC_AES_Init();
+
+    // Perform AES encryption
+    MXC_AES_Encrypt(&req);
+
+    // Shutdown AES after encryption
+    MXC_AES_Shutdown();
+
+    return E_NO_ERROR;
+}
+
 
 /*********************************** MAIN *************************************/
 
