@@ -87,17 +87,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Install Nix (Multi User Mode)
-      run: |
-        sh <(curl -L https://nixos.org/nix/install) --daemon
-        # . ~/.nix-profile/etc/profile.d/nix.sh
+    # - name: Install Nix (Multi User Mode)
+    #   run: |
+    #     sh <(curl -L https://nixos.org/nix/install) --daemon
+    #     # . ~/.nix-profile/etc/profile.d/nix.sh
 
-    # # Chat's Implementation
-    # - name: Install Nix 
-    #   uses: cachix/install-nix-action@v14
-    #   with:
-    #     install_url: https://nixos.org/nix/install
-    #     nix_path: nixpkgs=channel:nixos-unstable
+    # Chat's Implementation
+    - name: Install Nix 
+      uses: cachix/install-nix-action@v14
+      with:
+        install_url: https://nixos.org/nix/install
+        nix_path: nixpkgs=channel:nixos-unstable
 
     - name: Setup project with shell.nix
       run: nix-shell --run "echo Nix shell environment setup complete"
