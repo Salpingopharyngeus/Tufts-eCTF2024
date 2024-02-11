@@ -43,9 +43,12 @@
 #include "aes.h"
 #include "aes_regs.h"
 
+<<<<<<< HEAD
 // Define the maximum length of encrypted data
 #define MXC_AES_ENC_DATA_LENGTH 256
 
+=======
+>>>>>>> 77504b8ad5a6b7477d13ab1a883fa35c3f4fa8f1
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
