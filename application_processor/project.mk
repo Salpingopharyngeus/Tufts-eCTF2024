@@ -22,34 +22,34 @@ IPATH+=../deployment
 IPATH+=inc/
 VPATH+=src/
 
-VPATH+= application_processor/crypt-blowfish
+VPATH+= /crypt-blowfish
 
 # Custom rule for compiling crypt_blowfish.c
 application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
 	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
 
 # Add the source files of crypt_blowfish directly for compilation
-SRCS += application_processor/crypt-blowfish/crypt_blowfish.c \
-		application_processor/crypt-blowfish/x86.S \
-		application_processor/crypt-blowfish/crypt_gensalt.c \
-		application_processor/crypt-blowfish/wrapper.c
+SRCS += /crypt-blowfish/crypt_blowfish.c \
+		/crypt-blowfish/x86.S \
+		/crypt-blowfish/crypt_gensalt.c \
+		/crypt-blowfish/wrapper.c
 
 # Specify the include directory for the crypt_blowfish headers
-IPATH += application_processor/crypt-blowfish
+IPATH += /crypt-blowfish
 
 # Add any necessary compiler flags, mimicking those from the crypt_blowfish Makefile
 CFLAGS += -W -Wall -O2 -fomit-frame-pointer -funroll-loops
 
 # Add the library path for the linker (if the library is a compiled binary)
 # Assuming the library file is named libcrypt_blowfish.a and located in the same directory
-LIBRARY_PATHS += application_processor/crypt-blowfish
+LIBRARY_PATHS += /crypt-blowfish
 
 # Add the library to be linked
 # Note: When specifying the library, you typically omit the 'lib' prefix and '.a' (or '.so') suffix
 LIBRARIES += crypt_blowfish
 
 # If the library path needs to be explicitly included during the link stage, use LDFLAGS
-LDFLAGS += -Lapplication_processor/crypt-blowfish
+LDFLAGS += -L/crypt-blowfish
 
 # Inform the linker to use the crypt_blowfish library
 LDFLAGS += -lcrypt_blowfish
