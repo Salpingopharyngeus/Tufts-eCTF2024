@@ -42,17 +42,27 @@ CFLAGS += -W -Wall -O2 -fomit-frame-pointer -funroll-loops
 
 # Add the library path for the linker (if the library is a compiled binary)
 # Assuming the library file is named libcrypt_blowfish.a and located in the same directory
-LIBRARY_PATHS += /crypt-blowfish
+LIBRARY_PATHS += ./crypt-blowfish
+LIBRARY_PATHS += ./lib
 
 # Add the library to be linked
 # Note: When specifying the library, you typically omit the 'lib' prefix and '.a' (or '.so') suffix
 LIBRARIES += crypt_blowfish
+LIBRARIES += crypt
 
 # If the library path needs to be explicitly included during the link stage, use LDFLAGS
-LDFLAGS += -L/crypt-blowfish
+LDFLAGS += -L./crypt-blowfish
+# If the library path needs to be explicitly included during the link stage, use LDFLAGS
+LDFLAGS += -L./lib
 
 # Inform the linker to use the crypt_blowfish library
 LDFLAGS += -lcrypt_blowfish
+# Inform the linker to use the crypt library
+LDFLAGS += -lcrypt
+
+
+
+
 
 
 # ****************** eCTF Bootloader *******************
