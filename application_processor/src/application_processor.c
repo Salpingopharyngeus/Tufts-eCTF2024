@@ -58,7 +58,6 @@
 
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
-#define HASH_SIZE 16
 #define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
@@ -221,10 +220,11 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 /******************************** COMPONENT COMMS ********************************/
 
 int validate_components() {
+    print_debug("Validate components called!");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
+    print_debug("A");
     // Send validate command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
@@ -233,13 +233,21 @@ int validate_components() {
         // Create command message
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_VALIDATE;
+
+        char* key = KEY;
         uint8_t hash_out[HASH_SIZE];
-        int result = hash(KEY, strlen(KEY), hash_out);
-        
+        hash(key, BLOCK_SIZE, hash_out);
         // Copy the hash value to the params array
         for (int i = 0; i < HASH_SIZE; i++) {
             command->params[i] = hash_out[i];
         }
+        
+        print_debug("Values of params: ");
+        for(int i = 0; i < MAX_I2C_MESSAGE_LEN-1; i++) {
+            print_debug("0x%02X ", command->params[i]);
+        }
+        print_debug("\n");
+        printf("hello world! this shoudl work ");
         
         // command_message command;
         // command.opcode = COMPONENT_CMD_VALIDATE;
@@ -260,8 +268,11 @@ int validate_components() {
         }
         print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
+    print_debug("B");
+    print_debug("C");
     return SUCCESS_RETURN;
 }
+
 int scan_components() {
     if (validate_components()) {
         print_error("Components could not be validated\n");
@@ -276,7 +287,6 @@ int scan_components() {
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer_temp[MAX_I2C_MESSAGE_LEN];
 
     // Scan scan command to each component 
     for (i2c_addr_t addr = 0x8; addr < 0x78; addr++) {
