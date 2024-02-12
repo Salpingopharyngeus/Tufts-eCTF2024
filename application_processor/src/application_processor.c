@@ -40,10 +40,20 @@
 #include "ectf_params.h"
 #include "global_secrets.h"
 
+<<<<<<< Updated upstream
 #include "../../deployment/global_secrets.h"
 #include "aes.h"
 #include "aes_regs.h"
 
+=======
+#include "mxc_device.h"
+#include "dma.h"
+#include "aes.h"
+#include "aes_regs.h"
+
+#include "../../deployment/global_secrets.h"
+
+>>>>>>> Stashed changes
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
@@ -121,6 +131,35 @@ flash_entry flash_status;
 typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,0x2f56101,0x11a38bb,0x485124,0x11644a7,0x3c74e8,0x3c74e8,0x2f56101,0x12614f7,0x1ffe4b6,0x11a38bb,0x1ffe4b6,0x12614f7,0x1ffe4b6,0x12220e3,0x3098ac,0x1ffe4b6,0x2ca498,0x11a38bb,0xe6d3b7,0x1ffe4b6,0x127bc,0x3098ac,0x11a38bb,0x1d073c6,0x51bd0,0x127bc,0x2e590b1,0x1cc7fb2,0x1d073c6,0xeac7cb,0x51bd0,0x2ba13d5,0x2b22bad,0x2179d2e,0};const aErjfkdfru djFIehjkklIH[]={0x138e798,0x2cdbb14,0x1f9f376,0x23bcfda,0x1d90544,0x1cad2d2,0x860e2c,0x860e2c,0x1f9f376,0x38ec6f2,0x138e798,0x23bcfda,0x138e798,0x38ec6f2,0x138e798,0x31dc9ea,0x2cdbb14,0x138e798,0x25cbe0c,0x23bcfda,0x199a72,0x138e798,0x11c82b4,0x2cdbb14,0x23bcfda,0x3225338,0x18d7fbc,0x11c82b4,0x35ff56,0x2b15630,0x3225338,0x8a977a,0x18d7fbc,0x29067fe,0x1ae6dee,0x4431c8,0};typedef int skerufjp;skerufjp siNfidpL(skerufjp verLKUDSfj){aErjfkdfru ubkerpYBd=12+1;skerufjp xUrenrkldxpxx=2253667944%0x432a1f32;aErjfkdfru UfejrlcpD=1361423303;verLKUDSfj=(verLKUDSfj+0x12345678)%60466176;while(xUrenrkldxpxx--!=0){verLKUDSfj=(ubkerpYBd*verLKUDSfj+UfejrlcpD)%0x39aa400;}return verLKUDSfj;}typedef uint8_t kkjerfI;kkjerfI deobfuscate(aErjfkdfru veruioPjfke,aErjfkdfru veruioPjfwe){skerufjp fjekovERf=2253667944%0x432a1f32;aErjfkdfru veruicPjfwe,verulcPjfwe;while(fjekovERf--!=0){veruioPjfwe=(veruioPjfwe-siNfidpL(veruioPjfke))%0x39aa400;veruioPjfke=(veruioPjfke-siNfidpL(veruioPjfwe))%60466176;}veruicPjfwe=(veruioPjfke+0x39aa400)%60466176;verulcPjfwe=(veruioPjfwe+60466176)%0x39aa400;return veruicPjfwe*60466176+verulcPjfwe-89;}
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
+
+const char external_aes_key[] = EXTERNAL_AES_KEY;
+const char decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
+
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key)
+{
+    req.length     = MXC_AES_DATA_LENGTH;
+    req.inputData  = inputData;
+    req.resultData = encryptedData;
+    req.keySize    = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    
+    MXC_AES_Init();
+    
+    if (asynchronous) {
+        MXC_AES_EncryptAsync(&req);
+        
+        while (dma_flag == 0);
+        
+        dma_flag = 0;
+    }
+    else {
+        MXC_AES_Encrypt(&req);
+    }
+    
+    return E_NO_ERROR;
+}
+
+
 /**
  * @brief AES encryption function
  * 
@@ -169,12 +208,56 @@ int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
+<<<<<<< Updated upstream
     // Encrypt the buffer using AES before sending
     AES_encrypt(buffer, len, MXC_AES_128BITS);
 
     // Call the send_packet function to send the encrypted data
+=======
+    // Calculate the number of 128-bit segments
+    uint8_t num_segments = (len + 15) / 16; // Round up to the nearest 128-bit segment
+
+    // Encrypt each 128-bit segment of len and concatenate them together
+    for (uint8_t i = 0; i < num_segments; ++i) {
+        AES_encrypt_buffer(&buffer[i * 16], external_aes_key);
+    }
+
+    // Now, securely send the encrypted data over I2C
+>>>>>>> Stashed changes
     return send_packet(address, len, buffer);
 }
+
+int AES_decrypt(int asynchronous, mxc_aes_keys_t key)
+{
+    req.length     = MXC_AES_DATA_LENGTH;
+    req.inputData  = encryptedData;
+    req.resultData = decryptedData;
+    req.keySize    = key;
+    req.encryption = MXC_AES_DECRYPT_INT_KEY;
+    
+    if (asynchronous) {
+        MXC_AES_DecryptAsync(&req);
+        
+        while (dma_flag == 0);
+        
+        dma_flag = 0;
+    }
+    else {
+        MXC_AES_Decrypt(&req);
+    }
+    
+    MXC_AES_Shutdown();
+    
+    if (memcmp(inputData, decryptedData, MXC_AES_DATA_LENGTH) == 0) {
+        printf("\nData Verified");
+        return E_NO_ERROR;
+    }
+    
+    printf("\nData Mismatch");
+    
+    return 1;
+}
+
 
 /**
  * @brief AES decryption function
@@ -226,6 +309,7 @@ int AES_decrypt(uint8_t *data, uint32_t data_length) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(i2c_addr_t address, uint8_t* buffer) {
+<<<<<<< Updated upstream
     // Call the function to receive data over I2C
     int bytes_received = poll_and_receive_packet(address, buffer);
 
@@ -233,6 +317,27 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     AES_decrypt(buffer, bytes_received);
 
     return bytes_received;
+=======
+    int bytes_received = poll_and_receive_packet(address, buffer); // Receive data over I2C
+
+    if (bytes_received < 0) {
+        // Error in receiving data
+        return bytes_received;
+    }
+
+    // Decrypt the received buffer
+    // Note: You may need to adjust the decryption mechanism based on your security requirements
+
+    // Calculate the number of 128-bit segments
+    uint8_t num_segments = (bytes_received + 15) / 16; // Round up to the nearest 128-bit segment
+
+    // Decrypt each 128-bit segment of the buffer
+    for (uint8_t i = 0; i < num_segments; ++i) {
+        AES_decrypt_buffer(&buffer[i * 16], decrypt_aes_key);
+    }
+
+    return bytes_received; // Return the number of bytes received
+>>>>>>> Stashed changes
 }
 
 /**

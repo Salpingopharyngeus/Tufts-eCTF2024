@@ -21,12 +21,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mxc_device.h"
+#include "dma.h"
+#include "aes.h"
+#include "aes_regs.h"
+
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
 
 // Includes from containerized build
 #include "ectf_params.h"
-#include "global_secrets.h"
+#include "../../deployment/global_secrets.h"
 
 #ifdef POST_BOOT
 #include "led.h"
@@ -56,8 +61,15 @@
 #define ATTESTATION_CUSTOMER "Fritz"
 */
 
+<<<<<<< Updated upstream
 // Define the maximum length of encrypted data
 #define MXC_AES_ENC_DATA_LENGTH 256
+=======
+#define MXC_AES_DATA_LENGTH         8       //4 words
+
+#define MXC_AES_ENC_DATA_LENGTH     8       //Always multiple of 4 
+//(equal to or greater than MXC_AES_DATA_LENGTH)
+>>>>>>> Stashed changes
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Commands received by Component using 32 bit integer
@@ -96,6 +108,18 @@ void process_attest(void);
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+
+uint32_t inputData[MXC_AES_DATA_LENGTH]         = {0x873AC125, 0x2F45A7C8, 0x3EB7190, 0x486FA931, \
+                                                   0x94AE56F2, 0x89B4D0C1, 0x2F45A7C8, 0x3EB7190
+                                                  };
+uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
+uint32_t decryptedData[MXC_AES_DATA_LENGTH]     = {0};
+//AES request
+mxc_aes_req_t req;
+
+volatile int dma_flag = 0;
+
+const char external_aes_key[] = EXTERNAL_AES_KEY;
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -207,15 +231,54 @@ void process_validate() {
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
+<<<<<<< Updated upstream
 // Modify the process_attest function to encrypt the len variable
+=======
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key)
+{
+    req.length     = MXC_AES_DATA_LENGTH;
+    req.inputData  = inputData;
+    req.resultData = encryptedData;
+    req.keySize    = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    
+    MXC_AES_Init();
+    
+    if (asynchronous) {
+        MXC_AES_EncryptAsync(&req);
+        
+        while (dma_flag == 0);
+        
+        dma_flag = 0;
+    }
+    else {
+        MXC_AES_Encrypt(&req);
+    }
+    
+    return E_NO_ERROR;
+}
+
+>>>>>>> Stashed changes
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
-    uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
+    uint32_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
                 ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
+<<<<<<< Updated upstream
     // Encrypt the len variable
     AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
 
+=======
+    // Calculate the number of 128-bit segments
+    uint32_t num_segments = (len + 15) / 16; // Round up to the nearest 128-bit segment
+
+    // Encrypt each 128-bit segment of len and concatenate them together
+    for (uint32_t i = 0; i < num_segments; ++i) {
+        AES_encrypt(&transmit_buffer[i * 16], external_aes_key); // Encrypt 128-bit segment (16 bytes)
+    }
+
+    // Send the encrypted len and the attestation data
+>>>>>>> Stashed changes
     send_packet_and_ack(len, transmit_buffer);
 }
 // AES encryption function implementation
