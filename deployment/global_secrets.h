@@ -1,12 +1,4 @@
 #define SECRET 1234
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-#define KEY "TUFTS-eCTF2024"
-#define AES_DECRYPT_KEY {0xb9, 0x9a, 0x35, 0xff, 0x15, 0x2f, 0xde, 0x7a, \
-                         0x86, 0xfd, 0xf4, 0x3c, 0xac, 0x50, 0x32, 0xa0}
->>>>>>> Stashed changes
-=======
 #define KEY "TUFTS-eCTF2024"
 #define EXTERNAL_AES_KEY { \
     0x13, 0x9a, 0x35, 0x42, \
