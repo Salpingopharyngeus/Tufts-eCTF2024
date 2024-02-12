@@ -24,6 +24,10 @@ VPATH+=src/
 
 VPATH+= application_processor/crypt-blowfish
 
+# Custom rule for compiling crypt_blowfish.c
+application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
+	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
+
 # Add the source files of crypt_blowfish directly for compilation
 SRCS += application_processor/crypt-blowfish/crypt_blowfish.c \
 		application_processor/crypt-blowfish/x86.S \
