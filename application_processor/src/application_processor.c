@@ -40,6 +40,10 @@
 #include "ectf_params.h"
 #include "global_secrets.h"
 
+#include "../../deployment/global_secrets.h"
+#include "aes.h"
+#include "aes_regs.h"
+
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
@@ -60,6 +64,15 @@
 #define SUCCESS_RETURN 0
 #define ERROR_RETURN -1
 
+<<<<<<< Updated upstream
+=======
+// Hash Digest
+#define SHA256_DIGEST_LENGTH 32
+
+// Define the maximum length of encrypted data
+#define MXC_AES_ENC_DATA_LENGTH 256
+
+>>>>>>> Stashed changes
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
 // Params allows for up to MAX_I2C_MESSAGE_LEN - 1 bytes to be send
@@ -109,19 +122,97 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
+ * @brief AES encryption function
+ * 
+ * @param data: uint8_t*, pointer to the data to be encrypted
+ * @param data_length: uint32_t, length of the data to be encrypted
+ * @param key: mxc_aes_keys_t, AES key size
+ * 
+ * @return int: status of the encryption process
+ */
+int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key) {
+    mxc_aes_req_t req;
+
+    // Set the length of the input data
+    req.length = (data_length + 3) / 4; // Round up to the nearest word
+
+    // Set the input data and result data pointers
+    req.inputData = (uint32_t *)data;
+    req.resultData = encryptedData; // Assuming encryptedData is a global variable
+
+    // Set the key size and encryption mode
+    req.keySize = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+
+    // Initialize AES
+    MXC_AES_Init();
+
+    // Perform AES encryption
+    MXC_AES_Encrypt(&req);
+
+    // Shutdown AES after encryption
+    MXC_AES_Shutdown();
+
+    return E_NO_ERROR;
+}
+
+/**
  * @brief Secure Send 
  * 
  * @param address: i2c_addr_t, I2C address of recipient
- * @param buffer: uint8_t*, pointer to data to be send
+ * @param buffer: uint8_t*, pointer to data to be sent
  * @param len: uint8_t, size of data to be sent 
+ * 
+ * @return int: status of the sending process
  * 
  * Securely send data over I2C. This function is utilized in POST_BOOT functionality.
  * This function must be implemented by your team to align with the security requirements.
-
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
+    // Encrypt the buffer using AES before sending
+    AES_encrypt(buffer, len, MXC_AES_128BITS);
+
+    // Call the send_packet function to send the encrypted data
     return send_packet(address, len, buffer);
 }
+
+/**
+ * @brief AES decryption function
+ * 
+ * @param data: uint8_t*, pointer to the data to be decrypted
+ * @param data_length: uint32_t, length of the data to be decrypted
+ * 
+ * @return int: status of the decryption process
+ */
+int AES_decrypt(uint8_t *data, uint32_t data_length) {
+    // Obtain the decryption key from global_secrets.h
+    extern const uint8_t AES_DECRYPT_KEY[];
+
+    mxc_aes_req_t req;
+
+    // Set the length of the input data
+    req.length = (data_length + 3) / 4; // Round up to the nearest word
+
+    // Set the input data and result data pointers
+    req.inputData = (uint32_t *)data;
+    req.resultData = (uint32_t *)data; // Overwrite the input buffer with decrypted data
+
+    // Set the key size and decryption mode
+    req.keySize = MXC_AES_128BITS;
+    req.encryption = MXC_AES_DECRYPT_EXT_KEY;
+
+    // Initialize AES
+    MXC_AES_Init();
+
+    // Perform AES decryption
+    MXC_AES_Decrypt(&req);
+
+    // Shutdown AES after decryption
+    MXC_AES_Shutdown();
+
+    return E_NO_ERROR;
+}
+
 
 /**
  * @brief Secure Receive
@@ -135,7 +226,13 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(i2c_addr_t address, uint8_t* buffer) {
-    return poll_and_receive_packet(address, buffer);
+    // Call the function to receive data over I2C
+    int bytes_received = poll_and_receive_packet(address, buffer);
+
+    // Decrypt the received data using AES
+    AES_decrypt(buffer, bytes_received);
+
+    return bytes_received;
 }
 
 /**

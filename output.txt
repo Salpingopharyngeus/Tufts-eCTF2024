@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include "host_messaging.h"
 
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
@@ -42,7 +43,8 @@
 #include "aes.h"
 #include "aes_regs.h"
 
-#include "../../deployment/global_secrets.h"
+// Define the maximum length of encrypted data
+#define MXC_AES_ENC_DATA_LENGTH 256
 
 /********************************* CONSTANTS **********************************/
 
@@ -55,9 +57,6 @@
 #define ATTESTATION_DATE "08/08/08"
 #define ATTESTATION_CUSTOMER "Fritz"
 */
-
-// Define the maximum length of encrypted data
-#define MXC_AES_ENC_DATA_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Commands received by Component using 32 bit integer
@@ -84,6 +83,10 @@ typedef struct {
     uint32_t component_id;
 } scan_message;
 
+typedef struct {
+    command_message c_message;
+    char *auth_key;
+} outer_layer;
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
 void component_process_cmd(void);
@@ -92,10 +95,14 @@ void process_scan(void);
 void process_validate(void);
 void process_attest(void);
 
+// AES encryption function
+int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
+
 /********************************* GLOBAL VARIABLES **********************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -159,28 +166,44 @@ void boot() {
     #endif
 }
 
+bool valid_packet(uint8_t* receive_buffer){
+    print_info("Validating received packet");    
+    outer_layer* outer = (outer_layer*) receive_buffer;
+    char *received_key = outer->auth_key;
+    return strcmp(received_key, KEY) == 0;
+}
+
 // Handle a transaction from the AP
 void component_process_cmd() {
-    command_message* command = (command_message*) receive_buffer;
+    print_info("processing command packet");
+    if (valid_packet(receive_buffer)) {
+        outer_layer* outer = (outer_layer*) receive_buffer;
+        command_message command = outer->c_message;
 
-    // Output to application processor dependent on command received
-    switch (command->opcode) {
-    case COMPONENT_CMD_BOOT:
-        process_boot();
-        break;
-    case COMPONENT_CMD_SCAN:
-        process_scan();
-        break;
-    case COMPONENT_CMD_VALIDATE:
-        process_validate();
-        break;
-    case COMPONENT_CMD_ATTEST:
-        process_attest();
-        break;
-    default:
-        printf("Error: Unrecognized command received %d\n", command->opcode);
-        break;
+        //command_message* command = (command_message*) receive_buffer;
+
+        // Output to application processor dependent on command received
+        switch (command.opcode) {
+        case COMPONENT_CMD_BOOT:
+            process_boot();
+            break;
+        case COMPONENT_CMD_SCAN:
+            process_scan();
+            break;
+        case COMPONENT_CMD_VALIDATE:
+            process_validate();
+            break;
+        case COMPONENT_CMD_ATTEST:
+            process_attest();
+            break;
+        default:
+            printf("Error: Unrecognized command received %d\n", command.opcode);
+            break;
+        }
+    }else {
+        print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
     }
+    
 }
 
 void process_boot() {
@@ -218,6 +241,7 @@ void process_attest() {
 
     send_packet_and_ack(len, transmit_buffer);
 }
+
 // AES encryption function implementation
 int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
 {
@@ -246,6 +270,7 @@ int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
     return E_NO_ERROR;
 }
 
+
 /*********************************** MAIN *************************************/
 
 int main(void) {
@@ -262,7 +287,6 @@ int main(void) {
 
     while (1) {
         wait_and_receive_packet(receive_buffer);
-
         component_process_cmd();
     }
 }
