@@ -22,11 +22,13 @@ IPATH+=../deployment
 IPATH+=inc/
 VPATH+=src/
 
+VPATH+= application_processor/crypt-blowfish
+
 # Add the source files of crypt_blowfish directly for compilation
 SRCS += application_processor/crypt-blowfish/crypt_blowfish.c \
-        application_processor/crypt-blowfish/x86.S \
-        application_processor/crypt-blowfish/crypt_gensalt.c \
-        application_processor/crypt-blowfish/wrapper.c
+		application_processor/crypt-blowfish/x86.S \
+		application_processor/crypt-blowfish/crypt_gensalt.c \
+		application_processor/crypt-blowfish/wrapper.c
 
 # Specify the include directory for the crypt_blowfish headers
 IPATH += application_processor/crypt-blowfish
