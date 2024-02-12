@@ -170,9 +170,6 @@ export CMSIS_ROOT
 # Where to find source files for this project.
 VPATH += .
 VPATH += src
-# Adds crypt_blowfish to the VPATH
-VPATH += application_processor/crypt_blowfish
-
 
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
@@ -182,11 +179,8 @@ endif
 VPATH := $(VPATH)
 
 # Where to find header files for this project
+IPATH += .
 IPATH += include
-IPATH += src
-# Adds crypt_blowfish to the IPATH
-IPATH += application_processor/crypt_blowfish
-
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
 IPATH += wolfssl
@@ -197,21 +191,7 @@ AUTOSEARCH ?= 1
 ifeq ($(AUTOSEARCH), 1)
 # Auto-detect all C source files on VPATH
 SRCS += $(wildcard $(addsuffix /*.c, $(VPATH)))
-# Explicitly add crypt_blowfish source files if AUTOSEARCH is disabled or not capturing them
-SRCS += application_processor/crypt_blowfish/crypt_blowfish.c
-SRCS += application_processor/crypt_blowfish/ow-crypt.h
-# Add crypt_blowfish source files to SRCS
-SRCS += application_processor/crypt_blowfish/x86.S
-SRCS += $(addprefix application_processor/crypt_blowfish/, \
-    crypt_blowfish.c x86.S crypt_gensalt.c wrapper.c)
-
-$(info SRCS is $(SRCS))
-
 endif
-
-# Custom rule for compiling crypt_blowfish.c
-application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
-	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
 
 # Collapse SRCS before passing them on to the next stage
 SRCS := $(SRCS)
@@ -270,7 +250,7 @@ endif
 MXC_OPTIMIZE_CFLAGS ?= -O2
 
 # Set compiler flags
-# PROJ_CFLAGS += -Wall # Enable warnings
+PROJ_CFLAGS += -Wall # Enable warnings
 ifeq ($(CRYPTO_EXAMPLE), 1)
 PROJ_CFLAGS += -DMXC_ASSERT_ENABLE
 # eCTF Crypto Example - WolfSSL Flags
@@ -278,10 +258,6 @@ PROJ_CFLAGS += -DNO_WOLFSSL_DIR
 PROJ_CFLAGS += -DWOLFSSL_AES_DIRECT
 PROJ_CFLAGS += -DCRYPTO_EXAMPLE=1
 endif
-
-# Assuming PROJ_CFLAGS is defined somewhere above
-# Modify it to include directories from IPATH
-PROJ_CFLAGS += $(foreach dir,$(IPATH),-I$(dir))
 
 ifeq ($(POST_BOOT_ENABLED), 1)
 	PROJ_CFLAGS += -DPOST_BOOT=$(POST_BOOT_CODE)
