@@ -48,6 +48,7 @@
 #define ATTESTATION_DATE "08/08/08"
 #define ATTESTATION_CUSTOMER "Fritz"
 */
+#define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Commands received by Component using 32 bit integer
@@ -63,7 +64,7 @@ typedef enum {
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    //uint8_t params[MAX_I2C_MESSAGE_LEN-1];
 } command_message;
 
 typedef struct {
@@ -76,7 +77,7 @@ typedef struct {
 
 typedef struct {
     command_message c_message;
-    char *auth_key;
+    uint32_t key;
 } outer_layer;
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
@@ -85,12 +86,28 @@ void process_boot(void);
 void process_scan(void);
 void process_validate(void);
 void process_attest(void);
+void print(const char *message);
 
 /********************************* GLOBAL VARIABLES **********************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
+
+void print(const char *message) {
+    // Open the serial port
+    FILE *serial = fopen("/dev/tty.usbmodem21302", "w");
+    if (serial == NULL) {
+        perror("Error opening serial port");
+        return;
+    }
+
+    // Send the message over the serial port
+    fprintf(serial, "%s\n", message);
+
+    // Close the serial port
+    fclose(serial);
+}
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
  * @brief Secure Send 
@@ -136,51 +153,50 @@ void boot() {
     LED_Off(LED2);
     LED_Off(LED3);
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
     #endif
 }
 
-bool valid_packet(uint8_t* receive_buffer){
-    printf("Validating received packet");    
-    if (sizeof(outer_layer) <= MAX_I2C_MESSAGE_LEN) {
-        outer_layer* outer = (outer_layer*) receive_buffer;
-        // Validate the auth_key only if the command opcode is within expected range
-        char *received_key = outer->auth_key;
+// bool valid_packet(uint8_t* receive_buffer){
+//     //print("Validating received packet");    
+//     if (sizeof(outer_layer) <= MAX_I2C_MESSAGE_LEN) {
+//         outer_layer* outer = (outer_layer*) receive_buffer;
+//         // Validate the auth_key only if the command opcode is within expected range
+//         char *received_key = outer->auth_key;
 
-        // Ensure that the received_key is not NULL
-        return strcmp(received_key, KEY) == 0;
+//         // Ensure that the received_key is not NULL
+//         return strcmp(received_key, KEY) == 0;
        
-    } else {
-        printf("Received packet is too large");
-    }
-    // Return false if any validation fails
-    return false;
-}
+//     }
+//     // Return false if any validation fails
+//     return false;
+// }
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    printf("processing command packet");
+    //print("processing command packet");
     //if (valid_packet(receive_buffer)) {
-    outer_layer* outer = (outer_layer*) receive_buffer;
-    command_message command = outer->c_message;
-
-    //command_message* command = (command_message*) receive_buffer;
+    // outer_layer* outer = (outer_layer*) receive_buffer;
+    // command_message command = outer->c_message;
+    // uint32_t value = outer->key;
+    command_message* command = (command_message*) receive_buffer;
 
     // Output to application processor dependent on command received
-    switch (command.opcode) {
+    //if (!strcmp("test", "test")) {
+    switch (command->opcode) {
         case COMPONENT_CMD_BOOT:
             process_boot();
             break;
@@ -194,9 +210,10 @@ void component_process_cmd() {
             process_attest();
             break;
         default:
-            printf("Error: Unrecognized command received %d\n", command.opcode);
+            //print("Error: Unrecognized command received");
             break;
     }
+    //}
     // }else {
     //     print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
     // }
@@ -236,7 +253,7 @@ void process_attest() {
 /*********************************** MAIN *************************************/
 
 int main(void) {
-    printf("Component Started\n");
+    //print("Component Started\n");
     
     // Enable Global Interrupts
     __enable_irq();

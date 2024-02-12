@@ -58,6 +58,8 @@
 
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
+#define HASH_SIZE 16
+#define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -69,19 +71,10 @@ typedef struct {
     uint8_t params[MAX_I2C_MESSAGE_LEN-1];
 } command_message;
 
-//struct for encryption
-// typedef struct {
-//     struct command_message e_message;
-//     size_t counter;
-//     uint8_t hash[SHA256_DIGEST_LENGTH];
-// } encrypted_message;
-
 // outer layer struct for test purposes
 typedef struct {
     command_message c_message;
-    char *auth_key; 
-    // uint8_t key[KEY_LENGTH];
-
+    uint32_t key;
 } outer_layer;
 
 // Data type for receiving a validate message
@@ -174,7 +167,7 @@ int get_provisioned_ids(uint32_t* buffer) {
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
 
-    // Enable global interrupts    
+    // Enable global interrupts
     __enable_irq();
 
     // Setup Flash
@@ -195,17 +188,19 @@ void init() {
 
         flash_simple_write(FLASH_ADDR, (uint32_t*)&flash_status, sizeof(flash_entry));
     }
-    
     // Initialize board link interface
     board_link_init();
 }
 
-uint8_t* secure_wrapper(command_message c_message, uint8_t* transmit_buffer) {
-    outer_layer* outerl = (outer_layer*) transmit_buffer;
-    outerl->c_message = c_message;
-    outerl->auth_key = KEY; 
-    return transmit_buffer;
-}
+// uint8_t* secure_wrapper(command_message *c_message, uint8_t* transmit_buffer) {
+//     outer_layer* outerl = (outer_layer*) transmit_buffer;
+//     outerl->c_message = *c_message; 
+//     char* str = "123abc";
+//     // Convert string to uint32_t
+//     uint32_t value = strtoul(str, NULL, 10);
+//     outerl->key = value;
+//     return transmit_buffer;
+// }
 
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
@@ -216,7 +211,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     }
     
     // Receive message
-    print_debug("BEFORE: poll_and_receive_packet %#x\n", addr);
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
         return ERROR_RETURN;
@@ -225,45 +219,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 }
 
 /******************************** COMPONENT COMMS ********************************/
-
-int scan_components() {
-    print_debug("SCAN COMPONENTS CALLED!");
-    // Print out provisioned component IDs
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        print_info("P>0x%08x\n", flash_status.component_ids[i]);
-    }
-
-    // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
-    // Scan scan command to each component 
-    for (i2c_addr_t addr = 0x8; addr < 0x78; addr++) {
-        // I2C Blacklist:
-        // 0x18, 0x28, and 0x36 conflict with separate devices on MAX78000FTHR
-        if (addr == 0x18 || addr == 0x28 || addr == 0x36) {
-            continue;
-        }
-
-        // Create command message 
-        // command_message* command = (command_message*) transmit_buffer;
-        // command->opcode = COMPONENT_CMD_SCAN;
-        command_message command;
-        command.opcode = COMPONENT_CMD_SCAN;
-        
-        // Send out command and receive result
-        int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
-        //int len = issue_cmd(addr, transmit_buffer, receive_buffer);
-        //print_debug("Received len: %d", len);
-        // Success, device is present
-        if (len > 0) {
-            scan_message* scan = (scan_message*) receive_buffer;
-            print_info("F>0x%08x\n", scan->component_id);
-        }
-    }
-    print_success("List\n");
-    return SUCCESS_RETURN;
-}
 
 int validate_components() {
     // Buffers for board link communication
@@ -276,16 +231,22 @@ int validate_components() {
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
-        // command_message* command = (command_message*) transmit_buffer;
-        // command->opcode = COMPONENT_CMD_VALIDATE;
+        command_message* command = (command_message*) transmit_buffer;
+        command->opcode = COMPONENT_CMD_VALIDATE;
+        uint8_t hash_out[HASH_SIZE];
+        int result = hash(KEY, strlen(KEY), hash_out);
         
-        // outer_layer* outerl = (outer_layer*) transmit_buffer;
-        command_message command;
-        command.opcode = COMPONENT_CMD_VALIDATE;
-        //outerl->c_message = command;
+        // Copy the hash value to the params array
+        for (int i = 0; i < HASH_SIZE; i++) {
+            command->params[i] = hash_out[i];
+        }
+        
+        // command_message command;
+        // command.opcode = COMPONENT_CMD_VALIDATE;
         
         // Send out command and receive result
-        int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
+        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
             print_error("Could not validate component\n");
             return ERROR_RETURN;
@@ -299,6 +260,50 @@ int validate_components() {
         }
         print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
+    return SUCCESS_RETURN;
+}
+int scan_components() {
+    if (validate_components()) {
+        print_error("Components could not be validated\n");
+        return;
+    }
+    print_debug("All Components validated\n");
+    // Print out provisioned component IDs
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        print_info("P>0x%08x\n", flash_status.component_ids[i]);
+    }
+
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer_temp[MAX_I2C_MESSAGE_LEN];
+
+    // Scan scan command to each component 
+    for (i2c_addr_t addr = 0x8; addr < 0x78; addr++) {
+        // I2C Blacklist:
+        // 0x18, 0x28, and 0x36 conflict with separate devices on MAX78000FTHR
+        if (addr == 0x18 || addr == 0x28 || addr == 0x36) {
+            continue;
+        }
+
+        // Create command message 
+        command_message* command = (command_message*) transmit_buffer;
+        command->opcode = COMPONENT_CMD_SCAN;
+        
+        // command_message command;
+        // command.opcode = COMPONENT_CMD_SCAN;
+        
+        // Send out command and receive result
+        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        
+        // Success, device is present
+        if (len > 0) {
+            scan_message* scan = (scan_message*) receive_buffer;
+            print_info("F>0x%08x\n", scan->component_id);
+        }
+    }
+    print_success("List\n");
     return SUCCESS_RETURN;
 }
 
@@ -317,6 +322,10 @@ int boot_components() {
         command->opcode = COMPONENT_CMD_BOOT;
         
         // Send out command and receive result
+        // command_message command;
+        // command.opcode = COMPONENT_CMD_BOOT;
+        
+        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
             print_error("Could not boot component\n");
@@ -342,6 +351,10 @@ int attest_component(uint32_t component_id) {
     command->opcode = COMPONENT_CMD_ATTEST;
 
     // Send out command and receive result
+    // command_message command;
+    // command.opcode = COMPONENT_CMD_ATTEST;
+        
+    //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
@@ -523,7 +536,7 @@ void attempt_attest() {
 int main() {
     // Initialize board
     init();
-
+    
     // Print the component IDs to be helpful
     // Your design does not need to do this
     print_info("Application Processor Started\n");
@@ -532,12 +545,10 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-        print_debug("Executing given command");
         // Execute requested command
+        //print_debug("Given command '%s'\n", buf);
         if (!strcmp(buf, "list")) {
-            print_debug("Calling Scan Components!");
             scan_components();
-            print_debug("Scan Components Done");
         } else if (!strcmp(buf, "boot")) {
                                                     //TODO:  Check if secure boot has been enabled before proceding
             attempt_boot();
@@ -546,9 +557,9 @@ int main() {
         } else if (!strcmp(buf, "attest")) {
             attempt_attest();
         } else {
+            //scan_components();
             print_error("Unrecognized command '%s'\n", buf);
         }
-        print_debug("Waiting for command");
     }
     // Code never reaches here
     return 0;
