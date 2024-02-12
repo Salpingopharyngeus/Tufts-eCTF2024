@@ -5,7 +5,7 @@
 pkgs.mkShell {
   buildInputs = [
     pkgs.gnumake
-    pkgs.python39
+    pkgs.python311
     pkgs.gcc-arm-embedded
     pkgs.poetry
     pkgs.cacert

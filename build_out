@@ -1,55 +1,70 @@
-INFO     | ectf_tools.utils:run_shell:51 - STDERR:
-src/application_processor.c: In function 'validate_pin':
-src/application_processor.c:428:8: warning: implicit declaration of function 'bcrypt_checkpw' [-Wimplicit-function-declaration]
-  428 |     if(bcrypt_checkpw(buf, AP_PIN)==0){
-      |        ^~~~~~~~~~~~~~
-In function 'secure_wrapper',
-    inlined from 'validate_components' at src/application_processor.c:289:19:
-src/application_processor.c:265:22: warning: array subscript 'outer_layer[0]' is partly outside array bounds of 'uint8_t[256]' {aka 'unsigned char[256]'} [-Warray-bounds]
-  265 |     outerl->auth_key = KEY;
-src/application_processor.c: In function 'validate_components':
-src/application_processor.c:272:13: note: object 'transmit_buffer' of size 256
-  272 |     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-      |             ^~~~~~~~~~~~~~~
-src/bcrypt.c:22:10: fatal error: crypt_blowfish/ow-crypt.h: No such file or directory
-   22 | #include "crypt_blowfish/ow-crypt.h"
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-compilation terminated.
-make: *** [/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/bcrypt.o] Error 1
-
-2024-02-11 18:53:15.138 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
-
-[nix-shell:~/Desktop/eCTF/Tufts-eCTF2024]$ poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "McLean" -ad "08/08/08" -ac "Fritz"
-2024-02-11 18:53:51.167 | INFO     | ectf_tools.build_comp:build_component:53 - Creating parameters for build
-2024-02-11 18:53:51.168 | INFO     | ectf_tools.build_comp:build_component:70 - Checking output paths
-2024-02-11 18:53:51.173 | INFO     | ectf_tools.build_comp:build_component:81 - Running build
-2024-02-11 18:53:51.174 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd component &&  make clean &&  make && make release &&  cp build/max78000.elf /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/build/comp.elf &&  cp build/max78000.bin /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/build/comp.bin"'
-2024-02-11 18:56:21.817 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
+poetry run ectf_build_ap -d "$current_directory" -on ap --p 123456 -c 2 -ids "0x11111124, 0x11111125" -b "Test boot message" -t 0123456789abcdef -od build
+2024-02-12 18:42:40.077 | INFO     | ectf_tools.build_ap:build_ap:52 - Creating parameters for build
+2024-02-12 18:42:40.079 | INFO     | ectf_tools.build_ap:build_ap:69 - Checking output paths
+2024-02-12 18:42:40.079 | INFO     | ectf_tools.build_ap:build_ap:80 - Running build
+2024-02-12 18:42:40.081 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd application_processor &&  make clean &&  make && make release &&  cp build/max78000.elf /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/build/ap.elf &&  cp build/max78000.bin /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/build/ap.bin"'
+2024-02-12 18:45:38.363 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
 /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024
 Loaded project.mk
-SRCS is src//board_link.c src//component.c src//simple_i2c_peripheral.c src/board_link.c src/component.c src/simple_i2c_peripheral.c application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/ow-crypt.h application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_gensalt.c application_processor/crypt_blowfish/wrapper.c
 Loaded project.mk
-SRCS is src//board_link.c src//component.c src//simple_i2c_peripheral.c src/board_link.c src/component.c src/simple_i2c_peripheral.c application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/ow-crypt.h application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/x86.S application_processor/crypt_blowfish/crypt_gensalt.c application_processor/crypt_blowfish/wrapper.c
-  CC    src/board_link.c
-  CC    src/component.c
-  CC    src/simple_i2c_peripheral.c
+make -f /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/libPeriphDriver.mk  lib BUILD_DIR=/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/bin/MAX78000/softfp PROJ_CFLAGS="-Wall  -DLIB_BOARD -DCAMERA_OV7692" PROJ_LDFLAGS="" MXC_OPTIMIZE_CFLAGS=-O2 MFLOAT_ABI=soft DUAL_CORE= RISCV_CORE= PROJECTMK=/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk
+make[1]: Entering directory '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor'
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/mxc_assert.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/mxc_delay.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/mxc_lock.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/nvic_table.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/pins_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SYS/sys_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/ADC/adc_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/ADC/adc_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/AES/aes_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/AES/aes_revb.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/CAMERAIF/cameraif_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/CAMERAIF/cameraif_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/CRC/crc_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/CRC/crc_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/DMA/dma_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/DMA/dma_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/FLC/flc_common.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/FLC/flc_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/FLC/flc_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/GPIO/gpio_common.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/GPIO/gpio_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/GPIO/gpio_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/I2C/i2c_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/I2C/i2c_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/I2S/i2s_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/I2S/i2s_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/ICC/icc_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/ICC/icc_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/LP/lp_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/LPCMP/lpcmp_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/LPCMP/lpcmp_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/OWM/owm_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/OWM/owm_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/PT/pt_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/PT/pt_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/RTC/rtc_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/RTC/rtc_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SEMA/sema_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SEMA/sema_reva.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SPI/spi_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/SPI/spi_reva1.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/TRNG/trng_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/TRNG/trng_revb.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/TMR/tmr_common.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/TMR/tmr_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/TMR/tmr_revb.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_common.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_revb.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/WDT/wdt_common.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/WDT/wdt_me17.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/WDT/wdt_revb.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/WUT/wut_ai85.c
+  CC    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/WUT/wut_reva.c
+  AR    /home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/bin/MAX78000/softfp/libPeriphDriver_softfp.a
+make[1]: Leaving directory '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor'
 
-2024-02-11 18:56:21.818 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
-In function 'valid_packet',
-    inlined from 'component_process_cmd' at src/component.c:179:9:
-src/component.c:172:11: warning: array subscript 'outer_layer[0]' is partly outside array bounds of 'uint8_t[256]' {aka 'unsigned char[256]'} [-Warray-bounds]
-  172 |     char *received_key = outer->auth_key;
-      |           ^~~~~~~~~~~~
-src/component.c: In function 'component_process_cmd':
-src/component.c:103:9: note: object 'receive_buffer' of size 256
-  103 | uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-      |         ^~~~~~~~~~~~~~
-src/component.c:181:40: warning: array subscript 'outer_layer[0]' is partly outside array bounds of 'uint8_t[256]' {aka 'unsigned char[256]'} [-Warray-bounds]
-  181 |         command_message command = outer->c_message;
-      |                                        ^~
-src/component.c:103:9: note: object 'receive_buffer' of size 256
-  103 | uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-      |         ^~~~~~~~~~~~~~
-make: *** No rule to make target '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/component/build/crypt_blowfish.o', needed by '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/component/build/max78000.elf'.  Stop.
-
-2024-02-11 18:56:21.824 | ERROR    | ectf_tools.build_comp:build_component:94 - Error: tool did not build properly
+2024-02-12 18:45:38.364 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+make: *** No rule to make target '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/crypt_blowfish.o', needed by '/home/eCTF1/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/max78000.elf'.  Stop.
