@@ -1,0 +1,28 @@
+2024-02-12 15:00:03.793 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
+In file included from inc/aes.h:44,
+                 from src/component.c:25:
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/aes_key_regs.h:43:2: warning: #warning "DEPRECATED(1-10-2023): aes_key_regs.h - Scheduled for removal. Please use aeskeys_regs.h." [-Wcpp]
+   43 | #warning "DEPRECATED(1-10-2023): aes_key_regs.h - Scheduled for removal. Please use aeskeys_regs.h."
+      |  ^~~~~~~
+src/component.c: In function 'process_attest':
+src/component.c:272:21: warning: passing argument 1 of 'AES_encrypt' makes integer from pointer without a cast [-Wint-conversion]
+  272 |         AES_encrypt(&transmit_buffer[i * 16],
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~
+      |                     |
+      |                     uint8_t * {aka unsigned char *}
+src/component.c:236:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  236 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                 ~~~~^~~~~~~~~~~~
+src/component.c:273:21: error: incompatible type for argument 2 of 'AES_encrypt'
+  273 |                     external_aes_key); // Encrypt 128-bit segment (16 bytes)
+      |                     ^~~~~~~~~~~~~~~~
+      |                     |
+      |                     const char *
+src/component.c:236:50: note: expected 'mxc_aes_keys_t' but argument is of type 'const char *'
+  236 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                                   ~~~~~~~~~~~~~~~^~~
+make: *** [/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/component/build/component.o] Error 1
+
+2024-02-12 15:00:03.793 | ERROR    | ectf_tools.build_comp:build_component:94 - Error: tool did not build properly
+ERROR: Failed to build Component A.

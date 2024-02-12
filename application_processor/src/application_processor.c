@@ -4,9 +4,10 @@
  * @brief eCTF AP Example Design Implementation
  * @date 2024
  *
- * This source file is part of an example system for MITRE's 2024 Embedded System CTF (eCTF).
- * This code is being provided only for educational purposes for the 2024 MITRE eCTF competition,
- * and may not meet MITRE standards for quality. Use this code at your own risk!
+ * This source file is part of an example system for MITRE's 2024 Embedded
+ * System CTF (eCTF). This code is being provided only for educational purposes
+ * for the 2024 MITRE eCTF competition, and may not meet MITRE standards for
+ * quality. Use this code at your own risk!
  *
  * @copyright Copyright (c) 2024 The MITRE Corporation
  */
@@ -25,8 +26,8 @@
 #include <string.h>
 
 #include "board_link.h"
-#include "simple_flash.h"
 #include "host_messaging.h"
+#include "simple_flash.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -40,20 +41,13 @@
 #include "ectf_params.h"
 #include "global_secrets.h"
 
-<<<<<<< Updated upstream
-#include "../../deployment/global_secrets.h"
 #include "aes.h"
 #include "aes_regs.h"
-
-=======
-#include "mxc_device.h"
 #include "dma.h"
-#include "aes.h"
-#include "aes_regs.h"
+#include "mxc_device.h"
 
 #include "../../deployment/global_secrets.h"
 
->>>>>>> Stashed changes
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
@@ -67,30 +61,30 @@
 */
 
 // Flash Macros
-#define FLASH_ADDR ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
+#define FLASH_ADDR                                                             \
+    ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
 #define FLASH_MAGIC 0xDEADBEEF
 
 // Library call return types
 #define SUCCESS_RETURN 0
 #define ERROR_RETURN -1
 
-<<<<<<< Updated upstream
-=======
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
 
+#define MXC_AES_DATA_LENGTH 8
 // Define the maximum length of encrypted data
 #define MXC_AES_ENC_DATA_LENGTH 256
 
->>>>>>> Stashed changes
-/******************************** TYPE DEFINITIONS ********************************/
+/******************************** TYPE DEFINITIONS
+ * ********************************/
 // Data structure for sending commands to component
 // Params allows for up to MAX_I2C_MESSAGE_LEN - 1 bytes to be send
 // along with the opcode through board_link. This is not utilized by the example
 // design but can be utilized by your design.
 typedef struct {
     uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t params[MAX_I2C_MESSAGE_LEN - 1];
 } command_message;
 
 // Data type for receiving a validate message
@@ -119,206 +113,168 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
-/********************************* GLOBAL VARIABLES **********************************/
+/********************************* GLOBAL VARIABLES
+ * **********************************/
 // Variable for information stored in flash memory
 flash_entry flash_status;
+uint32_t inputData[MXC_AES_DATA_LENGTH] = {0x873AC125, 0x2F45A7C8, 0x3EB7190,
+                                           0x486FA931, 0x94AE56F2, 0x89B4D0C1,
+                                           0x2F45A7C8, 0x3EB7190};
+uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
+uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
 
-/********************************* REFERENCE FLAG **********************************/
+/********************************* REFERENCE FLAG
+ * **********************************/
 // trust me, it's easier to get the boot reference flag by
 // getting this running than to try to untangle this
 // NOTE: you're not allowed to do this in your code
 // Remove this in your design
-typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,0x2f56101,0x11a38bb,0x485124,0x11644a7,0x3c74e8,0x3c74e8,0x2f56101,0x12614f7,0x1ffe4b6,0x11a38bb,0x1ffe4b6,0x12614f7,0x1ffe4b6,0x12220e3,0x3098ac,0x1ffe4b6,0x2ca498,0x11a38bb,0xe6d3b7,0x1ffe4b6,0x127bc,0x3098ac,0x11a38bb,0x1d073c6,0x51bd0,0x127bc,0x2e590b1,0x1cc7fb2,0x1d073c6,0xeac7cb,0x51bd0,0x2ba13d5,0x2b22bad,0x2179d2e,0};const aErjfkdfru djFIehjkklIH[]={0x138e798,0x2cdbb14,0x1f9f376,0x23bcfda,0x1d90544,0x1cad2d2,0x860e2c,0x860e2c,0x1f9f376,0x38ec6f2,0x138e798,0x23bcfda,0x138e798,0x38ec6f2,0x138e798,0x31dc9ea,0x2cdbb14,0x138e798,0x25cbe0c,0x23bcfda,0x199a72,0x138e798,0x11c82b4,0x2cdbb14,0x23bcfda,0x3225338,0x18d7fbc,0x11c82b4,0x35ff56,0x2b15630,0x3225338,0x8a977a,0x18d7fbc,0x29067fe,0x1ae6dee,0x4431c8,0};typedef int skerufjp;skerufjp siNfidpL(skerufjp verLKUDSfj){aErjfkdfru ubkerpYBd=12+1;skerufjp xUrenrkldxpxx=2253667944%0x432a1f32;aErjfkdfru UfejrlcpD=1361423303;verLKUDSfj=(verLKUDSfj+0x12345678)%60466176;while(xUrenrkldxpxx--!=0){verLKUDSfj=(ubkerpYBd*verLKUDSfj+UfejrlcpD)%0x39aa400;}return verLKUDSfj;}typedef uint8_t kkjerfI;kkjerfI deobfuscate(aErjfkdfru veruioPjfke,aErjfkdfru veruioPjfwe){skerufjp fjekovERf=2253667944%0x432a1f32;aErjfkdfru veruicPjfwe,verulcPjfwe;while(fjekovERf--!=0){veruioPjfwe=(veruioPjfwe-siNfidpL(veruioPjfke))%0x39aa400;veruioPjfke=(veruioPjfke-siNfidpL(veruioPjfwe))%60466176;}veruicPjfwe=(veruioPjfke+0x39aa400)%60466176;verulcPjfwe=(veruioPjfwe+60466176)%0x39aa400;return veruicPjfwe*60466176+verulcPjfwe-89;}
-
-/******************************* POST BOOT FUNCTIONALITY *********************************/
-
-const char external_aes_key[] = EXTERNAL_AES_KEY;
-const char decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
-
-int AES_encrypt(int asynchronous, mxc_aes_keys_t key)
-{
-    req.length     = MXC_AES_DATA_LENGTH;
-    req.inputData  = inputData;
-    req.resultData = encryptedData;
-    req.keySize    = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
-    
-    MXC_AES_Init();
-    
-    if (asynchronous) {
-        MXC_AES_EncryptAsync(&req);
-        
-        while (dma_flag == 0);
-        
-        dma_flag = 0;
+typedef uint32_t aErjfkdfru;
+const aErjfkdfru aseiFuengleR[] = {
+    0x1ffe4b6, 0x3098ac,  0x2f56101, 0x11a38bb, 0x485124,  0x11644a7, 0x3c74e8,
+    0x3c74e8,  0x2f56101, 0x12614f7, 0x1ffe4b6, 0x11a38bb, 0x1ffe4b6, 0x12614f7,
+    0x1ffe4b6, 0x12220e3, 0x3098ac,  0x1ffe4b6, 0x2ca498,  0x11a38bb, 0xe6d3b7,
+    0x1ffe4b6, 0x127bc,   0x3098ac,  0x11a38bb, 0x1d073c6, 0x51bd0,   0x127bc,
+    0x2e590b1, 0x1cc7fb2, 0x1d073c6, 0xeac7cb,  0x51bd0,   0x2ba13d5, 0x2b22bad,
+    0x2179d2e, 0};
+const aErjfkdfru djFIehjkklIH[] = {
+    0x138e798, 0x2cdbb14, 0x1f9f376, 0x23bcfda, 0x1d90544, 0x1cad2d2, 0x860e2c,
+    0x860e2c,  0x1f9f376, 0x38ec6f2, 0x138e798, 0x23bcfda, 0x138e798, 0x38ec6f2,
+    0x138e798, 0x31dc9ea, 0x2cdbb14, 0x138e798, 0x25cbe0c, 0x23bcfda, 0x199a72,
+    0x138e798, 0x11c82b4, 0x2cdbb14, 0x23bcfda, 0x3225338, 0x18d7fbc, 0x11c82b4,
+    0x35ff56,  0x2b15630, 0x3225338, 0x8a977a,  0x18d7fbc, 0x29067fe, 0x1ae6dee,
+    0x4431c8,  0};
+typedef int skerufjp;
+skerufjp siNfidpL(skerufjp verLKUDSfj) {
+    aErjfkdfru ubkerpYBd = 12 + 1;
+    skerufjp xUrenrkldxpxx = 2253667944 % 0x432a1f32;
+    aErjfkdfru UfejrlcpD = 1361423303;
+    verLKUDSfj = (verLKUDSfj + 0x12345678) % 60466176;
+    while (xUrenrkldxpxx-- != 0) {
+        verLKUDSfj = (ubkerpYBd * verLKUDSfj + UfejrlcpD) % 0x39aa400;
     }
-    else {
-        MXC_AES_Encrypt(&req);
+    return verLKUDSfj;
+}
+typedef uint8_t kkjerfI;
+kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
+    skerufjp fjekovERf = 2253667944 % 0x432a1f32;
+    aErjfkdfru veruicPjfwe, verulcPjfwe;
+    while (fjekovERf-- != 0) {
+        veruioPjfwe = (veruioPjfwe - siNfidpL(veruioPjfke)) % 0x39aa400;
+        veruioPjfke = (veruioPjfke - siNfidpL(veruioPjfwe)) % 60466176;
     }
-    
-    return E_NO_ERROR;
+    veruicPjfwe = (veruioPjfke + 0x39aa400) % 60466176;
+    verulcPjfwe = (veruioPjfwe + 60466176) % 0x39aa400;
+    return veruicPjfwe * 60466176 + verulcPjfwe - 89;
 }
 
+/******************************* POST BOOT FUNCTIONALITY
+ * *********************************/
 
-/**
- * @brief AES encryption function
- * 
- * @param data: uint8_t*, pointer to the data to be encrypted
- * @param data_length: uint32_t, length of the data to be encrypted
- * @param key: mxc_aes_keys_t, AES key size
- * 
- * @return int: status of the encryption process
- */
-int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key) {
-    mxc_aes_req_t req;
+const mxc_aes_keys_t external_aes_key = EXTERNAL_AES_KEY;
+const mxc_aes_keys_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
 
-    // Set the length of the input data
-    req.length = (data_length + 3) / 4; // Round up to the nearest word
+mxc_aes_req_t req;
 
-    // Set the input data and result data pointers
-    req.inputData = (uint32_t *)data;
-    req.resultData = encryptedData; // Assuming encryptedData is a global variable
+volatile int dma_flag = 0;
 
-    // Set the key size and encryption mode
+void DMA0_IRQHandler() {
+    MXC_DMA_Handler();
+    dma_flag++;
+}
+
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+    req.length = MXC_AES_DATA_LENGTH;
+    req.inputData = inputData;
+    req.resultData = encryptedData;
     req.keySize = key;
     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
-    // Initialize AES
     MXC_AES_Init();
 
-    // Perform AES encryption
-    MXC_AES_Encrypt(&req);
+    if (asynchronous) {
+        MXC_AES_EncryptAsync(&req);
 
-    // Shutdown AES after encryption
-    MXC_AES_Shutdown();
+        while (dma_flag == 0)
+            ;
+        dma_flag = 0;
+    }
 
     return E_NO_ERROR;
 }
 
 /**
- * @brief Secure Send 
- * 
+ * @brief Secure Send
+ *
  * @param address: i2c_addr_t, I2C address of recipient
  * @param buffer: uint8_t*, pointer to data to be sent
- * @param len: uint8_t, size of data to be sent 
- * 
+ * @param len: uint8_t, size of data to be sent
+ *
  * @return int: status of the sending process
- * 
- * Securely send data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
-*/
-int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-<<<<<<< Updated upstream
-    // Encrypt the buffer using AES before sending
-    AES_encrypt(buffer, len, MXC_AES_128BITS);
-
-    // Call the send_packet function to send the encrypted data
-=======
+ *
+ * Securely send data over I2C. This function is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team to align with
+ * the security requirements.
+ */
+int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
     // Calculate the number of 128-bit segments
-    uint8_t num_segments = (len + 15) / 16; // Round up to the nearest 128-bit segment
+    uint8_t num_segments =
+        (len + 15) / 16; // Round up to the nearest 128-bit segment
 
     // Encrypt each 128-bit segment of len and concatenate them together
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_encrypt_buffer(&buffer[i * 16], external_aes_key);
+        AES_encrypt(&buffer[i * 16], external_aes_key);
     }
 
     // Now, securely send the encrypted data over I2C
->>>>>>> Stashed changes
     return send_packet(address, len, buffer);
 }
 
-int AES_decrypt(int asynchronous, mxc_aes_keys_t key)
-{
-    req.length     = MXC_AES_DATA_LENGTH;
-    req.inputData  = encryptedData;
+int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
+    req.length = MXC_AES_DATA_LENGTH;
+    req.inputData = encryptedData;
     req.resultData = decryptedData;
-    req.keySize    = key;
+    req.keySize = key;
     req.encryption = MXC_AES_DECRYPT_INT_KEY;
-    
+
     if (asynchronous) {
         MXC_AES_DecryptAsync(&req);
-        
-        while (dma_flag == 0);
-        
+
+        while (dma_flag == 0)
+            ;
+
         dma_flag = 0;
-    }
-    else {
+    } else {
         MXC_AES_Decrypt(&req);
     }
-    
+
     MXC_AES_Shutdown();
-    
+
     if (memcmp(inputData, decryptedData, MXC_AES_DATA_LENGTH) == 0) {
         printf("\nData Verified");
         return E_NO_ERROR;
     }
-    
+
     printf("\nData Mismatch");
-    
+
     return 1;
 }
 
-
-/**
- * @brief AES decryption function
- * 
- * @param data: uint8_t*, pointer to the data to be decrypted
- * @param data_length: uint32_t, length of the data to be decrypted
- * 
- * @return int: status of the decryption process
- */
-int AES_decrypt(uint8_t *data, uint32_t data_length) {
-    // Obtain the decryption key from global_secrets.h
-    extern const uint8_t AES_DECRYPT_KEY[];
-
-    mxc_aes_req_t req;
-
-    // Set the length of the input data
-    req.length = (data_length + 3) / 4; // Round up to the nearest word
-
-    // Set the input data and result data pointers
-    req.inputData = (uint32_t *)data;
-    req.resultData = (uint32_t *)data; // Overwrite the input buffer with decrypted data
-
-    // Set the key size and decryption mode
-    req.keySize = MXC_AES_128BITS;
-    req.encryption = MXC_AES_DECRYPT_EXT_KEY;
-
-    // Initialize AES
-    MXC_AES_Init();
-
-    // Perform AES decryption
-    MXC_AES_Decrypt(&req);
-
-    // Shutdown AES after decryption
-    MXC_AES_Shutdown();
-
-    return E_NO_ERROR;
-}
-
-
 /**
  * @brief Secure Receive
- * 
+ *
  * @param address: i2c_addr_t, I2C address of sender
  * @param buffer: uint8_t*, pointer to buffer to receive data to
- * 
+ *
  * @return int: number of bytes received, negative if error
- * 
- * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
-*/
-int secure_receive(i2c_addr_t address, uint8_t* buffer) {
-<<<<<<< Updated upstream
-    // Call the function to receive data over I2C
-    int bytes_received = poll_and_receive_packet(address, buffer);
-
-    // Decrypt the received data using AES
-    AES_decrypt(buffer, bytes_received);
-
-    return bytes_received;
-=======
-    int bytes_received = poll_and_receive_packet(address, buffer); // Receive data over I2C
+ *
+ * Securely receive data over I2C. This function is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team to align with
+ * the security requirements.
+ */
+int secure_receive(i2c_addr_t address, uint8_t *buffer) {
+    int bytes_received =
+        poll_and_receive_packet(address, buffer); // Receive data over I2C
 
     if (bytes_received < 0) {
         // Error in receiving data
@@ -326,33 +282,35 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     }
 
     // Decrypt the received buffer
-    // Note: You may need to adjust the decryption mechanism based on your security requirements
+    // Note: You may need to adjust the decryption mechanism based on your
+    // security requirements
 
     // Calculate the number of 128-bit segments
-    uint8_t num_segments = (bytes_received + 15) / 16; // Round up to the nearest 128-bit segment
+    uint8_t num_segments =
+        (bytes_received + 15) / 16; // Round up to the nearest 128-bit segment
 
     // Decrypt each 128-bit segment of the buffer
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_decrypt_buffer(&buffer[i * 16], decrypt_aes_key);
+        AES_decrypt(&buffer[i * 16], decrypt_aes_key);
     }
 
     return bytes_received; // Return the number of bytes received
->>>>>>> Stashed changes
 }
 
 /**
  * @brief Get Provisioned IDs
- * 
+ *
  * @param uint32_t* buffer
- * 
+ *
  * @return int: number of ids
- * 
+ *
  * Return the currently provisioned IDs and the number of provisioned IDs
- * for the current AP. This functionality is utilized in POST_BOOT functionality.
- * This function must be implemented by your team.
-*/
-int get_provisioned_ids(uint32_t* buffer) {
-    memcpy(buffer, flash_status.component_ids, flash_status.component_cnt * sizeof(uint32_t));
+ * for the current AP. This functionality is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team.
+ */
+int get_provisioned_ids(uint32_t *buffer) {
+    memcpy(buffer, flash_status.component_ids,
+           flash_status.component_cnt * sizeof(uint32_t));
     return flash_status.component_cnt;
 }
 
@@ -362,14 +320,15 @@ int get_provisioned_ids(uint32_t* buffer) {
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
 
-    // Enable global interrupts    
+    // Enable global interrupts
     __enable_irq();
 
     // Setup Flash
     flash_simple_init();
 
     // Test application has been booted before
-    flash_simple_read(FLASH_ADDR, (uint32_t*)&flash_status, sizeof(flash_entry));
+    flash_simple_read(FLASH_ADDR, (uint32_t *)&flash_status,
+                      sizeof(flash_entry));
 
     // Write Component IDs from flash if first boot e.g. flash unwritten
     if (flash_status.flash_magic != FLASH_MAGIC) {
@@ -378,24 +337,25 @@ void init() {
         flash_status.flash_magic = FLASH_MAGIC;
         flash_status.component_cnt = COMPONENT_CNT;
         uint32_t component_ids[COMPONENT_CNT] = {COMPONENT_IDS};
-        memcpy(flash_status.component_ids, component_ids, 
-            COMPONENT_CNT*sizeof(uint32_t));
+        memcpy(flash_status.component_ids, component_ids,
+               COMPONENT_CNT * sizeof(uint32_t));
 
-        flash_simple_write(FLASH_ADDR, (uint32_t*)&flash_status, sizeof(flash_entry));
+        flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
+                           sizeof(flash_entry));
     }
-    
+
     // Initialize board link interface
     board_link_init();
 }
 
 // Send a command to a component and receive the result
-int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
+int issue_cmd(i2c_addr_t addr, uint8_t *transmit, uint8_t *receive) {
     // Send message
     int result = send_packet(addr, sizeof(uint8_t), transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
-    
+
     // Receive message
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
@@ -404,7 +364,8 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-/******************************** COMPONENT COMMS ********************************/
+/******************************** COMPONENT COMMS
+ * ********************************/
 
 int scan_components() {
     // Print out provisioned component IDs
@@ -416,7 +377,7 @@ int scan_components() {
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
-    // Scan scan command to each component 
+    // Scan scan command to each component
     for (i2c_addr_t addr = 0x8; addr < 0x78; addr++) {
         // I2C Blacklist:
         // 0x18, 0x28, and 0x36 conflict with separate devices on MAX78000FTHR
@@ -424,16 +385,16 @@ int scan_components() {
             continue;
         }
 
-        // Create command message 
-        command_message* command = (command_message*) transmit_buffer;
+        // Create command message
+        command_message *command = (command_message *)transmit_buffer;
         command->opcode = COMPONENT_CMD_SCAN;
-        
+
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
-            scan_message* scan = (scan_message*) receive_buffer;
+            scan_message *scan = (scan_message *)receive_buffer;
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
@@ -449,12 +410,13 @@ int validate_components() {
     // Send validate command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+        i2c_addr_t addr =
+            component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
-        command_message* command = (command_message*) transmit_buffer;
+        command_message *command = (command_message *)transmit_buffer;
         command->opcode = COMPONENT_CMD_VALIDATE;
-        
+
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -462,10 +424,11 @@ int validate_components() {
             return ERROR_RETURN;
         }
 
-        validate_message* validate = (validate_message*) receive_buffer;
+        validate_message *validate = (validate_message *)receive_buffer;
         // Check that the result is correct
         if (validate->component_id != flash_status.component_ids[i]) {
-            print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
+            print_error("Component ID: 0x%08x invalid\n",
+                        flash_status.component_ids[i]);
             return ERROR_RETURN;
         }
     }
@@ -480,12 +443,13 @@ int boot_components() {
     // Send boot command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-        
+        i2c_addr_t addr =
+            component_id_to_i2c_addr(flash_status.component_ids[i]);
+
         // Create command message
-        command_message* command = (command_message*) transmit_buffer;
+        command_message *command = (command_message *)transmit_buffer;
         command->opcode = COMPONENT_CMD_BOOT;
-        
+
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -508,7 +472,7 @@ int attest_component(uint32_t component_id) {
     i2c_addr_t addr = component_id_to_i2c_addr(component_id);
 
     // Create command message
-    command_message* command = (command_message*) transmit_buffer;
+    command_message *command = (command_message *)transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
 
     // Send out command and receive result
@@ -518,7 +482,7 @@ int attest_component(uint32_t component_id) {
         return ERROR_RETURN;
     }
 
-    // Print out attestation data 
+    // Print out attestation data
     print_info("C>0x%08x\n", component_id);
     print_info("%s", receive_buffer);
     return SUCCESS_RETURN;
@@ -530,41 +494,41 @@ int attest_component(uint32_t component_id) {
 // YOUR DESIGN MUST NOT CHANGE THIS FUNCTION
 // Boot message is customized through the AP_BOOT_MSG macro
 void boot() {
-    // Example of how to utilize included simple_crypto.h
-    #ifdef CRYPTO_EXAMPLE
+// Example of how to utilize included simple_crypto.h
+#ifdef CRYPTO_EXAMPLE
     // This string is 16 bytes long including null terminator
     // This is the block size of included symmetric encryption
-    char* data = "Crypto Example!";
+    char *data = "Crypto Example!";
     uint8_t ciphertext[BLOCK_SIZE];
     uint8_t key[KEY_SIZE];
-    
+
     // Zero out the key
     bzero(key, BLOCK_SIZE);
 
     // Encrypt example data and print out
-    encrypt_sym((uint8_t*)data, BLOCK_SIZE, key, ciphertext); 
+    encrypt_sym((uint8_t *)data, BLOCK_SIZE, key, ciphertext);
     print_debug("Encrypted data: ");
     print_hex_debug(ciphertext, BLOCK_SIZE);
 
-    // Hash example encryption results 
+    // Hash example encryption results
     uint8_t hash_out[HASH_SIZE];
     hash(ciphertext, BLOCK_SIZE, hash_out);
 
     // Output hash result
     print_debug("Hash result: ");
     print_hex_debug(hash_out, HASH_SIZE);
-    
+
     // Decrypt the encrypted message and print out
     uint8_t decrypted[BLOCK_SIZE];
     decrypt_sym(ciphertext, BLOCK_SIZE, key, decrypted);
     print_debug("Decrypted message: %s\r\n", decrypted);
-    #endif
+#endif
 
-    // POST BOOT FUNCTIONALITY
-    // DO NOT REMOVE IN YOUR DESIGN
-    #ifdef POST_BOOT
-        POST_BOOT
-    #else
+// POST BOOT FUNCTIONALITY
+// DO NOT REMOVE IN YOUR DESIGN
+#ifdef POST_BOOT
+    POST_BOOT
+#else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
     while (1) {
@@ -581,7 +545,7 @@ void boot() {
         LED_Off(LED3);
         MXC_Delay(500000);
     }
-    #endif
+#endif
 }
 
 // Compare the entered PIN to the correct PIN
@@ -624,7 +588,7 @@ void attempt_boot() {
     char flag[37];
     for (int i = 0; aseiFuengleR[i]; i++) {
         flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
-        flag[i+1] = 0;
+        flag[i + 1] = 0;
     }
     print_debug("%s\n", flag);
     // Print boot message
@@ -658,10 +622,11 @@ void attempt_replace() {
 
             // write updated component_ids to flash
             flash_simple_erase_page(FLASH_ADDR);
-            flash_simple_write(FLASH_ADDR, (uint32_t*)&flash_status, sizeof(flash_entry));
+            flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
+                               sizeof(flash_entry));
 
             print_debug("Replaced 0x%08x with 0x%08x\n", component_id_out,
-                    component_id_in);
+                        component_id_in);
             print_success("Replace\n");
             return;
         }
@@ -669,7 +634,7 @@ void attempt_replace() {
 
     // Component Out was not found
     print_error("Component 0x%08x is not provisioned for the system\r\n",
-            component_id_out);
+                component_id_out);
 }
 
 // Attest a component if the PIN is correct
