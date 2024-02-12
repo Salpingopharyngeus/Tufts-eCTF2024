@@ -22,9 +22,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include "host_messaging.h"
-
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#ifdef CRYPTO_EXAMPLE
+#include "simple_crypto.h"
+#endif
 
 // Includes from containerized build
 #include "ectf_params.h"
@@ -64,7 +66,7 @@ typedef enum {
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
-    //uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
 } command_message;
 
 typedef struct {
@@ -92,6 +94,30 @@ void print(const char *message);
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+
+bool arrays_equal(uint8_t params1[MAX_I2C_MESSAGE_LEN-1], uint8_t params2[MAX_I2C_MESSAGE_LEN-1]) {
+    for (int i = 0; i < MAX_I2C_MESSAGE_LEN-1; i++) {
+        if (params1[i] != params2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
+
+char* array_to_str(uint8_t array[MAX_I2C_MESSAGE_LEN-1]) {
+    int maxStrLen = (MAX_I2C_MESSAGE_LEN - 1) * 2 + 1;
+    char* paramsStr[maxStrLen];
+    paramsStr[0] = '\0'; 
+    char tempStr[3];
+
+    for (int i = 0; i < MAX_I2C_MESSAGE_LEN - 1; i++) {
+        snprintf(tempStr, sizeof(tempStr), "%02X", array[i]);
+        strncat(paramsStr, tempStr, 3); 
+    }
+   return paramsStr;
+}
 
 
 void print(const char *message) {
@@ -170,21 +196,6 @@ void boot() {
     #endif
 }
 
-// bool valid_packet(uint8_t* receive_buffer){
-//     //print("Validating received packet");    
-//     if (sizeof(outer_layer) <= MAX_I2C_MESSAGE_LEN) {
-//         outer_layer* outer = (outer_layer*) receive_buffer;
-//         // Validate the auth_key only if the command opcode is within expected range
-//         char *received_key = outer->auth_key;
-
-//         // Ensure that the received_key is not NULL
-//         return strcmp(received_key, KEY) == 0;
-       
-//     }
-//     // Return false if any validation fails
-//     return false;
-// }
-
 // Handle a transaction from the AP
 void component_process_cmd() {
     //print("processing command packet");
@@ -193,7 +204,6 @@ void component_process_cmd() {
     // command_message command = outer->c_message;
     // uint32_t value = outer->key;
     command_message* command = (command_message*) receive_buffer;
-
     // Output to application processor dependent on command received
     //if (!strcmp("test", "test")) {
     switch (command->opcode) {
@@ -204,6 +214,20 @@ void component_process_cmd() {
             process_scan();
             break;
         case COMPONENT_CMD_VALIDATE:
+            char* key = "hello";
+            uint8_t hash_out[HASH_SIZE];
+            hash(key, BLOCK_SIZE, hash_out);
+            uint8_t recreate_hash[MAX_I2C_MESSAGE_LEN-1];
+            //print("Recreating hash!");
+            
+            //print("checking hashes!");
+            char* recreated_hash_to_str = array_to_str(recreate_hash);
+            char* received_hash_to_str = array_to_str(command->params);
+            if (strcmp(recreated_hash_to_str, received_hash_to_str) != 0) {
+                free(recreated_hash_to_str);
+                free(received_hash_to_str);
+                break;
+            }
             process_validate();
             break;
         case COMPONENT_CMD_ATTEST:
