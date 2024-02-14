@@ -9,7 +9,7 @@ pkgs.mkShell {
     pkgs.gcc-arm-embedded
     pkgs.poetry
     pkgs.cacert
-    #(pkgs.callPackage analog_openocd.nix { })
+    (pkgs.callPackage ./analog_openocd.nix { })
     pkgs.minicom
   ];
 

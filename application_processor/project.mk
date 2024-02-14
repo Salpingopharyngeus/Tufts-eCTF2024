@@ -22,11 +22,12 @@ IPATH+=../deployment
 IPATH+=inc/
 VPATH+=src/
 
-VPATH+= /crypt-blowfish
+VPATH+= /src/crypt-blowfish
 
 # Custom rule for compiling crypt_blowfish.c
-application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
+application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/src/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
 	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
+crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.h
 
 # Add the source files of crypt_blowfish directly for compilation
 SRCS += /crypt-blowfish/crypt_blowfish.c \
