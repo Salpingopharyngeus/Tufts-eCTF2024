@@ -55,21 +55,3 @@ LDFLAGS += -L/crypt-blowfish
 # Inform the linker to use the crypt_blowfish library
 LDFLAGS += -lcrypt_blowfish
 
-
-# ****************** eCTF Bootloader *******************
-# DO NOT REMOVE
-LINKERFILE=firmware.ld
-STARTUPFILE=startup_firmware.S
-ENTRY=firmware_startup
-
-# ****************** eCTF Crypto Example *******************
-# Uncomment the commented lines below and comment the disable
-# lines to enable the eCTF Crypto Example.
-# WolfSSL must be included in this directory as wolfssl/
-# WolfSSL can be downloaded from: https://www.wolfssl.com/download/
-
-# Disable Crypto Example
-CRYPTO_EXAMPLE=0
-
-# Enable Crypto Example
-#CRYPTO_EXAMPLE=1

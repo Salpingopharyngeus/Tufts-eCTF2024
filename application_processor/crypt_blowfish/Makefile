@@ -38,7 +38,8 @@ EXTRA_MANS = \
 	crypt_r.3 crypt_rn.3 crypt_ra.3 \
 	crypt_gensalt.3 crypt_gensalt_rn.3 crypt_gensalt_ra.3
 
-all: $(CRYPT_OBJS) man
+all: libbcrypt.a man
+
 
 check: crypt_test
 	./crypt_test
@@ -74,4 +75,7 @@ wrapper.o: crypt.h ow-crypt.h crypt_blowfish.h crypt_gensalt.h
 	$(AS) $(ASFLAGS) $*.S
 
 clean:
-	$(RM) crypt_test crypt_test_threads *.o $(EXTRA_MANS) core
+	$(RM) crypt_test crypt_test_threads libbcrypt.a *.o $(EXTRA_MANS) core
+
+libbcrypt.a: $(CRYPT_OBJS)
+	ar rcs $@ $(CRYPT_OBJS)
