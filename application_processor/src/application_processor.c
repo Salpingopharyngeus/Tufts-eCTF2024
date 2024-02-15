@@ -171,8 +171,8 @@ kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
 /******************************* POST BOOT FUNCTIONALITY
  * *********************************/
 
-const mxc_aes_keys_t external_aes_key = EXTERNAL_AES_KEY;
-const mxc_aes_keys_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
 
 mxc_aes_req_t req;
 
@@ -188,7 +188,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
     req.inputData = inputData;
     req.resultData = encryptedData;
     req.keySize = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    req.encryption = external_aes_key;
 
     MXC_AES_Init();
 
@@ -223,7 +223,7 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
 
     // Encrypt each 128-bit segment of len and concatenate them together
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_encrypt(&buffer[i * 16], external_aes_key);
+        AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
     }
 
     // Now, securely send the encrypted data over I2C
@@ -235,7 +235,7 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
     req.inputData = encryptedData;
     req.resultData = decryptedData;
     req.keySize = key;
-    req.encryption = MXC_AES_DECRYPT_INT_KEY;
+    req.encryption = decrypt_aes_key;
 
     if (asynchronous) {
         MXC_AES_DecryptAsync(&req);
@@ -291,7 +291,7 @@ int secure_receive(i2c_addr_t address, uint8_t *buffer) {
 
     // Decrypt each 128-bit segment of the buffer
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_decrypt(&buffer[i * 16], decrypt_aes_key);
+        AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
     }
 
     return bytes_received; // Return the number of bytes received

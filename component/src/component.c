@@ -119,7 +119,7 @@ mxc_aes_req_t req;
 
 volatile int dma_flag = 0;
 
-const mxc_aes_keys_t external_aes_key = EXTERNAL_AES_KEY;
+const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
 
 /******************************* POST BOOT FUNCTIONALITY
  * *********************************/
@@ -270,7 +270,7 @@ void process_attest() {
     // Encrypt each 128-bit segment of len and concatenate them together
     for (uint32_t i = 0; i < num_segments; ++i) {
         AES_encrypt(&transmit_buffer[i * 16],
-                    external_aes_key); // Encrypt 128-bit segment (16 bytes)
+                    MXC_AES_128BITS); // Encrypt 128-bit segment (16 bytes)
     }
 
     // Send the encrypted len and the attestation data
