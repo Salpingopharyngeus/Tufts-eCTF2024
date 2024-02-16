@@ -1,292 +1,393 @@
-/**
- * @file component.c
- * @author Jacob Doll 
- * @brief eCTF Component Example Design Implementation
- * @date 2024
- *
- * This source file is part of an example system for MITRE's 2024 Embedded System CTF (eCTF).
- * This code is being provided only for educational purposes for the 2024 MITRE eCTF competition,
- * and may not meet MITRE standards for quality. Use this code at your own risk!
- *
- * @copyright Copyright (c) 2024 The MITRE Corporation
- */
+2024-02-16 16:08:59.292 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
+/home/kali/Desktop/Tufts-eCTF2024
+Loaded project.mk
+Loaded project.mk
+  CC    src/application_processor.c
 
-#include "board.h"
-#include "i2c.h"
-#include "led.h"
-#include "mxc_delay.h"
-#include "mxc_errors.h"
-#include "nvic_table.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include "host_messaging.h"
-
-#include "simple_i2c_peripheral.h"
-#include "board_link.h"
-
-// Includes from containerized build
-#include "ectf_params.h"
-#include "global_secrets.h"
-
-#ifdef POST_BOOT
-#include "led.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include "mxc_device.h"
-#include "board.h"
-#include "dma.h"
-#endif
-
-// AES encryption related includes
-#include "aes.h"
-#include "aes_regs.h"
-
-// Define the maximum length of encrypted data
-#define MXC_AES_ENC_DATA_LENGTH 256
-
-/********************************* CONSTANTS **********************************/
-
-// Passed in through ectf-params.h
-// Example of format of ectf-params.h shown here
-/*
-#define COMPONENT_ID 0x11111124
-#define COMPONENT_BOOT_MSG "Component boot"
-#define ATTESTATION_LOC "McLean"
-#define ATTESTATION_DATE "08/08/08"
-#define ATTESTATION_CUSTOMER "Fritz"
-*/
-
-/******************************** TYPE DEFINITIONS ********************************/
-// Commands received by Component using 32 bit integer
-typedef enum {
-    COMPONENT_CMD_NONE,
-    COMPONENT_CMD_SCAN,
-    COMPONENT_CMD_VALIDATE,
-    COMPONENT_CMD_BOOT,
-    COMPONENT_CMD_ATTEST
-} component_cmd_t;
-
-/******************************** TYPE DEFINITIONS ********************************/
-// Data structure for receiving messages from the AP
-typedef struct {
-    uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
-} command_message;
-
-typedef struct {
-    uint32_t component_id;
-} validate_message;
-
-typedef struct {
-    uint32_t component_id;
-} scan_message;
-
-typedef struct {
-    command_message c_message;
-    char *auth_key;
-} outer_layer;
-/********************************* FUNCTION DECLARATIONS **********************************/
-// Core function definitions
-void component_process_cmd(void);
-void process_boot(void);
-void process_scan(void);
-void process_validate(void);
-void process_attest(void);
-
-// AES encryption function
-int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
-
-/********************************* GLOBAL VARIABLES **********************************/
-// Global varaibles
-uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
-
-/******************************* POST BOOT FUNCTIONALITY *********************************/
-/**
- * @brief Secure Send 
- * 
- * @param buffer: uint8_t*, pointer to data to be send
- * @param len: uint8_t, size of data to be sent 
- * 
- * Securely send data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
-*/
-void secure_send(uint8_t* buffer, uint8_t len) {
-    send_packet_and_ack(len, buffer); 
-}
-
-/**
- * @brief Secure Receive
- * 
- * @param buffer: uint8_t*, pointer to buffer to receive data to
- * 
- * @return int: number of bytes received, negative if error
- * 
- * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
-*/
-int secure_receive(uint8_t* buffer) {
-    return wait_and_receive_packet(buffer);
-}
-
-/******************************* FUNCTION DEFINITIONS *********************************/
-
-// Example boot sequence
-// Your design does not need to change this
-void boot() {
-
-    // POST BOOT FUNCTIONALITY
-    // DO NOT REMOVE IN YOUR DESIGN
-    #ifdef POST_BOOT
-        POST_BOOT
-    #else
-    // Anything after this macro can be changed by your design
-    // but will not be run on provisioned systems
-    LED_Off(LED1);
-    LED_Off(LED2);
-    LED_Off(LED3);
-    // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
-    #endif
-}
-
-bool valid_packet(uint8_t* receive_buffer){
-    print_info("Validating received packet");    
-    outer_layer* outer = (outer_layer*) receive_buffer;
-    char *received_key = outer->auth_key;
-    return strcmp(received_key, KEY) == 0;
-}
-
-// Handle a transaction from the AP
-void component_process_cmd() {
-    print_info("processing command packet");
-    if (valid_packet(receive_buffer)) {
-        outer_layer* outer = (outer_layer*) receive_buffer;
-        command_message command = outer->c_message;
-
-        //command_message* command = (command_message*) receive_buffer;
-
-        // Output to application processor dependent on command received
-        switch (command.opcode) {
-        case COMPONENT_CMD_BOOT:
-            process_boot();
-            break;
-        case COMPONENT_CMD_SCAN:
-            process_scan();
-            break;
-        case COMPONENT_CMD_VALIDATE:
-            process_validate();
-            break;
-        case COMPONENT_CMD_ATTEST:
-            process_attest();
-            break;
-        default:
-            printf("Error: Unrecognized command received %d\n", command.opcode);
-            break;
-        }
-    }else {
-        print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
-    }
-    
-}
-
-void process_boot() {
-    // The AP requested a boot. Set `component_boot` for the main loop and
-    // respond with the boot message
-    uint8_t len = strlen(COMPONENT_BOOT_MSG) + 1;
-    memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
-    send_packet_and_ack(len, transmit_buffer);
-    // Call the boot function
-    boot();
-}
-
-void process_scan() {
-    // The AP requested a scan. Respond with the Component ID
-    scan_message* packet = (scan_message*) transmit_buffer;
-    packet->component_id = COMPONENT_ID;
-    send_packet_and_ack(sizeof(scan_message), transmit_buffer);
-}
-
-void process_validate() {
-    // The AP requested a validation. Respond with the Component ID
-    validate_message* packet = (validate_message*) transmit_buffer;
-    packet->component_id = COMPONENT_ID;
-    send_packet_and_ack(sizeof(validate_message), transmit_buffer);
-}
-
-// Modify the process_attest function to encrypt the len variable
-void process_attest() {
-    // The AP requested attestation. Respond with the attestation data
-    uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
-                ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
-
-    // Encrypt the len variable
-    AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
-
-    send_packet_and_ack(len, transmit_buffer);
-}
-
-// AES encryption function implementation
-int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
-{
-    mxc_aes_req_t req;
-
-    // Set the length of the input data
-    req.length = (data_length + 3) / 4; // Round up to the nearest word
-
-    // Set the input data and result data pointers
-    req.inputData = (uint32_t *)data;
-    req.resultData = encryptedData;
-
-    // Set the key size and encryption mode
-    req.keySize = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
-
-    // Initialize AES
-    MXC_AES_Init();
-
-    // Perform AES encryption
-    MXC_AES_Encrypt(&req);
-
-    // Shutdown AES after encryption
-    MXC_AES_Shutdown();
-
-    return E_NO_ERROR;
-}
-
-
-/*********************************** MAIN *************************************/
-
-int main(void) {
-    printf("Component Started\n");
-    
-    // Enable Global Interrupts
-    __enable_irq();
-    
-    // Initialize Component
-    i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
-    board_link_init(addr);
-    
-    LED_On(LED2);
-
-    while (1) {
-        wait_and_receive_packet(receive_buffer);
-        component_process_cmd();
-    }
-}
+2024-02-16 16:08:59.293 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+In file included from src/application_processor.c:49:
+src/../../deployment/global_secrets.h:5:11: warning: excess elements in scalar initializer
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:5:11: note: (near initialization for 'external_aes_key')
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:5:17: warning: excess elements in scalar initializer
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |                 ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:5:17: note: (near initialization for 'external_aes_key')
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |                 ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:5:23: warning: excess elements in scalar initializer
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |                       ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:5:23: note: (near initialization for 'external_aes_key')
+    5 |     0x13, 0x9a, 0x35, 0x42,     \
+      |                       ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:9: warning: excess elements in scalar initializer
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:9: note: (near initialization for 'external_aes_key')
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:15: warning: excess elements in scalar initializer
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:15: note: (near initialization for 'external_aes_key')
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:21: warning: excess elements in scalar initializer
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:21: note: (near initialization for 'external_aes_key')
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:27: warning: excess elements in scalar initializer
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:6:27: note: (near initialization for 'external_aes_key')
+    6 |         0x2f, 0x1d, 0x61, 0xde, \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:9: warning: excess elements in scalar initializer
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:9: note: (near initialization for 'external_aes_key')
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:15: warning: excess elements in scalar initializer
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:15: note: (near initialization for 'external_aes_key')
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:21: warning: excess elements in scalar initializer
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:21: note: (near initialization for 'external_aes_key')
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:27: warning: excess elements in scalar initializer
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:7:27: note: (near initialization for 'external_aes_key')
+    7 |         0x3c, 0x91, 0x78, 0x7f, \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:9: warning: excess elements in scalar initializer
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:9: note: (near initialization for 'external_aes_key')
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |         ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:15: warning: excess elements in scalar initializer
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:15: note: (near initialization for 'external_aes_key')
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |               ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:21: warning: excess elements in scalar initializer
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:21: note: (near initialization for 'external_aes_key')
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |                     ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:27: warning: excess elements in scalar initializer
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:8:27: note: (near initialization for 'external_aes_key')
+    8 |         0xe0, 0x50, 0x7a, 0xfd  \
+      |                           ^~~~
+src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
+  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
+      |                                             ^~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:11: warning: excess elements in scalar initializer
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:11: note: (near initialization for 'decrypt_aes_key')
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:17: warning: excess elements in scalar initializer
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |                 ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:17: note: (near initialization for 'decrypt_aes_key')
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |                 ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:23: warning: excess elements in scalar initializer
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |                       ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:13:23: note: (near initialization for 'decrypt_aes_key')
+   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
+      |                       ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:9: warning: excess elements in scalar initializer
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:9: note: (near initialization for 'decrypt_aes_key')
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:15: warning: excess elements in scalar initializer
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:15: note: (near initialization for 'decrypt_aes_key')
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:21: warning: excess elements in scalar initializer
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:21: note: (near initialization for 'decrypt_aes_key')
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:27: warning: excess elements in scalar initializer
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:14:27: note: (near initialization for 'decrypt_aes_key')
+   14 |         0x27, 0x3A, 0x61, 0xF2,   \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:9: warning: excess elements in scalar initializer
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:9: note: (near initialization for 'decrypt_aes_key')
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:15: warning: excess elements in scalar initializer
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:15: note: (near initialization for 'decrypt_aes_key')
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:21: warning: excess elements in scalar initializer
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:21: note: (near initialization for 'decrypt_aes_key')
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:27: warning: excess elements in scalar initializer
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:15:27: note: (near initialization for 'decrypt_aes_key')
+   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:9: warning: excess elements in scalar initializer
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:9: note: (near initialization for 'decrypt_aes_key')
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |         ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:15: warning: excess elements in scalar initializer
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:15: note: (near initialization for 'decrypt_aes_key')
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |               ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:21: warning: excess elements in scalar initializer
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:21: note: (near initialization for 'decrypt_aes_key')
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |                     ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:27: warning: excess elements in scalar initializer
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/../../deployment/global_secrets.h:16:27: note: (near initialization for 'decrypt_aes_key')
+   16 |         0x19, 0x72, 0xC6, 0x9D    \
+      |                           ^~~~
+src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/application_processor.c: In function 'secure_send':
+src/application_processor.c:226:21: warning: passing argument 1 of 'AES_encrypt' makes integer from pointer without a cast [-Wint-conversion]
+  226 |         AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
+      |                     ^~~~~~~~~~~~~~~
+      |                     |
+      |                     uint8_t * {aka unsigned char *}
+src/application_processor.c:186:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  186 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                 ~~~~^~~~~~~~~~~~
+src/application_processor.c: In function 'secure_receive':
+src/application_processor.c:294:21: warning: passing argument 1 of 'AES_decrypt' makes integer from pointer without a cast [-Wint-conversion]
+  294 |         AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
+      |                     ^~~~~~~~~~~~~~~
+      |                     |
+      |                     uint8_t * {aka unsigned char *}
+src/application_processor.c:233:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  233 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                 ~~~~^~~~~~~~~~~~
+src/application_processor.c: In function 'boot':
+src/application_processor.c:539:16: error: 'LED3' undeclared (first use in this function); did you mean 'LED1'?
+  539 |         LED_On(LED3);
+      |                ^~~~
+      |                LED1
+src/application_processor.c:539:16: note: each undeclared identifier is reported only once for each function it appears in
+make: *** [/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/kali/Desktop/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
