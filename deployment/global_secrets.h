@@ -1,4 +1,5 @@
 #define SECRET 1234
+/*
 #define KEY "TUFTS-eCTF2024"
 #define EXTERNAL_AES_KEY        \
   {                             \
@@ -14,4 +15,5 @@
         0x27, 0x3A, 0x61, 0xF2,   \
         0x0B, 0xD4, 0x8E, 0x4A,   \
         0x19, 0x72, 0xC6, 0x9D    \
-  }
+  } 
+  /*
