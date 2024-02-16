@@ -1,59 +1,14 @@
-2024-02-16 16:29:55.473 | INFO     | ectf_tools.build_ap:build_ap:52 - Creating parameters for build
-2024-02-16 16:29:55.474 | INFO     | ectf_tools.build_ap:build_ap:69 - Checking output paths
-2024-02-16 16:29:55.474 | INFO     | ectf_tools.build_ap:build_ap:80 - Running build
-2024-02-16 16:29:55.474 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd application_processor &&  make clean &&  make && make release &&  cp build/max78000.elf /home/kali/Desktop/Tufts-eCTF2024/build/ap.elf &&  cp build/max78000.bin /home/kali/Desktop/Tufts-eCTF2024/build/ap.bin"'
-2024-02-16 16:30:13.955 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
+2024-02-16 18:15:16.407 | INFO     | ectf_tools.build_ap:build_ap:52 - Creating parameters for build
+2024-02-16 18:15:16.407 | INFO     | ectf_tools.build_ap:build_ap:69 - Checking output paths
+2024-02-16 18:15:16.408 | INFO     | ectf_tools.build_ap:build_ap:71 - Removing old .elf output
+2024-02-16 18:15:16.408 | INFO     | ectf_tools.build_ap:build_ap:74 - Removing old .bin output
+2024-02-16 18:15:16.408 | INFO     | ectf_tools.build_ap:build_ap:77 - Removing old .img output
+2024-02-16 18:15:16.408 | INFO     | ectf_tools.build_ap:build_ap:80 - Running build
+2024-02-16 18:15:16.409 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd application_processor &&  make clean &&  make && make release &&  cp build/max78000.elf /home/kali/Desktop/Tufts-eCTF2024/build/ap.elf &&  cp build/max78000.bin /home/kali/Desktop/Tufts-eCTF2024/build/ap.bin"'
+2024-02-16 18:15:50.989 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
 /home/kali/Desktop/Tufts-eCTF2024
-Loaded project.mk
-Loaded project.mk
-  CC    src/application_processor.c
 
-2024-02-16 16:30:13.955 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
-In file included from src/application_processor.c:42:
-../deployment/global_secrets.h:19:3: warning: "/*" within comment [-Wcomment]
-   19 |   /*
-      |    
-../deployment/global_secrets.h:2:1: error: unterminated comment
-    2 | /*
-      | ^
-In file included from src/application_processor.c:49:
-src/../../deployment/global_secrets.h:19:3: warning: "/*" within comment [-Wcomment]
-   19 |   /*
-      |    
-src/../../deployment/global_secrets.h:2:1: error: unterminated comment
-    2 | /*
-      | ^
-src/application_processor.c:174:45: error: 'EXTERNAL_AES_KEY' undeclared here (not in a function)
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/application_processor.c:175:44: error: 'GLOBAL_AES_DECRYPTION_KEY' undeclared here (not in a function); did you mean 'MXC_AES_DECRYPT_INT_KEY'?
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-      |                                            MXC_AES_DECRYPT_INT_KEY
-src/application_processor.c: In function 'secure_send':
-src/application_processor.c:226:21: warning: passing argument 1 of 'AES_encrypt' makes integer from pointer without a cast [-Wint-conversion]
-  226 |         AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
-      |                     ^~~~~~~~~~~~~~~
-      |                     |
-      |                     uint8_t * {aka unsigned char *}
-src/application_processor.c:186:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  186 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
-      |                 ~~~~^~~~~~~~~~~~
-src/application_processor.c: In function 'secure_receive':
-src/application_processor.c:294:21: warning: passing argument 1 of 'AES_decrypt' makes integer from pointer without a cast [-Wint-conversion]
-  294 |         AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
-      |                     ^~~~~~~~~~~~~~~
-      |                     |
-      |                     uint8_t * {aka unsigned char *}
-src/application_processor.c:233:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  233 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
-      |                 ~~~~^~~~~~~~~~~~
-src/application_processor.c: In function 'boot':
-src/application_processor.c:539:16: error: 'LED3' undeclared (first use in this function); did you mean 'LED1'?
-  539 |         LED_On(LED3);
-      |                ^~~~
-      |                LED1
-src/application_processor.c:539:16: note: each undeclared identifier is reported only once for each function it appears in
-make: *** [/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/kali/Desktop/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
+2024-02-16 18:15:50.989 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+/home/kali/Desktop/Tufts-eCTF2024/application_processor/project.mk:47: *** "PERIPH_DRIVER_DIR must be specified".  Stop.
 
-2024-02-16 16:30:13.956 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+2024-02-16 18:15:50.990 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
