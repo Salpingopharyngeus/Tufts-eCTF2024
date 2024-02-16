@@ -269,7 +269,7 @@ void process_attest() {
 
     // Encrypt each 128-bit segment of len and concatenate them together
     for (uint32_t i = 0; i < num_segments; ++i) {
-        AES_encrypt(&transmit_buffer[i * 16],
+        AES_encrypt((u_int8_t)&transmit_buffer[i * 16],
                     MXC_AES_128BITS); // Encrypt 128-bit segment (16 bytes)
     }
 
