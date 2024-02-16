@@ -1,0 +1,36 @@
+/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/bin/MAX78000/softfp/uart_ai85.o: \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_ai85.c \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/uart.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/uart_regs.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdint.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdint.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_default_types.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/features.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_newlib_version.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_intsup.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_stdint.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_sys.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_device.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_errors.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_pins.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/gpio.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/lpgcr_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_device.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_pins.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/mxc_assert.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_revb.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Include/MAX78000/dma.h \
+ /nix/store/n4mprmdq79nbz8rqgwq0jb99y7kkk6ni-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdbool.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/dma_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_revb_regs.h \
+ /home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/../PeriphDrivers/Source/UART/uart_common.h
