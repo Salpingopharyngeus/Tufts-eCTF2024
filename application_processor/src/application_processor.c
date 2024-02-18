@@ -66,25 +66,27 @@
 // along with the opcode through board_link. This is not utilized by the example
 // design but can be utilized by your design.
 typedef struct {
-    uint8_t opcode;
-    uint8_t params[HASH_SIZE];
+    uint8_t opcode; // 1 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } command_message;
 
 // Data type for receiving a validate message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } scan_message;
 
 // Datatype for information stored in flash
 typedef struct {
-    uint32_t flash_magic;
-    uint32_t component_cnt;
-    uint32_t component_ids[32];
+    uint32_t flash_magic; // 4 bytes
+    uint32_t component_cnt; // 4 bytes
+    uint32_t component_ids[32]; // 4 bytes
 } flash_entry;
 
 // Datatype for commands sent to components
@@ -164,12 +166,6 @@ int get_provisioned_ids(uint32_t* buffer) {
     return flash_status.component_cnt;
 }
 
-void attach_key(command_message* command){
-    char* key = KEY;
-    uint8_t hash_out[HASH_SIZE];
-    hash(key, BLOCK_SIZE, hash_out);
-    memcpy(command->params, hash_out, HASH_SIZE);
-}
 /********************************* UTILITIES **********************************/
 
 // Initialize the device
@@ -200,6 +196,12 @@ void init() {
     // Initialize board link interface
     board_link_init();
 }
+void attach_key(command_message* command){
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+    memcpy(command->authkey, hash_out, HASH_SIZE);
+}
 
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
@@ -217,10 +219,21 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1)/sizeof(uint8_t);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
+
 /******************************** COMPONENT COMMS ********************************/
 
 int validate_components() {
-    print_debug("Validate components called!");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -240,6 +253,10 @@ int validate_components() {
             return ERROR_RETURN;
         }
         validate_message* validate = (validate_message*) receive_buffer;
+        if(!hash_equal(command->authkey, validate->authkey)){
+            print_error("Could not validate component\n");
+            return ERROR_RETURN;
+        }
         if (validate->component_id != flash_status.component_ids[i]) {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
             return ERROR_RETURN;
@@ -281,6 +298,9 @@ int scan_components() {
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
+            if(!hash_equal(command->authkey, scan->authkey)){
+                return ERROR_RETURN;
+            }
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
@@ -302,9 +322,14 @@ int boot_components() {
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_BOOT;
         attach_key(command);
-        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+
         if (len == ERROR_RETURN) {
+            print_error("Could not boot component\n");
+            return ERROR_RETURN;
+        }
+        // Validate received authkey hash
+        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
             print_error("Could not boot component\n");
             return ERROR_RETURN;
         }
@@ -330,6 +355,10 @@ int attest_component(uint32_t component_id) {
 
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {
+        print_error("Could not attest component\n");
+        return ERROR_RETURN;
+    }
+    if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
@@ -449,7 +478,7 @@ void attempt_boot() {
     print_info("AP>%s\n", AP_BOOT_MSG);
     print_success("Boot\n");
     // Boot
-    boot();
+    //boot();
 }
 
 // Replace a component if the PIN is correct

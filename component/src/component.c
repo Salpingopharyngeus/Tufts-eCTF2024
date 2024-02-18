@@ -66,20 +66,20 @@ typedef enum {
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
-    uint8_t params[HASH_SIZE];
+    uint8_t authkey[HASH_SIZE];
 } command_message;
 
 typedef struct {
     uint32_t component_id;
+    uint8_t authkey[HASH_SIZE];
 } validate_message;
 
 typedef struct {
-    uint8_t test_message[MAX_I2C_MESSAGE_LEN-1];
-} test;
-
-typedef struct {
     uint32_t component_id;
+    uint8_t authkey[HASH_SIZE];
 } scan_message;
+
+
 
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
@@ -108,30 +108,6 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     return true;
 }
 
-bool strings_equal(const char* str1, const char* str2) {
-    return strcmp(str1, str2) == 0;
-}
-
-char* hash_to_str(uint8_t *buf, size_t len) {
-    // Allocate memory for the string buffer
-    char *hash_str = malloc(len * 2 + 1); // Each byte requires 2 characters (hexadecimal representation) plus '\0'
-    if (hash_str == NULL) {
-        // Handle memory allocation failure
-        return NULL;
-    }
-    
-    // Iterate over the hash buffer and format it into the string buffer
-    int offset = 0;
-    for (int i = 0; i < len; i++) {
-        offset += sprintf(hash_str + offset, "%02x", buf[i]);
-    }
-    
-    // Terminate the string
-    hash_str[offset] = '\0';
-    
-    // Return the dynamically allocated string buffer
-    return hash_str;
-}
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
  * @brief Secure Send 
@@ -196,42 +172,36 @@ void boot() {
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    print_debug("PROCESS COMMAND\n");
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
     
-    // Check authenticity of the packet
-    print_debug("RECEIVED HASH: \n");
-    print_hex_debug(command->params, HASH_SIZE);
-
-    print_debug("RECREATED HASH: \n");
+    // Recreate authkey hash 
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, BLOCK_SIZE, hash_out);
-    uint8_t recreate_hash[HASH_SIZE];
-    memcpy(recreate_hash, hash_out, HASH_SIZE);
-    print_hex_debug(recreate_hash, HASH_SIZE);
+    hash(key, HASH_SIZE, hash_out);
 
-    // Check validity of hash
-    if (hash_equal(command->params, recreate_hash)){
-        print_debug("HASHES MATCH!\n");
-    }
-    switch (command->opcode) {
-        case COMPONENT_CMD_BOOT:
-            process_boot();
-            break;
-        case COMPONENT_CMD_SCAN:
-            process_scan();
-            break;
-        case COMPONENT_CMD_VALIDATE:     
-            process_validate();
-            break;
-        case COMPONENT_CMD_ATTEST:
-            process_attest();
-            break;
-        default:
-            //print("Error: Unrecognized command received");
-            break;
+    // Check validity of authkey hash
+    if (hash_equal(command->authkey, hash_out)){
+        print_debug("AP and Components are valid!\n");
+        switch (command->opcode) {
+            case COMPONENT_CMD_BOOT:
+                process_boot();
+                break;
+            case COMPONENT_CMD_SCAN:
+                process_scan();
+                break;
+            case COMPONENT_CMD_VALIDATE:     
+                process_validate();
+                break;
+            case COMPONENT_CMD_ATTEST:
+                process_attest();
+                break;
+            default:
+                //print("Error: Unrecognized command received");
+                break;
+        }
+    }else{
+        print_error("Conflicting Authentication Hashes!\n");
     }
 }
 
@@ -239,16 +209,35 @@ void process_boot() {
     // The AP requested a boot. Set `component_boot` for the main loop and
     // respond with the boot message
     uint8_t len = strlen(COMPONENT_BOOT_MSG) + 1;
+
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
-    send_packet_and_ack(len, transmit_buffer);
+    memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
+
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE;
+
+    // Send the data
+    send_packet_and_ack(total_len, transmit_buffer);
+    
     // Call the boot function
     boot();
 }
 
 void process_scan() {
+    
     // The AP requested a scan. Respond with the Component ID
     scan_message* packet = (scan_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(scan_message), transmit_buffer);
 }
 
@@ -256,6 +245,12 @@ void process_validate() {
     // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
@@ -263,7 +258,17 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
     uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
                 ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
-    send_packet_and_ack(len, transmit_buffer);
+    
+    // send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+
+    memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE;
+
+    send_packet_and_ack(total_len, transmit_buffer);
 }
 
 /*********************************** MAIN *************************************/
