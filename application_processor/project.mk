@@ -64,8 +64,8 @@ ECTF_PARAMS_PATH := inc/ectf_params.h
 
 # Custom target for processing ectf_params.h
 process-ectf-params: $(ECTF_PARAMS_PATH)
-    @echo "Running Python script to hash PIN and TOKEN in $(ECTF_PARAMS_PATH)..."
-    @python3 src/bcrypt_pin.py $(ECTF_PARAMS_PATH)
+	@echo "Running Python script to hash PIN and TOKEN in $(ECTF_PARAMS_PATH)..."
+	@python3 src/bcrypt_pin.py $(ECTF_PARAMS_PATH)
 
 # Ensure the custom script runs before the build process
 pre-build: process-ectf-params
