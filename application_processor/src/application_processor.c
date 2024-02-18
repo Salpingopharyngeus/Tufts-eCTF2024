@@ -171,8 +171,8 @@ kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
 /******************************* POST BOOT FUNCTIONALITY
  * *********************************/
 
-const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
+const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
+const mxc_aes_enc_type_t decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
 
 mxc_aes_req_t req;
 
