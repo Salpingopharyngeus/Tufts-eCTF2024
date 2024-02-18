@@ -536,14 +536,14 @@ void boot() {
         MXC_Delay(500000);
         LED_On(LED2);
         MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
+        // LED_On(LED3);
+        // MXC_Delay(500000);
         LED_Off(LED1);
         MXC_Delay(500000);
         LED_Off(LED2);
         MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
+        // LED_Off(LED3);
+        // MXC_Delay(500000);
     }
 #endif
 }
