@@ -1,2 +1,2 @@
 #define SECRET 1234
-#define KEY "TUFTS-eCTF2024"
+#define KEY "TUFTS-eCTF#2024"
