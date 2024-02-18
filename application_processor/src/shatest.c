@@ -33,7 +33,7 @@
 
 
 //#define VERBOSE
-#include <testing_config.h>
+#include <ucl_testing_config.h>
 #include <ucl_hash.h>
 #include <ucl_retdefs.h>
 #include <ucl_types.h>
