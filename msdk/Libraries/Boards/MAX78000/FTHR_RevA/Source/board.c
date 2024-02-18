@@ -204,8 +204,17 @@ int SD_Power(int on)
     return max20303_sd_power(on);
 }
 
+// #ifdef MXC_SPI0
+// void SD_Get_Connections(mxc_spi_regs_t **spi, mxc_gpio_regs_t **ssPort, int *ssPin)
+// {
+//     *spi = MXC_SPI0;
+//     *ssPort = MXC_GPIO0;
+//     *ssPin = 4;
+// }
+// #endif
+
 #ifdef MXC_SPI0
-void SD_Get_Connections(mxc_spi_regs_t **spi, mxc_gpio_regs_t **ssPort, int *ssPin)
+void SD_Get_Connections(mxc_gpio_regs_t **spi, mxc_gpio_regs_t **ssPort, int *ssPin)
 {
     *spi = MXC_SPI0;
     *ssPort = MXC_GPIO0;
