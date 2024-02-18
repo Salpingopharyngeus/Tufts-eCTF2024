@@ -92,9 +92,10 @@
 
 /* ECDSA key lengths */
 #define ECDSA_BLOCK_SIZE 32
-#ifdef WORD32
+// #ifdef WORD32
+#define WORD32
 #define ECDSA_DIGITS 17
-#endif
+// #endif
 
 #define SECP192R1 0
 #define SECP224R1 1
