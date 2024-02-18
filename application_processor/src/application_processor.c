@@ -223,7 +223,7 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
 
     // Encrypt each 128-bit segment of len and concatenate them together
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
+        AES_encrypt(0, MXC_AES_128BITS);
     }
 
     // Now, securely send the encrypted data over I2C
@@ -291,7 +291,7 @@ int secure_receive(i2c_addr_t address, uint8_t *buffer) {
 
     // Decrypt each 128-bit segment of the buffer
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
+        AES_decrypt(0, MXC_AES_128BITS);
     }
 
     return bytes_received; // Return the number of bytes received
