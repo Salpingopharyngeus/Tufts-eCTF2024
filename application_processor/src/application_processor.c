@@ -188,7 +188,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
     req.inputData = inputData;
     req.resultData = encryptedData;
     req.keySize = key;
-    req.encryption = external_aes_key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
     MXC_AES_Init();
 
@@ -235,7 +235,7 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
     req.inputData = encryptedData;
     req.resultData = decryptedData;
     req.keySize = key;
-    req.encryption = decrypt_aes_key;
+    req.encryption = MXC_AES_DECRYPT_INT_KEY;
 
     if (asynchronous) {
         MXC_AES_DecryptAsync(&req);
