@@ -19,9 +19,9 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_aes.h>
+#include <ucl_types.h>
+#include <ucl_retdefs.h>
+#include <ucl_aes.h>
 
 #ifdef SWAP
 # define SWAP(x) (_lrotl(x, 8) & 0x00ff00ff | _lrotr(x, 8) & 0xff00ff00)
