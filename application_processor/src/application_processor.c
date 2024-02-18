@@ -18,25 +18,21 @@
 #include "mxc_delay.h"
 #include "mxc_device.h"
 #include "nvic_table.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 #include "board_link.h"
 #include "simple_flash.h"
 #include "host_messaging.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
-
 #ifdef POST_BOOT
 #include <stdint.h>
 #include <stdio.h>
 #include "bcrypt.h"
 #endif
-
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
@@ -64,6 +60,7 @@
 
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
+#define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -71,40 +68,27 @@
 // along with the opcode through board_link. This is not utilized by the example
 // design but can be utilized by your design.
 typedef struct {
-    uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t opcode; // 1 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } command_message;
-
-//struct for encryption
-// typedef struct {
-//     struct command_message e_message;
-//     size_t counter;
-//     uint8_t hash[SHA256_DIGEST_LENGTH];
-// } encrypted_message;
-
-// outer layer struct for test purposes
-typedef struct {
-    command_message c_message;
-    char *auth_key; 
-    // uint8_t key[KEY_LENGTH];
-
-} outer_layer;
 
 // Data type for receiving a validate message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } scan_message;
 
 // Datatype for information stored in flash
 typedef struct {
-    uint32_t flash_magic;
-    uint32_t component_cnt;
-    uint32_t component_ids[32];
+    uint32_t flash_magic; // 4 bytes
+    uint32_t component_cnt; // 4 bytes
+    uint32_t component_ids[32]; // 4 bytes
 } flash_entry;
 
 // Datatype for commands sent to components
@@ -158,6 +142,16 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     return poll_and_receive_packet(address, buffer);
 }
 
+void file_print(const char *content) {
+    FILE *fptr;
+    fptr = fopen("/Users/samchung/Desktop/eCTF/Tufts-eCTF2024/debug.txt", "a");
+    if (fptr == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+    fprintf(fptr, "%s\n", content); // Note the "%s\n" format string
+    fclose(fptr);
+}
 /**
  * @brief Get Provisioned IDs
  * 
@@ -180,7 +174,7 @@ int get_provisioned_ids(uint32_t* buffer) {
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
 
-    // Enable global interrupts    
+    // Enable global interrupts
     __enable_irq();
 
     // Setup Flash
@@ -201,15 +195,20 @@ void init() {
 
         flash_simple_write(FLASH_ADDR, (uint32_t*)&flash_status, sizeof(flash_entry));
     }
-    
     // Initialize board link interface
     board_link_init();
+}
+void attach_key(command_message* command){
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+    memcpy(command->authkey, hash_out, HASH_SIZE);
 }
 
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     // Send message
-    int result = send_packet(addr, sizeof(uint8_t), transmit);
+    int result = send_packet(addr, HASH_SIZE+1, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
@@ -222,9 +221,59 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1)/sizeof(uint8_t);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
+
 /******************************** COMPONENT COMMS ********************************/
 
+int validate_components() {
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    // Send validate command to each component
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        // Set the I2C address of the component
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+
+        // Create command message
+        command_message* command = (command_message*) transmit_buffer;
+        command->opcode = COMPONENT_CMD_VALIDATE;
+        attach_key(command);
+        // Send out command and receive result
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        if (len == ERROR_RETURN) {
+            print_error("Could not validate component\n");
+            return ERROR_RETURN;
+        }
+        validate_message* validate = (validate_message*) receive_buffer;
+        if(!hash_equal(command->authkey, validate->authkey)){
+            print_error("Could not validate component\n");
+            return ERROR_RETURN;
+        }
+        if (validate->component_id != flash_status.component_ids[i]) {
+            print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
+            return ERROR_RETURN;
+        }
+        print_debug("Received Component ID: 0x%08x\n", validate->component_id);
+    }
+    return SUCCESS_RETURN;
+}
+
 int scan_components() {
+    if (validate_components()) {
+        print_error("Components could not be validated\n");
+        return;
+    }
+    print_debug("All Components validated\n");
     // Print out provisioned component IDs
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -245,61 +294,19 @@ int scan_components() {
         // Create command message 
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_SCAN;
+        attach_key(command);
         
-        // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
-
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
+            if(!hash_equal(command->authkey, scan->authkey)){
+                return ERROR_RETURN;
+            }
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
     print_success("List\n");
-    return SUCCESS_RETURN;
-}
-uint8_t* secure_wrapper(command_message c_message, uint8_t* transmit_buffer) {
-
-    outer_layer* outerl = (outer_layer*) transmit_buffer;
-    outerl->c_message = c_message;
-    outerl->auth_key = KEY; 
-    return transmit_buffer;
-}
-
-int validate_components() {
-    // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
-    // Send validate command to each component
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-
-        // Create command message
-        // command_message* command = (command_message*) transmit_buffer;
-        // command->opcode = COMPONENT_CMD_VALIDATE;
-        
-        // outer_layer* outerl = (outer_layer*) transmit_buffer;
-        command_message command;
-        command.opcode = COMPONENT_CMD_VALIDATE;
-        //outerl->c_message = command;
-        
-        // Send out command and receive result
-        int len = issue_cmd(addr, secure_wrapper(command, transmit_buffer), receive_buffer);
-        if (len == ERROR_RETURN) {
-            print_error("Could not validate component\n");
-            return ERROR_RETURN;
-        }
-
-        validate_message* validate = (validate_message*) receive_buffer;
-        // Check that the result is correct
-        if (validate->component_id != flash_status.component_ids[i]) {
-            print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
-            return ERROR_RETURN;
-        }
-        print_debug("Received Component ID: 0x%08x\n", validate->component_id);
-    }
     return SUCCESS_RETURN;
 }
 
@@ -316,16 +323,21 @@ int boot_components() {
         // Create command message
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_BOOT;
-        
-        // Send out command and receive result
+        attach_key(command);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+
         if (len == ERROR_RETURN) {
+            print_error("Could not boot component\n");
+            return ERROR_RETURN;
+        }
+        // Validate received authkey hash
+        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
             print_error("Could not boot component\n");
             return ERROR_RETURN;
         }
 
         // Print boot message from component
-        print_info("0x%x>%s\n", flash_status.component_ids[i], receive_buffer);
+        print_info("0x%08x>%s\n", flash_status.component_ids[i], receive_buffer);
     }
     return SUCCESS_RETURN;
 }
@@ -341,10 +353,14 @@ int attest_component(uint32_t component_id) {
     // Create command message
     command_message* command = (command_message*) transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
+    attach_key(command);
 
-    // Send out command and receive result
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {
+        print_error("Could not attest component\n");
+        return ERROR_RETURN;
+    }
+    if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
@@ -398,20 +414,20 @@ void boot() {
     #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
     #endif
 }
 
@@ -457,6 +473,7 @@ int validate_token() {
 
 // Boot the components and board if the components validate
 void attempt_boot() {
+    print_info("Attempting to boot AP!\n");
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -479,7 +496,7 @@ void attempt_boot() {
     print_info("AP>%s\n", AP_BOOT_MSG);
     print_success("Boot\n");
     // Boot
-    boot();
+    //boot();
 }
 
 // Replace a component if the PIN is correct
@@ -539,7 +556,7 @@ void attempt_attest() {
 int main() {
     // Initialize board
     init();
-
+    
     // Print the component IDs to be helpful
     // Your design does not need to do this
     print_info("Application Processor Started\n");
@@ -548,8 +565,8 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-
         // Execute requested command
+        //print_debug("Given command '%s'\n", buf);
         if (!strcmp(buf, "list")) {
             scan_components();
         } else if (!strcmp(buf, "boot")) {
@@ -560,6 +577,7 @@ int main() {
         } else if (!strcmp(buf, "attest")) {
             attempt_attest();
         } else {
+            //scan_components();
             print_error("Unrecognized command '%s'\n", buf);
         }
     }

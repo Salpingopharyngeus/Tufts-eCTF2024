@@ -19,11 +19,14 @@
 #include "nvic_table.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "host_messaging.h"
-
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#ifdef CRYPTO_EXAMPLE
+#include "simple_crypto.h"
+#endif
 
 // Includes from containerized build
 #include "ectf_params.h"
@@ -57,6 +60,7 @@
 #define ATTESTATION_DATE "08/08/08"
 #define ATTESTATION_CUSTOMER "Fritz"
 */
+#define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Commands received by Component using 32 bit integer
@@ -72,21 +76,21 @@ typedef enum {
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t authkey[HASH_SIZE];
 } command_message;
 
 typedef struct {
     uint32_t component_id;
+    uint8_t authkey[HASH_SIZE];
 } validate_message;
 
 typedef struct {
     uint32_t component_id;
+    uint8_t authkey[HASH_SIZE];
 } scan_message;
 
-typedef struct {
-    command_message c_message;
-    char *auth_key;
-} outer_layer;
+
+
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
 void component_process_cmd(void);
@@ -94,6 +98,7 @@ void process_boot(void);
 void process_scan(void);
 void process_validate(void);
 void process_attest(void);
+void print(const char *message);
 
 // AES encryption function
 int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
@@ -103,6 +108,19 @@ int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
+
+
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -149,84 +167,104 @@ void boot() {
     LED_Off(LED2);
     LED_Off(LED3);
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        LED_On(LED3);
-        MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        LED_Off(LED3);
-        MXC_Delay(500000);
-    }
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
     #endif
-}
-
-bool valid_packet(uint8_t* receive_buffer){
-    print_info("Validating received packet");    
-    outer_layer* outer = (outer_layer*) receive_buffer;
-    char *received_key = outer->auth_key;
-    return strcmp(received_key, KEY) == 0;
 }
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    print_info("processing command packet");
-    if (valid_packet(receive_buffer)) {
-        outer_layer* outer = (outer_layer*) receive_buffer;
-        command_message command = outer->c_message;
-
-        //command_message* command = (command_message*) receive_buffer;
-
-        // Output to application processor dependent on command received
-        switch (command.opcode) {
-        case COMPONENT_CMD_BOOT:
-            process_boot();
-            break;
-        case COMPONENT_CMD_SCAN:
-            process_scan();
-            break;
-        case COMPONENT_CMD_VALIDATE:
-            process_validate();
-            break;
-        case COMPONENT_CMD_ATTEST:
-            process_attest();
-            break;
-        default:
-            printf("Error: Unrecognized command received %d\n", command.opcode);
-            break;
-        }
-    }else {
-        print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
-    }
+    // Output to application processor dependent on command received
+    command_message* command = (command_message*) receive_buffer;
     
+    // Recreate authkey hash 
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+
+    // Check validity of authkey hash
+    if (hash_equal(command->authkey, hash_out)){
+        print_debug("AP and Components are valid!\n");
+        switch (command->opcode) {
+            case COMPONENT_CMD_BOOT:
+                process_boot();
+                break;
+            case COMPONENT_CMD_SCAN:
+                process_scan();
+                break;
+            case COMPONENT_CMD_VALIDATE:     
+                process_validate();
+                break;
+            case COMPONENT_CMD_ATTEST:
+                process_attest();
+                break;
+            default:
+                //print("Error: Unrecognized command received");
+                break;
+        }
+    }else{
+        print_error("Conflicting Authentication Hashes!\n");
+    }
 }
 
 void process_boot() {
     // The AP requested a boot. Set `component_boot` for the main loop and
     // respond with the boot message
     uint8_t len = strlen(COMPONENT_BOOT_MSG) + 1;
+
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
-    send_packet_and_ack(len, transmit_buffer);
+    memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
+
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE;
+
+    // Send the data
+    send_packet_and_ack(total_len, transmit_buffer);
+    
     // Call the boot function
     boot();
 }
 
 void process_scan() {
+    
     // The AP requested a scan. Respond with the Component ID
     scan_message* packet = (scan_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(scan_message), transmit_buffer);
 }
 
 void process_validate() {
-    // The AP requested a validation. Respond with the Component ID
+    // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    
+    // Send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
@@ -237,44 +275,54 @@ void process_attest() {
                 ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
     // Encrypt the len variable
-    AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
+    // AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
+    // send_packet_and_ack(len, transmit_buffer);
+    
+    // send authkey hash
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
 
-    send_packet_and_ack(len, transmit_buffer);
+    memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE;
+
+    send_packet_and_ack(total_len, transmit_buffer);
 }
 
 // AES encryption function implementation
-int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
-{
-    mxc_aes_req_t req;
+// int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
+// {
+//     mxc_aes_req_t req;
 
-    // Set the length of the input data
-    req.length = (data_length + 3) / 4; // Round up to the nearest word
+//     // Set the length of the input data
+//     req.length = (data_length + 3) / 4; // Round up to the nearest word
 
-    // Set the input data and result data pointers
-    req.inputData = (uint32_t *)data;
-    req.resultData = encryptedData;
+//     // Set the input data and result data pointers
+//     req.inputData = (uint32_t *)data;
+//     req.resultData = encryptedData;
 
-    // Set the key size and encryption mode
-    req.keySize = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+//     // Set the key size and encryption mode
+//     req.keySize = key;
+//     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
-    // Initialize AES
-    MXC_AES_Init();
+//     // Initialize AES
+//     MXC_AES_Init();
 
-    // Perform AES encryption
-    MXC_AES_Encrypt(&req);
+//     // Perform AES encryption
+//     MXC_AES_Encrypt(&req);
 
-    // Shutdown AES after encryption
-    MXC_AES_Shutdown();
+//     // Shutdown AES after encryption
+//     MXC_AES_Shutdown();
 
-    return E_NO_ERROR;
-}
+//     return E_NO_ERROR;
+// }
 
 
 /*********************************** MAIN *************************************/
 
 int main(void) {
-    printf("Component Started\n");
+    //print("Component Started\n");
     
     // Enable Global Interrupts
     __enable_irq();

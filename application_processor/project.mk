@@ -69,3 +69,21 @@ process-ectf-params: $(ECTF_PARAMS_PATH)
 
 # Ensure the custom script runs before the build process
 pre-build: process-ectf-params
+
+# ****************** eCTF Bootloader *******************
+# DO NOT REMOVE
+LINKERFILE=firmware.ld
+STARTUPFILE=startup_firmware.S
+ENTRY=firmware_startup
+
+# ****************** eCTF Crypto Example *******************
+# Uncomment the commented lines below and comment the disable
+# lines to enable the eCTF Crypto Example.
+# WolfSSL must be included in this directory as wolfssl/
+# WolfSSL can be downloaded from: https://www.wolfssl.com/download/
+
+# Disable Crypto Example
+CRYPTO_EXAMPLE=1
+
+# Enable Crypto Example
+#CRYPTO_EXAMPLE=1

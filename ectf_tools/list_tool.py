@@ -37,7 +37,6 @@ def list(args):
         stopbits=serial.STOPBITS_ONE,
         bytesize=serial.EIGHTBITS,
     )
-
     # Send command
     ser.write(b"list\r")
     logger.bind(extra="INPUT").debug("list\r")

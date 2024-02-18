@@ -13,6 +13,7 @@
 
 
 #include "simple_i2c_controller.h"
+#include "host_messaging.h"
 
 /******************************** FUNCTION PROTOTYPES ********************************/
 /**
@@ -207,6 +208,8 @@ int i2c_simple_read_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t len
  * Can be used to write the PARAMS or RESULT register
 */
 int i2c_simple_write_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t len, uint8_t* buf) {
+    // print_debug("HASH at i2c_simple_write_data_generic stage: \n");
+    // print_hex_debug(buf, len);
     uint8_t packet[257];
     packet[0] = reg;
     memcpy(&packet[1], buf, len);
@@ -220,7 +223,6 @@ int i2c_simple_write_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t le
     request.rx_buf = 0;
     request.restart = 0;
     request.callback = NULL;
-
     return MXC_I2C_MasterTransaction(&request);
 }
 
