@@ -35,6 +35,7 @@
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
+#include "trng_util.h"
 
 /********************************* CONSTANTS **********************************/
 
@@ -215,6 +216,17 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
         return ERROR_RETURN;
     }
     return len;
+}
+
+
+void GenerateAndUseRandomID() {
+    uint8_t randomID[16]; // Assuming we want a 16-byte ID
+
+    TRNG_Init();
+    TRNG_GenerateRandomID(randomID, sizeof(randomID));
+    TRNG_Shutdown();
+
+    print_hex_debug(randomID, sizeof(randomID));
 }
 
 /******************************** COMPONENT COMMS ********************************/
@@ -509,6 +521,8 @@ void attempt_attest() {
 int main() {
     // Initialize board
     init();
+
+    GenerateAndUseRandomID();
     
     // Print the component IDs to be helpful
     // Your design does not need to do this
