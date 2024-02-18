@@ -75,7 +75,6 @@ export MXC_OPTIMIZE_CFLAGS
 export DUAL_CORE
 export RISCV_CORE
 
-include ${PERIPH_DRIVER_DIR}/$(TARGET_LC)_files.mk
 IPATH += ${PERIPH_DRIVER_INCLUDE_DIR}
 ifeq "$(LIBRARY_VARIANT)" ""
 PERIPH_DRIVER_LIB := libPeriphDriver.a
