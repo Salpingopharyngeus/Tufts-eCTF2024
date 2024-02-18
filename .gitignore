@@ -368,8 +368,6 @@ cython_debug/
 !device/lib
 msdk/
 
-component/build/
-
 shell.nix
 
 run.sh
