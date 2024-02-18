@@ -67,14 +67,8 @@
 // design but can be utilized by your design.
 typedef struct {
     uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t params[HASH_SIZE];
 } command_message;
-
-// outer layer struct for test purposes
-typedef struct {
-    command_message c_message;
-    uint32_t key;
-} outer_layer;
 
 // Data type for receiving a validate message
 typedef struct {
@@ -144,6 +138,16 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     return poll_and_receive_packet(address, buffer);
 }
 
+void file_print(const char *content) {
+    FILE *fptr;
+    fptr = fopen("/Users/samchung/Desktop/eCTF/Tufts-eCTF2024/debug.txt", "a");
+    if (fptr == NULL) {
+        printf("Error opening file!\n");
+        return;
+    }
+    fprintf(fptr, "%s\n", content); // Note the "%s\n" format string
+    fclose(fptr);
+}
 /**
  * @brief Get Provisioned IDs
  * 
@@ -160,6 +164,15 @@ int get_provisioned_ids(uint32_t* buffer) {
     return flash_status.component_cnt;
 }
 
+// void attach_key(command_message* command){
+//     char* key = KEY;
+//     uint8_t hash_out[HASH_SIZE];
+//     hash(key, BLOCK_SIZE, hash_out);
+//     // Copy the hash value to the params array
+//     for (int i = 0; i < HASH_SIZE; i++) {
+//         command->params[i] = hash_out[i];
+//     }
+// }
 /********************************* UTILITIES **********************************/
 
 // Initialize the device
@@ -191,20 +204,10 @@ void init() {
     board_link_init();
 }
 
-// uint8_t* secure_wrapper(command_message *c_message, uint8_t* transmit_buffer) {
-//     outer_layer* outerl = (outer_layer*) transmit_buffer;
-//     outerl->c_message = *c_message; 
-//     char* str = "123abc";
-//     // Convert string to uint32_t
-//     uint32_t value = strtoul(str, NULL, 10);
-//     outerl->key = value;
-//     return transmit_buffer;
-// }
-
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     // Send message
-    int result = send_packet(addr, sizeof(uint8_t), transmit);
+    int result = send_packet(addr, HASH_SIZE+1, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
@@ -219,7 +222,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 
 /******************************** COMPONENT COMMS ********************************/
 
-
 int validate_components() {
     print_debug("Validate components called!");
     // Buffers for board link communication
@@ -233,29 +235,26 @@ int validate_components() {
         // Create command message
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_VALIDATE;
-
+        
         char* key = KEY;
         uint8_t hash_out[HASH_SIZE];
         hash(key, BLOCK_SIZE, hash_out);
-        // Copy the hash value to the params array
-        for (int i = 0; i < HASH_SIZE; i++) {
-            command->params[i] = hash_out[i];
-        }
-        
+        memcpy(command->params, hash_out, HASH_SIZE);
         // Send out command and receive result
-        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
             print_error("Could not validate component\n");
             return ERROR_RETURN;
         }
-
         validate_message* validate = (validate_message*) receive_buffer;
-        // Check that the result is correct
         if (validate->component_id != flash_status.component_ids[i]) {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
             return ERROR_RETURN;
         }
+        // test* packet = (test*) receive_buffer;
+        // print_debug("Receive HASH: ");
+        // char* received_hash = hash_to_str(packet->test_message, BLOCK_SIZE);
+        // print_debug(received_hash);
         print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
     return SUCCESS_RETURN;
@@ -287,12 +286,11 @@ int scan_components() {
         // Create command message 
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_SCAN;
+        char* key = KEY;
+        uint8_t hash_out[HASH_SIZE];
+        hash(key, BLOCK_SIZE, hash_out);
+        memcpy(command->params, hash_out, HASH_SIZE);
         
-        // command_message command;
-        // command.opcode = COMPONENT_CMD_SCAN;
-        
-        // Send out command and receive result
-        //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         
         // Success, device is present

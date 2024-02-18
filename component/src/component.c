@@ -66,7 +66,7 @@ typedef enum {
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t params[HASH_SIZE];
 } command_message;
 
 typedef struct {
@@ -74,13 +74,13 @@ typedef struct {
 } validate_message;
 
 typedef struct {
+    uint8_t test_message[MAX_I2C_MESSAGE_LEN-1];
+} test;
+
+typedef struct {
     uint32_t component_id;
 } scan_message;
 
-typedef struct {
-    command_message c_message;
-    uint32_t key;
-} outer_layer;
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
 void component_process_cmd(void);
@@ -95,6 +95,7 @@ void print(const char *message);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
+
 bool arrays_equal(uint8_t params1[MAX_I2C_MESSAGE_LEN-1], uint8_t params2[MAX_I2C_MESSAGE_LEN-1]) {
     for (int i = 0; i < MAX_I2C_MESSAGE_LEN-1; i++) {
         if (params1[i] != params2[i]) {
@@ -106,33 +107,29 @@ bool arrays_equal(uint8_t params1[MAX_I2C_MESSAGE_LEN-1], uint8_t params2[MAX_I2
     return true;
 }
 
-char* array_to_str(uint8_t array[MAX_I2C_MESSAGE_LEN-1]) {
-    int maxStrLen = (MAX_I2C_MESSAGE_LEN - 1) * 2 + 1;
-    char* paramsStr[maxStrLen];
-    paramsStr[0] = '\0'; 
-    char tempStr[3];
-
-    for (int i = 0; i < MAX_I2C_MESSAGE_LEN - 1; i++) {
-        snprintf(tempStr, sizeof(tempStr), "%02X", array[i]);
-        strncat(paramsStr, tempStr, 3); 
-    }
-   return paramsStr;
+bool strings_equal(const char* str1, const char* str2) {
+    return strcmp(str1, str2) == 0;
 }
 
-
-void print(const char *message) {
-    // Open the serial port
-    FILE *serial = fopen("/dev/tty.usbmodem21302", "w");
-    if (serial == NULL) {
-        perror("Error opening serial port");
-        return;
+char* hash_to_str(uint8_t *buf, size_t len) {
+    // Allocate memory for the string buffer
+    char *hash_str = malloc(len * 2 + 1); // Each byte requires 2 characters (hexadecimal representation) plus '\0'
+    if (hash_str == NULL) {
+        // Handle memory allocation failure
+        return NULL;
     }
-
-    // Send the message over the serial port
-    fprintf(serial, "%s\n", message);
-
-    // Close the serial port
-    fclose(serial);
+    
+    // Iterate over the hash buffer and format it into the string buffer
+    int offset = 0;
+    for (int i = 0; i < len; i++) {
+        offset += sprintf(hash_str + offset, "%02x", buf[i]);
+    }
+    
+    // Terminate the string
+    hash_str[offset] = '\0';
+    
+    // Return the dynamically allocated string buffer
+    return hash_str;
 }
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -198,14 +195,11 @@ void boot() {
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    //print("processing command packet");
-    //if (valid_packet(receive_buffer)) {
-    // outer_layer* outer = (outer_layer*) receive_buffer;
-    // command_message command = outer->c_message;
-    // uint32_t value = outer->key;
+    print_debug("PROCESS COMMAND\n");
     command_message* command = (command_message*) receive_buffer;
     // Output to application processor dependent on command received
-    //if (!strcmp("test", "test")) {
+    print_debug("RECEIVED HASH: \n");
+    print_hex_debug(command->params, HASH_SIZE);
     switch (command->opcode) {
         case COMPONENT_CMD_BOOT:
             process_boot();
@@ -214,21 +208,44 @@ void component_process_cmd() {
             process_scan();
             break;
         case COMPONENT_CMD_VALIDATE:
-            char* key = "hello";
-            uint8_t hash_out[HASH_SIZE];
-            hash(key, BLOCK_SIZE, hash_out);
-            uint8_t recreate_hash[MAX_I2C_MESSAGE_LEN-1];
-            //print("Recreating hash!");
+            print_debug("VALIDATE COMMAND\n");
+            // char* key = KEY;
+            // uint8_t hash_out[HASH_SIZE];
+            // hash(key, BLOCK_SIZE, hash_out);
+            // uint8_t recreate_hash[MAX_I2C_MESSAGE_LEN-1];
+            // for (int i = 0; i < HASH_SIZE; i++) {
+            //     recreate_hash[i] = hash_out[i];
+            // }
+            // char* recreated_hash_to_str = hash_to_str(recreate_hash, HASH_SIZE);
+            // char* received_hash_to_str = hash_to_str(command->params, HASH_SIZE);
             
-            //print("checking hashes!");
-            char* recreated_hash_to_str = array_to_str(recreate_hash);
-            char* received_hash_to_str = array_to_str(command->params);
-            if (strcmp(recreated_hash_to_str, received_hash_to_str) != 0) {
-                free(recreated_hash_to_str);
-                free(received_hash_to_str);
-                break;
-            }
+            // print_debug("Recreated Hash: %s\n", recreated_hash_to_str);
+            // print_debug("Received Hash: %s\n", received_hash_to_str);
+            // free(recreated_hash_to_str);
+            // free(received_hash_to_str);
+            // if (!strings_equal(recreated_hash_to_str, received_hash_to_str)) {
+            //     // Do something here to report conflicting HASH!!
+            //     free(recreated_hash_to_str);
+            //     free(received_hash_to_str);
+            //     while (1) {
+            //         LED_On(LED1);
+            //         MXC_Delay(500000);
+            //         LED_On(LED2);
+            //         MXC_Delay(500000);
+            //         LED_On(LED3);
+            //         MXC_Delay(500000);
+            //         LED_Off(LED1);
+            //         MXC_Delay(500000);
+            //         LED_Off(LED2);
+            //         MXC_Delay(500000);
+            //         LED_Off(LED3);
+            //         MXC_Delay(500000);
+            //     }
+            //     break;
+            // }
             process_validate();
+            // free(recreated_hash_to_str);
+            // free(received_hash_to_str);
             break;
         case COMPONENT_CMD_ATTEST:
             process_attest();
@@ -237,10 +254,6 @@ void component_process_cmd() {
             //print("Error: Unrecognized command received");
             break;
     }
-    //}
-    // }else {
-    //     print_error("INVALID PACKET! POTENTIAL IMPOSTER!!!");
-    // }
 }
 
 void process_boot() {
@@ -261,7 +274,7 @@ void process_scan() {
 }
 
 void process_validate() {
-    // The AP requested a validation. Respond with the Component ID
+    // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
