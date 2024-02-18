@@ -34,15 +34,15 @@
  */
 #include <ucl_testing_config.h>
 
-#include <ucl/ucl_hash.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_aes.h>
-#include <ucl/ucl_aes_ecb.h>
-#include <ucl/ucl_aes_cbc_mac.h>
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_sys.h>
+#include <ucl_hash.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
+#include <ucl_aes.h>
+#include <ucl_aes_ecb.h>
+#include <ucl_aes_cbc_mac.h>
+#include <ucl_config.h>
+#include <ucl_defs.h>
+#include <ucl_sys.h>
 #include <string.h>
 
 
