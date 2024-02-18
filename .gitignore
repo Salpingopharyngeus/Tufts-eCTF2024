@@ -369,3 +369,12 @@ cython_debug/
 msdk/
 
 component/build/
+
+shell.nix
+
+run.sh
+output.txt
+output
+build_out
+analog_openocd.nix
+.github -r
