@@ -170,9 +170,6 @@ export CMSIS_ROOT
 # Where to find source files for this project.
 VPATH += .
 VPATH += src
-# Adds crypt_blowfish to the VPATH
-VPATH += application_processor/crypt_blowfish
-
 
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
@@ -184,29 +181,18 @@ VPATH := $(VPATH)
 # Where to find header files for this project
 IPATH += .
 IPATH += include
-# Adds crypt_blowfish to the IPATH
-IPATH += application_processor/crypt_blowfish
 
 # eCTF Crypto Example
 ifeq ($(CRYPTO_EXAMPLE), 1)
 IPATH += wolfssl
 endif
+
 IPATH := $(IPATH)
 
 AUTOSEARCH ?= 1
 ifeq ($(AUTOSEARCH), 1)
 # Auto-detect all C source files on VPATH
 SRCS += $(wildcard $(addsuffix /*.c, $(VPATH)))
-# Explicitly add crypt_blowfish source files if AUTOSEARCH is disabled or not capturing them
-SRCS += application_processor/crypt_blowfish/crypt_blowfish.c
-SRCS += application_processor/crypt_blowfish/ow-crypt.h
-# Add crypt_blowfish source files to SRCS
-SRCS += application_processor/crypt_blowfish/x86.S
-SRCS += $(addprefix application_processor/crypt_blowfish/, \
-    crypt_blowfish.c x86.S crypt_gensalt.c wrapper.c)
-
-$(info SRCS is $(SRCS))
-
 endif
 
 # Collapse SRCS before passing them on to the next stage
