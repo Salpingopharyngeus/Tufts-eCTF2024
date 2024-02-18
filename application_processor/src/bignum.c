@@ -44,9 +44,9 @@
 
 #include <stdio.h>
 
-#include <ucl/bignum_ecdsa_generic_api.h>
-#include <ucl/ecdsa_generic_api.h>
-#include <ucl/ucl_retdefs.h>
+#include <bignum_ecdsa_generic_api.h>
+#include <ecdsa_generic_api.h>
+#include <ucl_retdefs.h>
 #include <string.h>
 
 // for all u32* numbers, digit[0] is the least significent digit
