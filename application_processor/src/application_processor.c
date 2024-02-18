@@ -164,15 +164,12 @@ int get_provisioned_ids(uint32_t* buffer) {
     return flash_status.component_cnt;
 }
 
-// void attach_key(command_message* command){
-//     char* key = KEY;
-//     uint8_t hash_out[HASH_SIZE];
-//     hash(key, BLOCK_SIZE, hash_out);
-//     // Copy the hash value to the params array
-//     for (int i = 0; i < HASH_SIZE; i++) {
-//         command->params[i] = hash_out[i];
-//     }
-// }
+void attach_key(command_message* command){
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    memcpy(command->params, hash_out, HASH_SIZE);
+}
 /********************************* UTILITIES **********************************/
 
 // Initialize the device
@@ -235,11 +232,7 @@ int validate_components() {
         // Create command message
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_VALIDATE;
-        
-        char* key = KEY;
-        uint8_t hash_out[HASH_SIZE];
-        hash(key, BLOCK_SIZE, hash_out);
-        memcpy(command->params, hash_out, HASH_SIZE);
+        attach_key(command);
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -251,10 +244,6 @@ int validate_components() {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
             return ERROR_RETURN;
         }
-        // test* packet = (test*) receive_buffer;
-        // print_debug("Receive HASH: ");
-        // char* received_hash = hash_to_str(packet->test_message, BLOCK_SIZE);
-        // print_debug(received_hash);
         print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
     return SUCCESS_RETURN;
@@ -286,13 +275,9 @@ int scan_components() {
         // Create command message 
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_SCAN;
-        char* key = KEY;
-        uint8_t hash_out[HASH_SIZE];
-        hash(key, BLOCK_SIZE, hash_out);
-        memcpy(command->params, hash_out, HASH_SIZE);
+        attach_key(command);
         
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
-        
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
@@ -316,11 +301,7 @@ int boot_components() {
         // Create command message
         command_message* command = (command_message*) transmit_buffer;
         command->opcode = COMPONENT_CMD_BOOT;
-        
-        // Send out command and receive result
-        // command_message command;
-        // command.opcode = COMPONENT_CMD_BOOT;
-        
+        attach_key(command);
         //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -345,12 +326,8 @@ int attest_component(uint32_t component_id) {
     // Create command message
     command_message* command = (command_message*) transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
+    attach_key(command);
 
-    // Send out command and receive result
-    // command_message command;
-    // command.opcode = COMPONENT_CMD_ATTEST;
-        
-    //int len = issue_cmd(addr, secure_wrapper(&command, transmit_buffer), receive_buffer);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");

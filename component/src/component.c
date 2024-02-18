@@ -96,9 +96,10 @@ uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
 
-bool arrays_equal(uint8_t params1[MAX_I2C_MESSAGE_LEN-1], uint8_t params2[MAX_I2C_MESSAGE_LEN-1]) {
-    for (int i = 0; i < MAX_I2C_MESSAGE_LEN-1; i++) {
-        if (params1[i] != params2[i]) {
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
             // Found elements that are not equal, so the arrays are not identical
             return false;
         }
@@ -196,10 +197,25 @@ void boot() {
 // Handle a transaction from the AP
 void component_process_cmd() {
     print_debug("PROCESS COMMAND\n");
-    command_message* command = (command_message*) receive_buffer;
     // Output to application processor dependent on command received
+    command_message* command = (command_message*) receive_buffer;
+    
+    // Check authenticity of the packet
     print_debug("RECEIVED HASH: \n");
     print_hex_debug(command->params, HASH_SIZE);
+
+    print_debug("RECREATED HASH: \n");
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, BLOCK_SIZE, hash_out);
+    uint8_t recreate_hash[HASH_SIZE];
+    memcpy(recreate_hash, hash_out, HASH_SIZE);
+    print_hex_debug(recreate_hash, HASH_SIZE);
+
+    // Check validity of hash
+    if (hash_equal(command->params, recreate_hash)){
+        print_debug("HASHES MATCH!\n");
+    }
     switch (command->opcode) {
         case COMPONENT_CMD_BOOT:
             process_boot();
@@ -207,45 +223,8 @@ void component_process_cmd() {
         case COMPONENT_CMD_SCAN:
             process_scan();
             break;
-        case COMPONENT_CMD_VALIDATE:
-            print_debug("VALIDATE COMMAND\n");
-            // char* key = KEY;
-            // uint8_t hash_out[HASH_SIZE];
-            // hash(key, BLOCK_SIZE, hash_out);
-            // uint8_t recreate_hash[MAX_I2C_MESSAGE_LEN-1];
-            // for (int i = 0; i < HASH_SIZE; i++) {
-            //     recreate_hash[i] = hash_out[i];
-            // }
-            // char* recreated_hash_to_str = hash_to_str(recreate_hash, HASH_SIZE);
-            // char* received_hash_to_str = hash_to_str(command->params, HASH_SIZE);
-            
-            // print_debug("Recreated Hash: %s\n", recreated_hash_to_str);
-            // print_debug("Received Hash: %s\n", received_hash_to_str);
-            // free(recreated_hash_to_str);
-            // free(received_hash_to_str);
-            // if (!strings_equal(recreated_hash_to_str, received_hash_to_str)) {
-            //     // Do something here to report conflicting HASH!!
-            //     free(recreated_hash_to_str);
-            //     free(received_hash_to_str);
-            //     while (1) {
-            //         LED_On(LED1);
-            //         MXC_Delay(500000);
-            //         LED_On(LED2);
-            //         MXC_Delay(500000);
-            //         LED_On(LED3);
-            //         MXC_Delay(500000);
-            //         LED_Off(LED1);
-            //         MXC_Delay(500000);
-            //         LED_Off(LED2);
-            //         MXC_Delay(500000);
-            //         LED_Off(LED3);
-            //         MXC_Delay(500000);
-            //     }
-            //     break;
-            // }
+        case COMPONENT_CMD_VALIDATE:     
             process_validate();
-            // free(recreated_hash_to_str);
-            // free(received_hash_to_str);
             break;
         case COMPONENT_CMD_ATTEST:
             process_attest();

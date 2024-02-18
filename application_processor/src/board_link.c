@@ -53,11 +53,8 @@ i2c_addr_t component_id_to_i2c_addr(uint32_t component_id) {
  * Function sends an arbitrary packet over i2c to a specified component
 */
 int send_packet(i2c_addr_t address, uint8_t len, uint8_t* packet) {
-    print_debug("SEND PACKET STAGE");
-    print_hex_debug(packet, len);
-    // for (size_t i = 0; i < len; i++) {
-    //     print_debug("%02X ", packet[i]); // Assuming the data is in hexadecimal format
-    // }
+    // print_debug("SEND PACKET STAGE");
+    // print_hex_debug(packet, len);
     int result;
     result = i2c_simple_write_receive_len(address, len);
     if (result < SUCCESS_RETURN) {
@@ -71,7 +68,6 @@ int send_packet(i2c_addr_t address, uint8_t len, uint8_t* packet) {
     if (result < SUCCESS_RETURN) {
         return ERROR_RETURN;
     }
-
     return SUCCESS_RETURN;
 }
 
