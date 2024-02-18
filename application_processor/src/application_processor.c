@@ -31,10 +31,12 @@
 #ifdef POST_BOOT
 #include <stdint.h>
 #include <stdio.h>
+#include "bcrypt.h"
 #endif
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
+#include <time.h>
 
 /********************************* CONSTANTS **********************************/
 
@@ -431,10 +433,23 @@ void boot() {
 
 // Compare the entered PIN to the correct PIN
 int validate_pin() {
+    clock_t start_time, end_time;
+    //Starts the clock
+    start_time = clock();
+
     char buf[50];
+    
     recv_input("Enter pin: ", buf);
-    if (!strcmp(buf, AP_PIN)) {
+    print_debug("Verifying PIN...\n");
+    if(bcrypt_checkpw(buf, AP_PIN)==0){
         print_debug("Pin Accepted!\n");
+        // Ends the clock
+        end_time = clock();
+        
+        //Calculates the time it took to verify the pin
+        double time_taken = ((double)end_time - start_time)/CLOCKS_PER_SEC;
+        print_debug("Time taken to verify pin: %f\n", time_taken);
+        
         return SUCCESS_RETURN;
     }
     print_error("Invalid PIN!\n");
@@ -445,10 +460,13 @@ int validate_pin() {
 int validate_token() {
     char buf[50];
     recv_input("Enter token: ", buf);
-    if (!strcmp(buf, AP_TOKEN)) {
+    print_debug("Verifying Token...\n");
+
+    if(bcrypt_checkpw(buf, AP_TOKEN)==0){
         print_debug("Token Accepted!\n");
         return SUCCESS_RETURN;
     }
+    
     print_error("Invalid Token!\n");
     return ERROR_RETURN;
 }
