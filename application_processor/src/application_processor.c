@@ -226,6 +226,7 @@ void GenerateAndUseRandomID() {
     TRNG_GenerateRandomID(randomID, sizeof(randomID));
     TRNG_Shutdown();
 
+    print_debug("This is the RNG");
     print_hex_debug(randomID, sizeof(randomID));
 }
 
@@ -522,7 +523,7 @@ int main() {
     // Initialize board
     init();
 
-    GenerateAndUseRandomID();
+    
     
     // Print the component IDs to be helpful
     // Your design does not need to do this
@@ -534,6 +535,9 @@ int main() {
         recv_input("Enter Command: ", buf);
         // Execute requested command
         //print_debug("Given command '%s'\n", buf);
+
+        GenerateAndUseRandomID();
+
         if (!strcmp(buf, "list")) {
             scan_components();
         } else if (!strcmp(buf, "boot")) {
