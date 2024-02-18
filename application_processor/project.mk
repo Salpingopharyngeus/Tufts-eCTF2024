@@ -40,13 +40,6 @@ CRYPTO_EXAMPLE=0
 # Enable Crypto Example
 #CRYPTO_EXAMPLE=1
 
-#Adds the periph driver to the build from the periphdriver.mk file
-
-
-ifeq "$(PERIPH_DRIVER_DIR)" ""
-$(error "PERIPH_DRIVER_DIR must be specified")
-endif
-
 TARGET_UC:=$(shell echo $(TARGET) | tr a-z A-Z)
 TARGET_LC:=$(shell echo $(TARGET) | tr A-Z a-z)
 
