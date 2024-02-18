@@ -40,13 +40,13 @@
 *******************************************************************************
  */
 #include <string.h>
-#include <ucl/ucl_hash.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA256
 
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
+#include <ucl_config.h>
+#include <ucl_defs.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
 
 #include <hash/sha256.h>
 

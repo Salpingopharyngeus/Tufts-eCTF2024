@@ -42,18 +42,18 @@
 #define MINVER 0
 #define ZVER 0
 //1.0.0: initial release from UCL file 1.9.0
-#include <ucl/bignum_ecdsa_generic_api.h>
-#include <ucl/ecdsa_generic_api.h>
+#include <bignum_ecdsa_generic_api.h>
+#include <ecdsa_generic_api.h>
 
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_sys.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_rng.h>
-#include <ucl/ucl_hash.h>
+#include <ucl_config.h>
+#include <ucl_types.h>
+#include <ucl_sys.h>
+#include <ucl_defs.h>
+#include <ucl_retdefs.h>
+#include <ucl_rng.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA256
-#include <ucl/ucl_sha256.h>
+#include <ucl_sha256.h>
 #endif
 
 //default modular reduction

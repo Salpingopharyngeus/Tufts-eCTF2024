@@ -31,14 +31,14 @@
  * property whatsoever. Maxim Integrated Products, Inc. retains all
  * ownership rights.
  ********************************************************************************/
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_retdefs.h>
+#include <ucl_types.h>
+#include <ucl_defs.h>
+#include <ucl_retdefs.h>
 
-#include <ucl/ucl_aes.h>
-#include <ucl/ucl_aes_ecb.h>
-#include <ucl/ucl_aes_cbc_mac.h>
-#include <ucl/ucl_aes_cbc.h>
+#include <ucl_aes.h>
+#include <ucl_aes_ecb.h>
+#include <ucl_aes_cbc_mac.h>
+#include <ucl_aes_cbc.h>
 #include <string.h>
 
 //used to not increment the *dst pointer in cbc mode when cbc-mac is targeted

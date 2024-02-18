@@ -32,11 +32,11 @@
 * ownership rights.
 *******************************************************************************
 */
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_aes.h>
-#include "ucl/ucl_aes_ecb.h"
+#include <ucl_types.h>
+#include <ucl_defs.h>
+#include <ucl_retdefs.h>
+#include <ucl_aes.h>
+#include "ucl_aes_ecb.h"
 #include <string.h>
 
 int ucl_aes_ecb(u8 *dst, u8 *src, u32 len, u8 *key, u32 keylen, int mode)

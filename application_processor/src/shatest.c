@@ -33,16 +33,16 @@
 
 
 //#define VERBOSE
-#include <ucl_testing_config.h>
-#include <ucl/ucl_hash.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_sha256.h>
-#include <ucl/ucl_sha384.h>
-#include <ucl/ucl_sia256.h>
-#include <ucl/ucl_sha3.h>
+#include <testing_config.h>
+#include <ucl_hash.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
+#include <ucl_config.h>
+#include <ucl_defs.h>
+#include <ucl_sha256.h>
+#include <ucl_sha384.h>
+#include <ucl_sia256.h>
+#include <ucl_sha3.h>
 #include "string.h"
 
 
@@ -493,22 +493,22 @@ cf83e1357eefb8bd f1542850d66d8007 d620e4050b5715dc 83f4a921d36ce9ce
 #6) 1000 bytes of zeros
 ca3dff61bb23477a a6087b27508264a6 f9126ee3a004f53c b8db942ed345f2f2
 d229b4b59c859220 a1cf1913f34248e3 803bab650e849a3d 9a709edc09ae4a76
-#7) 1000 bytes of 0x41 ‘A’
+#7) 1000 bytes of 0x41 ï¿½Aï¿½
 329c52ac62d1fe73 1151f2b895a00475 445ef74f50b979c6 f7bb7cae349328c1
 d4cb4f7261a0ab43 f936a24b000651d4 a824fcdd577f211a ef8f806b16afe8af
-#8) 1005 bytes of 0x55 ‘U’
+#8) 1005 bytes of 0x55 ï¿½Uï¿½
 59f5e54fe299c6a8 764c6b199e44924a 37f59e2b56c3ebad 939b7289210dc8e4
 c21b9720165b0f4d 4374c90f1bf4fb4a 5ace17a116179801 5052893a48c3d161
 #9) 1000000 bytes of zeros
 ce044bc9fd43269d 5bbc946cbebc3bb7 11341115cc4abdf2 edbc3ff2c57ad4b1
 5deb699bda257fea 5aef9c6e55fcf4cf 9dc25a8c3ce25f2e fe90908379bff7ed
-#10) 0x20000000 (536870912) bytes of 0x5a ‘Z’
+#10) 0x20000000 (536870912) bytes of 0x5a ï¿½Zï¿½
 da172279f3ebbda9 5f6b6e1e5f0ebec6 82c25d3d93561a16 24c2fa9009d64c7e
 9923f3b46bcaf11d 39a531f43297992b a4155c7e827bd0f1 e194ae7ed6de4cac
 #11) 0x41000000 (1090519040) bytes of zeros
 14b1be901cb43549 b4d831e61e5f9df1 c791c85b50e85f9d 6bc64135804ad43c
 e8402750edbe4e5c 0fc170b99cf78b9f 4ecb9c7e02a15791 1d1bd1832d76784f
-#12) 0x6000003e (1610612798) bytes of 0x42 ‘B’
+#12) 0x6000003e (1610612798) bytes of 0x42 ï¿½Bï¿½
 fd05e13eb771f051 90bd97d62647157e a8f1f6949a52bb6d aaedbad5f578ec59
 b1b8d6c4a7ecb2fe ca6892b4dc138771 670a0f3bd577eea3 26aed40ab7dd58b1
   */
@@ -597,7 +597,7 @@ b1b8d6c4a7ecb2fe ca6892b4dc138771 670a0f3bd577eea3 26aed40ab7dd58b1
 #ifdef VERBOSE
   PRINTF("sha512(1000-A):");
 #endif
-  //#7) 1000 bytes of 0x41 ‘A’
+  //#7) 1000 bytes of 0x41 ï¿½Aï¿½
   if(memcmp(e,digest_100041,64)!=0)
     return(UCL_ERROR);
 
@@ -607,7 +607,7 @@ b1b8d6c4a7ecb2fe ca6892b4dc138771 670a0f3bd577eea3 26aed40ab7dd58b1
 #ifdef VERBOSE
   PRINTF("sha512(1005-U):");
 #endif
-  //#8) 1005 bytes of 0x55 ‘U’
+  //#8) 1005 bytes of 0x55 ï¿½Uï¿½
   if(memcmp(e,digest_1005U,64)!=0)
     return(UCL_ERROR);
 
@@ -635,7 +635,7 @@ b1b8d6c4a7ecb2fe ca6892b4dc138771 670a0f3bd577eea3 26aed40ab7dd58b1
 #ifdef VERBOSE
   PRINTF("sha512(2^29-Z):");
 #endif
-  //#10) 0x20000000 (536870912) bytes of 0x5a ‘Z’
+  //#10) 0x20000000 (536870912) bytes of 0x5a ï¿½Zï¿½
   if(memcmp(e,digest_5a,64)!=0)
     return(UCL_ERROR);
 
@@ -663,7 +663,7 @@ b1b8d6c4a7ecb2fe ca6892b4dc138771 670a0f3bd577eea3 26aed40ab7dd58b1
 #ifdef VERBOSE
   PRINTF("sha512(2*59*13649261-'B'):");
 #endif
-  //#12) 0x6000003e (1610612798) bytes of 0x42 ‘B’
+  //#12) 0x6000003e (1610612798) bytes of 0x42 ï¿½Bï¿½
   if(memcmp(e,digest_42,64)!=0)
     return(UCL_ERROR);
   return(UCL_OK);

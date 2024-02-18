@@ -37,27 +37,27 @@
 *
 *******************************************************************************
  */
-#include "ucl/ucl_config.h"
-#include "ucl/ucl_defs.h"
-#include "ucl/ucl_retdefs.h"
-#include "ucl/ucl_types.h"
+#include "ucl_config.h"
+#include "ucl_defs.h"
+#include "ucl_retdefs.h"
+#include "ucl_types.h"
 
-#include <ucl/ucl_hash.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA256
-#include <ucl/ucl_sha256.h>
+#include <ucl_sha256.h>
 #endif
 #ifdef HASH_SHA384
-#include <ucl/ucl_sha384.h>
+#include <ucl_sha384.h>
 #endif
 #ifdef HASH_SHA512
-#include <ucl/ucl_sha512.h>
+#include <ucl_sha512.h>
 #endif
 #ifdef HASH_SIA256
-#include <ucl/ucl_sia256.h>
+#include <ucl_sia256.h>
 #endif
 
 #ifdef HASH_SHA3
-#include <ucl/ucl_sha3.h>
+#include <ucl_sha3.h>
 #endif
 
 __API__ int hash_size[MAX_HASH_FUNCTIONS];

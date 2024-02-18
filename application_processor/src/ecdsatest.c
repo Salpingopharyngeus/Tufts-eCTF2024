@@ -46,24 +46,24 @@
 #include <ucl_testing_config.h>
 #ifdef ECDSA
 
-#include <ucl/ecdsa_generic_api.h>
-#include <ucl/bignum_ecdsa_generic_api.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_sys.h>
-#include <ucl/ucl_hash.h>
+#include <ecdsa_generic_api.h>
+#include <bignum_ecdsa_generic_api.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
+#include <ucl_config.h>
+#include <ucl_defs.h>
+#include <ucl_sys.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA256
-#include <ucl/ucl_sha256.h>
+#include <ucl_sha256.h>
 #endif
 #ifdef HASH_SHA384
-#include <ucl/ucl_sha384.h>
+#include <ucl_sha384.h>
 #endif
 #ifdef HASH_SHA512
-#include <ucl/ucl_sha512.h>
+#include <ucl_sha512.h>
 #endif
-#include <ucl/ucl_rng.h>
+#include <ucl_rng.h>
 
 extern ucl_type_curve secp256r1;
 extern ucl_type_curve secp192r1;

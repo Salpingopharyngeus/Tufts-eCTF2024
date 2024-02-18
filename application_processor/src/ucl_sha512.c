@@ -36,14 +36,14 @@
 *        Compiler: gcc
 *
 *******************************************************************************/
-#include <ucl/ucl_hash.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA512
 #include <string.h>
 
-#include "ucl/ucl_sha512.h"
-#include <ucl/ucl_sys.h>
-#include <ucl/ucl_retdefs.h>
-#include "ucl/bignum_ecdsa_generic_api.h"
+#include "ucl_sha512.h"
+#include <ucl_sys.h>
+#include <ucl_retdefs.h>
+#include "bignum_ecdsa_generic_api.h"
 
 
 void _wsb_ll2b(u8 *dst, u64 src)

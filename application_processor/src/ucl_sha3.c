@@ -61,11 +61,11 @@ SOFTWARE.
 #include <ucl/ucl_hash.h>
 #ifdef HASH_SHA3
 #include <string.h>
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
-#include "ucl/ucl_sha3.h"
-#include <ucl/ucl_sys.h>
+#include <ucl_config.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
+#include "ucl_sha3.h"
+#include <ucl_sys.h>
 
 #define N_ROUNDS 24 //the specialization for keccak-f from keccak-p
 

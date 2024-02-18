@@ -5,7 +5,7 @@
  *==========================================================================*/
 /*============================================================================
  *
- * Copyright © 2018 Maxim Integrated. All rights reserved. Do not disclose.
+ * Copyright ï¿½ 2018 Maxim Integrated. All rights reserved. Do not disclose.
  * All Rights Reserved. Do not disclose.
  *
  * This software is the confidential and proprietary information of
@@ -28,17 +28,17 @@
  *
  *==========================================================================*/
 #include <string.h>
-#include <ucl/ucl_hash.h>
+#include <ucl_hash.h>
 #ifdef HASH_SHA384
 
-#include <ucl/ucl_config.h>
-#include <ucl/ucl_defs.h>
-#include <ucl/ucl_retdefs.h>
-#include <ucl/ucl_types.h>
+#include <ucl_config.h>
+#include <ucl_defs.h>
+#include <ucl_retdefs.h>
+#include <ucl_types.h>
 
-#include "ucl/ucl_sha384.h"
-#include <ucl/ucl_sys.h>
-#include "ucl/bignum_ecdsa_generic_api.h"
+#include "ucl_sha384.h"
+#include <ucl_sys.h>
+#include "bignum_ecdsa_generic_api.h"
 
 extern int using_sha_hardware;
 
