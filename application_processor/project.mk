@@ -55,3 +55,17 @@ LDFLAGS += -L/crypt-blowfish
 # Inform the linker to use the crypt_blowfish library
 LDFLAGS += -lcrypt_blowfish
 
+# Modifies the build process to hash the PIN and TOKEN in the ectf_params.h file before the build process begins. 
+# This is done by adding a custom target to the Makefile that runs a Python script to hash the PIN and TOKEN values in the ectf_params.h file. 
+# The custom target is then added to the pre-build process to ensure that it runs before the build process begins.
+
+# Define the path to ectf_params.h
+ECTF_PARAMS_PATH := inc/ectf_params.h
+
+# Custom target for processing ectf_params.h
+process-ectf-params: $(ECTF_PARAMS_PATH)
+    @echo "Running Python script to hash PIN and TOKEN in $(ECTF_PARAMS_PATH)..."
+    @python3 src/bcrypt_pin.py $(ECTF_PARAMS_PATH)
+
+# Ensure the custom script runs before the build process
+pre-build: process-ectf-params
