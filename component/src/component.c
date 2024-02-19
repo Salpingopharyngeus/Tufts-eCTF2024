@@ -60,7 +60,6 @@
 #define ATTESTATION_DATE "08/08/08"
 #define ATTESTATION_CUSTOMER "Fritz"
 */
-#define MAX_KEY_LENGTH 256
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Commands received by Component using 32 bit integer
@@ -109,7 +108,7 @@ uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 
-
+// Check equality of two uint8_t* values holding hash value
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
     for (int i = 0; i < array_size; i++) {
@@ -189,14 +188,14 @@ void component_process_cmd() {
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
     
-    // Recreate authkey hash 
+    // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     hash(key, HASH_SIZE, hash_out);
 
     // Check validity of authkey hash
     if (hash_equal(command->authkey, hash_out)){
-        print_debug("AP and Components are valid!\n");
+        print_debug("AP validated\n");
         switch (command->opcode) {
             case COMPONENT_CMD_BOOT:
                 process_boot();
