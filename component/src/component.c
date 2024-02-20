@@ -67,11 +67,14 @@ typedef enum {
 typedef struct {
     uint8_t opcode;
     uint8_t authkey[HASH_SIZE];
+    uint8_t random_number[4];   // for the RNG
+
 } command_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
+    uint8_t random_number[4];   // for the RNG
 } validate_message;
 
 typedef struct {
@@ -183,6 +186,13 @@ void component_process_cmd() {
     // Check validity of authkey hash
     if (hash_equal(command->authkey, hash_out)){
         print_debug("AP and Components are valid!\n");
+
+        //Show received random number
+        print_debug("This is the RNG received by component: ");
+        print_hex_debug(receive_buffer, sizeof(command_message));
+        print_debug("This is just the RNG: ");
+        print_hex_debug(command->random_number, sizeof(command->random_number));
+
         switch (command->opcode) {
             case COMPONENT_CMD_BOOT:
                 process_boot();
