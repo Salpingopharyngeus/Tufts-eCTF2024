@@ -337,6 +337,7 @@ int secure_receive(uint8_t address, uint8_t *decryptedData, uint8_t max_len) {
     // // Assuming decryptedData is a global buffer similar to the encryptedData in AES_encrypt
     // extern uint32_t decryptedData[];
     // - Remy: Changed this to use the *buffer in params (?) also doesnt seem to be used?
+    // - Changed the second parameter to adjust for this...
 
     for (uint8_t i = 0; i < totalSegments; ++i) {
         // Prepare a segment-sized buffer to hold the current segment for decryption
