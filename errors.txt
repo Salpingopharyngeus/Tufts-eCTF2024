@@ -1,873 +1,146 @@
-2024-02-16 13:03:50.410 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+2024-02-21 15:35:01.449 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
 warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
-In file included from /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/LED/led.h:44,
-                 from src/application_processor.c:18:
-inc/gpio.h:127:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_IN'
-  127 |     MXC_GPIO_FUNC_IN,       /**< GPIO Input */
-      |     ^~~~~~~~~~~~~~~~
-In file included from /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:42,
-                 from /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_device.h:39,
-                 from /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_sys.h:42,
-                 from inc/i2c.h:47,
-                 from src/application_processor.c:16:
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:124:5: note: previous definition of 'MXC_GPIO_FUNC_IN' with type 'enum <anonymous>'
-  124 |     MXC_GPIO_FUNC_IN, /**< GPIO Input */
-      |     ^~~~~~~~~~~~~~~~
-inc/gpio.h:128:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_OUT'
-  128 |     MXC_GPIO_FUNC_OUT,      /**< GPIO Output */
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:125:5: note: previous definition of 'MXC_GPIO_FUNC_OUT' with type 'enum <anonymous>'
-  125 |     MXC_GPIO_FUNC_OUT, /**< GPIO Output */
-      |     ^~~~~~~~~~~~~~~~~
-inc/gpio.h:129:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_ALT1'
-  129 |     MXC_GPIO_FUNC_ALT1,     /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:126:5: note: previous definition of 'MXC_GPIO_FUNC_ALT1' with type 'enum <anonymous>'
-  126 |     MXC_GPIO_FUNC_ALT1, /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:130:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_ALT2'
-  130 |     MXC_GPIO_FUNC_ALT2,     /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:127:5: note: previous definition of 'MXC_GPIO_FUNC_ALT2' with type 'enum <anonymous>'
-  127 |     MXC_GPIO_FUNC_ALT2, /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:131:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_ALT3'
-  131 |     MXC_GPIO_FUNC_ALT3,     /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:128:5: note: previous definition of 'MXC_GPIO_FUNC_ALT3' with type 'enum <anonymous>'
-  128 |     MXC_GPIO_FUNC_ALT3, /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:132:5: error: redeclaration of enumerator 'MXC_GPIO_FUNC_ALT4'
-  132 |     MXC_GPIO_FUNC_ALT4,     /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:129:5: note: previous definition of 'MXC_GPIO_FUNC_ALT4' with type 'enum <anonymous>'
-  129 |     MXC_GPIO_FUNC_ALT4, /**< Alternate Function Selection */
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:133:3: error: conflicting types for 'mxc_gpio_func_t'; have 'enum <anonymous>'
-  133 | } mxc_gpio_func_t;
-      |   ^~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:130:3: note: previous declaration of 'mxc_gpio_func_t' with type 'mxc_gpio_func_t'
-  130 | } mxc_gpio_func_t;
-      |   ^~~~~~~~~~~~~~~
-inc/gpio.h:139:5: error: redeclaration of enumerator 'MXC_GPIO_VSSEL_VDDIO'
-  139 |     MXC_GPIO_VSSEL_VDDIO,        /**< Set pin to VIDDIO voltage */
-      |     ^~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:136:5: note: previous definition of 'MXC_GPIO_VSSEL_VDDIO' with type 'enum <anonymous>'
-  136 |     MXC_GPIO_VSSEL_VDDIO, /**< Set pin to VIDDIO voltage */
-      |     ^~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:140:5: error: redeclaration of enumerator 'MXC_GPIO_VSSEL_VDDIOH'
-  140 |     MXC_GPIO_VSSEL_VDDIOH,       /**< Set pin to VIDDIOH voltage */
-      |     ^~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:137:5: note: previous definition of 'MXC_GPIO_VSSEL_VDDIOH' with type 'enum <anonymous>'
-  137 |     MXC_GPIO_VSSEL_VDDIOH, /**< Set pin to VIDDIOH voltage */
-      |     ^~~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:141:3: error: conflicting types for 'mxc_gpio_vssel_t'; have 'enum <anonymous>'
-  141 | } mxc_gpio_vssel_t;
-      |   ^~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:138:3: note: previous declaration of 'mxc_gpio_vssel_t' with type 'mxc_gpio_vssel_t'
-  138 | } mxc_gpio_vssel_t;
-      |   ^~~~~~~~~~~~~~~~
-inc/gpio.h:147:5: error: redeclaration of enumerator 'MXC_GPIO_PAD_NONE'
-  147 |     MXC_GPIO_PAD_NONE,              /**< No pull-up or pull-down */
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:144:5: note: previous definition of 'MXC_GPIO_PAD_NONE' with type 'enum <anonymous>'
-  144 |     MXC_GPIO_PAD_NONE, /**< No pull-up or pull-down */
-      |     ^~~~~~~~~~~~~~~~~
-inc/gpio.h:148:5: error: redeclaration of enumerator 'MXC_GPIO_PAD_PULL_UP'
-  148 |     MXC_GPIO_PAD_PULL_UP,           /**< Set pad to strong pull-up */
-      |     ^~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:145:5: note: previous definition of 'MXC_GPIO_PAD_PULL_UP' with type 'enum <anonymous>'
-  145 |     MXC_GPIO_PAD_PULL_UP, /**< Set pad to strong pull-up */
-      |     ^~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:149:5: error: redeclaration of enumerator 'MXC_GPIO_PAD_PULL_DOWN'
-  149 |     MXC_GPIO_PAD_PULL_DOWN,         /**< Set pad to strong pull-down */
-      |     ^~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:146:5: note: previous definition of 'MXC_GPIO_PAD_PULL_DOWN' with type 'enum <anonymous>'
-  146 |     MXC_GPIO_PAD_PULL_DOWN, /**< Set pad to strong pull-down */
-      |     ^~~~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:150:5: error: redeclaration of enumerator 'MXC_GPIO_PAD_WEAK_PULL_UP'
-  150 |     MXC_GPIO_PAD_WEAK_PULL_UP,      /**< Set pad to weak pull-up */
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:147:5: note: previous definition of 'MXC_GPIO_PAD_WEAK_PULL_UP' with type 'enum <anonymous>'
-  147 |     MXC_GPIO_PAD_WEAK_PULL_UP, /**< Set pad to weak pull-up */
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:151:5: error: redeclaration of enumerator 'MXC_GPIO_PAD_WEAK_PULL_DOWN'
-  151 |     MXC_GPIO_PAD_WEAK_PULL_DOWN,    /**< Set pad to weak pull-down */
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:148:5: note: previous definition of 'MXC_GPIO_PAD_WEAK_PULL_DOWN' with type 'enum <anonymous>'
-  148 |     MXC_GPIO_PAD_WEAK_PULL_DOWN, /**< Set pad to weak pull-down */
-      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:152:3: error: conflicting types for 'mxc_gpio_pad_t'; have 'enum <anonymous>'
-  152 | } mxc_gpio_pad_t;
-      |   ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:149:3: note: previous declaration of 'mxc_gpio_pad_t' with type 'mxc_gpio_pad_t'
-  149 | } mxc_gpio_pad_t;
-      |   ^~~~~~~~~~~~~~
-inc/gpio.h:163:3: error: conflicting types for 'mxc_gpio_cfg_t'; have 'struct <anonymous>'
-  163 | } mxc_gpio_cfg_t;
-      |   ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:160:3: note: previous declaration of 'mxc_gpio_cfg_t' with type 'mxc_gpio_cfg_t'
-  160 | } mxc_gpio_cfg_t;
-      |   ^~~~~~~~~~~~~~
-inc/gpio.h:169:5: error: redeclaration of enumerator 'MXC_GPIO_INT_LEVEL'
-  169 |     MXC_GPIO_INT_LEVEL,   /**< Interrupt is level sensitive */
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:166:5: note: previous definition of 'MXC_GPIO_INT_LEVEL' with type 'enum <anonymous>'
-  166 |     MXC_GPIO_INT_LEVEL, /**< Interrupt is level sensitive */
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:170:5: error: redeclaration of enumerator 'MXC_GPIO_INT_EDGE'
-  170 |     MXC_GPIO_INT_EDGE     /**< Interrupt is edge sensitive */
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:167:5: note: previous definition of 'MXC_GPIO_INT_EDGE' with type 'enum <anonymous>'
-  167 |     MXC_GPIO_INT_EDGE /**< Interrupt is edge sensitive */
-      |     ^~~~~~~~~~~~~~~~~
-inc/gpio.h:171:3: error: conflicting types for 'mxc_gpio_int_mode_t'; have 'enum <anonymous>'
-  171 | } mxc_gpio_int_mode_t;
-      |   ^~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:168:3: note: previous declaration of 'mxc_gpio_int_mode_t' with type 'mxc_gpio_int_mode_t'
-  168 | } mxc_gpio_int_mode_t;
-      |   ^~~~~~~~~~~~~~~~~~~
-inc/gpio.h:177:5: error: redeclaration of enumerator 'MXC_GPIO_INT_FALLING'
-  177 |     MXC_GPIO_INT_FALLING,                 /**< Interrupt triggers on falling edge */
-      |     ^~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:174:5: note: previous definition of 'MXC_GPIO_INT_FALLING' with type 'enum <anonymous>'
-  174 |     MXC_GPIO_INT_FALLING, /**< Interrupt triggers on falling edge */
-      |     ^~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:178:5: error: redeclaration of enumerator 'MXC_GPIO_INT_HIGH'
-  178 |     MXC_GPIO_INT_HIGH,                    /**< Interrupt triggers when level is high */
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:175:5: note: previous definition of 'MXC_GPIO_INT_HIGH' with type 'enum <anonymous>'
-  175 |     MXC_GPIO_INT_HIGH, /**< Interrupt triggers when level is high */
-      |     ^~~~~~~~~~~~~~~~~
-inc/gpio.h:179:5: error: redeclaration of enumerator 'MXC_GPIO_INT_RISING'
-  179 |     MXC_GPIO_INT_RISING,                  /**< Interrupt triggers on rising edge */
-      |     ^~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:176:5: note: previous definition of 'MXC_GPIO_INT_RISING' with type 'enum <anonymous>'
-  176 |     MXC_GPIO_INT_RISING, /**< Interrupt triggers on rising edge */
-      |     ^~~~~~~~~~~~~~~~~~~
-inc/gpio.h:180:5: error: redeclaration of enumerator 'MXC_GPIO_INT_LOW'
-  180 |     MXC_GPIO_INT_LOW,                     /**< Interrupt triggers when level is low */
-      |     ^~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:177:5: note: previous definition of 'MXC_GPIO_INT_LOW' with type 'enum <anonymous>'
-  177 |     MXC_GPIO_INT_LOW, /**< Interrupt triggers when level is low */
-      |     ^~~~~~~~~~~~~~~~
-inc/gpio.h:181:5: error: redeclaration of enumerator 'MXC_GPIO_INT_BOTH'
-  181 |     MXC_GPIO_INT_BOTH                     /**< Interrupt triggers on either edge */
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:178:5: note: previous definition of 'MXC_GPIO_INT_BOTH' with type 'enum <anonymous>'
-  178 |     MXC_GPIO_INT_BOTH /**< Interrupt triggers on either edge */
-      |     ^~~~~~~~~~~~~~~~~
-inc/gpio.h:182:3: error: conflicting types for 'mxc_gpio_int_pol_t'; have 'enum <anonymous>'
-  182 | } mxc_gpio_int_pol_t;
-      |   ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:179:3: note: previous declaration of 'mxc_gpio_int_pol_t' with type 'mxc_gpio_int_pol_t'
-  179 | } mxc_gpio_int_pol_t;
-      |   ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:212:5: error: conflicting types for 'MXC_GPIO_Config'; have 'int(const mxc_gpio_cfg_t *)'
-  212 | int MXC_GPIO_Config (const mxc_gpio_cfg_t *cfg);
-      |     ^~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:209:5: note: previous declaration of 'MXC_GPIO_Config' with type 'int(const mxc_gpio_cfg_t *)'
-  209 | int MXC_GPIO_Config(const mxc_gpio_cfg_t *cfg);
-      |     ^~~~~~~~~~~~~~~
-inc/gpio.h:267:5: error: conflicting types for 'MXC_GPIO_IntConfig'; have 'int(const mxc_gpio_cfg_t *, mxc_gpio_int_pol_t)'
-  267 | int MXC_GPIO_IntConfig (const mxc_gpio_cfg_t *cfg, mxc_gpio_int_pol_t pol);
-      |     ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:264:5: note: previous declaration of 'MXC_GPIO_IntConfig' with type 'int(const mxc_gpio_cfg_t *, mxc_gpio_int_pol_t)'
-  264 | int MXC_GPIO_IntConfig(const mxc_gpio_cfg_t *cfg, mxc_gpio_int_pol_t pol);
-      |     ^~~~~~~~~~~~~~~~~~
-inc/gpio.h:308:6: error: conflicting types for 'MXC_GPIO_RegisterCallback'; have 'void(const mxc_gpio_cfg_t *, void (*)(void *), void *)'
-  308 | void MXC_GPIO_RegisterCallback (const mxc_gpio_cfg_t *cfg, mxc_gpio_callback_fn callback, void *cbdata);
-      |      ^~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:305:6: note: previous declaration of 'MXC_GPIO_RegisterCallback' with type 'void(const mxc_gpio_cfg_t *, void (*)(void *), void *)'
-  305 | void MXC_GPIO_RegisterCallback(const mxc_gpio_cfg_t *cfg, mxc_gpio_callback_fn callback,
-      |      ^~~~~~~~~~~~~~~~~~~~~~~~~
-inc/gpio.h:328:5: error: conflicting types for 'MXC_GPIO_SetVSSEL'; have 'int(mxc_gpio_regs_t *, mxc_gpio_vssel_t,  uint32_t)' {aka 'int(mxc_gpio_regs_t *, mxc_gpio_vssel_t,  long unsigned int)'}
-  328 | int MXC_GPIO_SetVSSEL (mxc_gpio_regs_t* port, mxc_gpio_vssel_t vssel, uint32_t mask);
-      |     ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/gpio.h:326:5: note: previous declaration of 'MXC_GPIO_SetVSSEL' with type 'int(mxc_gpio_regs_t *, mxc_gpio_vssel_t,  uint32_t)' {aka 'int(mxc_gpio_regs_t *, mxc_gpio_vssel_t,  long unsigned int)'}
-  326 | int MXC_GPIO_SetVSSEL(mxc_gpio_regs_t *port, mxc_gpio_vssel_t vssel, uint32_t mask);
-      |     ^~~~~~~~~~~~~~~~~
-In file included from inc/mxc_device.h:42,
-                 from src/application_processor.c:20:
-inc/mxc_pins.h:47:29: error: conflicting types for 'gpio_cfg_extclk'; have 'mxc_gpio_cfg_t'
-   47 | extern const mxc_gpio_cfg_t gpio_cfg_extclk;
-      |                             ^~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:46:29: note: previous declaration of 'gpio_cfg_extclk' with type 'mxc_gpio_cfg_t'
-   46 | extern const mxc_gpio_cfg_t gpio_cfg_extclk;
-      |                             ^~~~~~~~~~~~~~~
-inc/mxc_pins.h:48:29: error: conflicting types for 'gpio_cfg_i2c0'; have 'mxc_gpio_cfg_t'
-   48 | extern const mxc_gpio_cfg_t gpio_cfg_i2c0;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:47:29: note: previous declaration of 'gpio_cfg_i2c0' with type 'mxc_gpio_cfg_t'
-   47 | extern const mxc_gpio_cfg_t gpio_cfg_i2c0;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:49:29: error: conflicting types for 'gpio_cfg_i2c1'; have 'mxc_gpio_cfg_t'
-   49 | extern const mxc_gpio_cfg_t gpio_cfg_i2c1;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:48:29: note: previous declaration of 'gpio_cfg_i2c1' with type 'mxc_gpio_cfg_t'
-   48 | extern const mxc_gpio_cfg_t gpio_cfg_i2c1;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:50:29: error: conflicting types for 'gpio_cfg_i2c2'; have 'mxc_gpio_cfg_t'
-   50 | extern const mxc_gpio_cfg_t gpio_cfg_i2c2;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:49:29: note: previous declaration of 'gpio_cfg_i2c2' with type 'mxc_gpio_cfg_t'
-   49 | extern const mxc_gpio_cfg_t gpio_cfg_i2c2;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:52:29: error: conflicting types for 'gpio_cfg_uart0'; have 'mxc_gpio_cfg_t'
-   52 | extern const mxc_gpio_cfg_t gpio_cfg_uart0;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:51:29: note: previous declaration of 'gpio_cfg_uart0' with type 'mxc_gpio_cfg_t'
-   51 | extern const mxc_gpio_cfg_t gpio_cfg_uart0;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:53:29: error: conflicting types for 'gpio_cfg_uart0_flow'; have 'mxc_gpio_cfg_t'
-   53 | extern const mxc_gpio_cfg_t gpio_cfg_uart0_flow;
-      |                             ^~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:52:29: note: previous declaration of 'gpio_cfg_uart0_flow' with type 'mxc_gpio_cfg_t'
-   52 | extern const mxc_gpio_cfg_t gpio_cfg_uart0_flow;
-      |                             ^~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:54:29: error: conflicting types for 'gpio_cfg_uart0_flow_disable'; have 'mxc_gpio_cfg_t'
-   54 | extern const mxc_gpio_cfg_t gpio_cfg_uart0_flow_disable;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:53:29: note: previous declaration of 'gpio_cfg_uart0_flow_disable' with type 'mxc_gpio_cfg_t'
-   53 | extern const mxc_gpio_cfg_t gpio_cfg_uart0_flow_disable;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:55:29: error: conflicting types for 'gpio_cfg_uart1'; have 'mxc_gpio_cfg_t'
-   55 | extern const mxc_gpio_cfg_t gpio_cfg_uart1;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:54:29: note: previous declaration of 'gpio_cfg_uart1' with type 'mxc_gpio_cfg_t'
-   54 | extern const mxc_gpio_cfg_t gpio_cfg_uart1;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:58:29: error: conflicting types for 'gpio_cfg_uart2'; have 'mxc_gpio_cfg_t'
-   58 | extern const mxc_gpio_cfg_t gpio_cfg_uart2;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:55:29: note: previous declaration of 'gpio_cfg_uart2' with type 'mxc_gpio_cfg_t'
-   55 | extern const mxc_gpio_cfg_t gpio_cfg_uart2;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:61:29: error: conflicting types for 'gpio_cfg_uart3'; have 'mxc_gpio_cfg_t'
-   61 | extern const mxc_gpio_cfg_t gpio_cfg_uart3;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:56:29: note: previous declaration of 'gpio_cfg_uart3' with type 'mxc_gpio_cfg_t'
-   56 | extern const mxc_gpio_cfg_t gpio_cfg_uart3;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:66:29: error: conflicting types for 'gpio_cfg_tmr0'; have 'mxc_gpio_cfg_t'
-   66 | extern const mxc_gpio_cfg_t gpio_cfg_tmr0;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:59:29: note: previous declaration of 'gpio_cfg_tmr0' with type 'mxc_gpio_cfg_t'
-   59 | extern const mxc_gpio_cfg_t gpio_cfg_tmr0;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:67:29: error: conflicting types for 'gpio_cfg_tmr1'; have 'mxc_gpio_cfg_t'
-   67 | extern const mxc_gpio_cfg_t gpio_cfg_tmr1;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:60:29: note: previous declaration of 'gpio_cfg_tmr1' with type 'mxc_gpio_cfg_t'
-   60 | extern const mxc_gpio_cfg_t gpio_cfg_tmr1;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:68:29: error: conflicting types for 'gpio_cfg_tmr2'; have 'mxc_gpio_cfg_t'
-   68 | extern const mxc_gpio_cfg_t gpio_cfg_tmr2;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:61:29: note: previous declaration of 'gpio_cfg_tmr2' with type 'mxc_gpio_cfg_t'
-   61 | extern const mxc_gpio_cfg_t gpio_cfg_tmr2;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:69:29: error: conflicting types for 'gpio_cfg_tmr3'; have 'mxc_gpio_cfg_t'
-   69 | extern const mxc_gpio_cfg_t gpio_cfg_tmr3;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:62:29: note: previous declaration of 'gpio_cfg_tmr3' with type 'mxc_gpio_cfg_t'
-   62 | extern const mxc_gpio_cfg_t gpio_cfg_tmr3;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:70:29: error: conflicting types for 'gpio_cfg_tmr0b'; have 'mxc_gpio_cfg_t'
-   70 | extern const mxc_gpio_cfg_t gpio_cfg_tmr0b;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:63:29: note: previous declaration of 'gpio_cfg_tmr0b' with type 'mxc_gpio_cfg_t'
-   63 | extern const mxc_gpio_cfg_t gpio_cfg_tmr0b;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:71:29: error: conflicting types for 'gpio_cfg_tmr1b'; have 'mxc_gpio_cfg_t'
-   71 | extern const mxc_gpio_cfg_t gpio_cfg_tmr1b;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:64:29: note: previous declaration of 'gpio_cfg_tmr1b' with type 'mxc_gpio_cfg_t'
-   64 | extern const mxc_gpio_cfg_t gpio_cfg_tmr1b;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:72:29: error: conflicting types for 'gpio_cfg_tmr2b'; have 'mxc_gpio_cfg_t'
-   72 | extern const mxc_gpio_cfg_t gpio_cfg_tmr2b;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:65:29: note: previous declaration of 'gpio_cfg_tmr2b' with type 'mxc_gpio_cfg_t'
-   65 | extern const mxc_gpio_cfg_t gpio_cfg_tmr2b;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:73:29: error: conflicting types for 'gpio_cfg_tmr3b'; have 'mxc_gpio_cfg_t'
-   73 | extern const mxc_gpio_cfg_t gpio_cfg_tmr3b;
-      |                             ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:66:29: note: previous declaration of 'gpio_cfg_tmr3b' with type 'mxc_gpio_cfg_t'
-   66 | extern const mxc_gpio_cfg_t gpio_cfg_tmr3b;
-      |                             ^~~~~~~~~~~~~~
-inc/mxc_pins.h:74:29: error: conflicting types for 'gpio_cfg_tmr4'; have 'mxc_gpio_cfg_t'
-   74 | extern const mxc_gpio_cfg_t gpio_cfg_tmr4;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:67:29: note: previous declaration of 'gpio_cfg_tmr4' with type 'mxc_gpio_cfg_t'
-   67 | extern const mxc_gpio_cfg_t gpio_cfg_tmr4;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:75:29: error: conflicting types for 'gpio_cfg_tmr5'; have 'mxc_gpio_cfg_t'
-   75 | extern const mxc_gpio_cfg_t gpio_cfg_tmr5;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:68:29: note: previous declaration of 'gpio_cfg_tmr5' with type 'mxc_gpio_cfg_t'
-   68 | extern const mxc_gpio_cfg_t gpio_cfg_tmr5;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:77:29: error: conflicting types for 'gpio_cfg_i2s0'; have 'mxc_gpio_cfg_t'
-   77 | extern const mxc_gpio_cfg_t gpio_cfg_i2s0;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:70:29: note: previous declaration of 'gpio_cfg_i2s0' with type 'mxc_gpio_cfg_t'
-   70 | extern const mxc_gpio_cfg_t gpio_cfg_i2s0;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:78:29: error: conflicting types for 'gpio_cfg_i2s0_extclk'; have 'mxc_gpio_cfg_t'
-   78 | extern const mxc_gpio_cfg_t gpio_cfg_i2s0_extclk;
-      |                             ^~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:71:29: note: previous declaration of 'gpio_cfg_i2s0_extclk' with type 'mxc_gpio_cfg_t'
-   71 | extern const mxc_gpio_cfg_t gpio_cfg_i2s0_extclk;
-      |                             ^~~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:80:29: error: conflicting types for 'gpio_cfg_owm'; have 'mxc_gpio_cfg_t'
-   80 | extern const mxc_gpio_cfg_t gpio_cfg_owm;
-      |                             ^~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:73:29: note: previous declaration of 'gpio_cfg_owm' with type 'mxc_gpio_cfg_t'
-   73 | extern const mxc_gpio_cfg_t gpio_cfg_owm;
-      |                             ^~~~~~~~~~~~
-inc/mxc_pins.h:81:29: error: conflicting types for 'gpio_cfg_owmb'; have 'mxc_gpio_cfg_t'
-   81 | extern const mxc_gpio_cfg_t gpio_cfg_owmb;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:74:29: note: previous declaration of 'gpio_cfg_owmb' with type 'mxc_gpio_cfg_t'
-   74 | extern const mxc_gpio_cfg_t gpio_cfg_owmb;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:83:29: error: conflicting types for 'gpio_cfg_spi0'; have 'mxc_gpio_cfg_t'
-   83 | extern const mxc_gpio_cfg_t gpio_cfg_spi0;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:76:29: note: previous declaration of 'gpio_cfg_spi0' with type 'mxc_gpio_cfg_t'
-   76 | extern const mxc_gpio_cfg_t gpio_cfg_spi0;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:84:29: error: conflicting types for 'gpio_cfg_spi1'; have 'mxc_gpio_cfg_t'
-   84 | extern const mxc_gpio_cfg_t gpio_cfg_spi1;
-      |                             ^~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:77:29: note: previous declaration of 'gpio_cfg_spi1' with type 'mxc_gpio_cfg_t'
-   77 | extern const mxc_gpio_cfg_t gpio_cfg_spi1;
-      |                             ^~~~~~~~~~~~~
-inc/mxc_pins.h:86:29: error: conflicting types for 'gpio_cfg_rtcsqw'; have 'mxc_gpio_cfg_t'
-   86 | extern const mxc_gpio_cfg_t gpio_cfg_rtcsqw;
-      |                             ^~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:79:29: note: previous declaration of 'gpio_cfg_rtcsqw' with type 'mxc_gpio_cfg_t'
-   79 | extern const mxc_gpio_cfg_t gpio_cfg_rtcsqw;
-      |                             ^~~~~~~~~~~~~~~
-inc/mxc_pins.h:87:29: error: conflicting types for 'gpio_cfg_rtcsqwb'; have 'mxc_gpio_cfg_t'
-   87 | extern const mxc_gpio_cfg_t gpio_cfg_rtcsqwb;
-      |                             ^~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:80:29: note: previous declaration of 'gpio_cfg_rtcsqwb' with type 'mxc_gpio_cfg_t'
-   80 | extern const mxc_gpio_cfg_t gpio_cfg_rtcsqwb;
-      |                             ^~~~~~~~~~~~~~~~
-inc/mxc_pins.h:89:29: error: conflicting types for 'gpio_cfg_pt0'; have 'mxc_gpio_cfg_t'
-   89 | extern const mxc_gpio_cfg_t gpio_cfg_pt0;
-      |                             ^~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:82:29: note: previous declaration of 'gpio_cfg_pt0' with type 'mxc_gpio_cfg_t'
-   82 | extern const mxc_gpio_cfg_t gpio_cfg_pt0;
-      |                             ^~~~~~~~~~~~
-inc/mxc_pins.h:90:29: error: conflicting types for 'gpio_cfg_pt1'; have 'mxc_gpio_cfg_t'
-   90 | extern const mxc_gpio_cfg_t gpio_cfg_pt1;
-      |                             ^~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:83:29: note: previous declaration of 'gpio_cfg_pt1' with type 'mxc_gpio_cfg_t'
-   83 | extern const mxc_gpio_cfg_t gpio_cfg_pt1;
-      |                             ^~~~~~~~~~~~
-inc/mxc_pins.h:91:29: error: conflicting types for 'gpio_cfg_pt2'; have 'mxc_gpio_cfg_t'
-   91 | extern const mxc_gpio_cfg_t gpio_cfg_pt2;
-      |                             ^~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:84:29: note: previous declaration of 'gpio_cfg_pt2' with type 'mxc_gpio_cfg_t'
-   84 | extern const mxc_gpio_cfg_t gpio_cfg_pt2;
-      |                             ^~~~~~~~~~~~
-inc/mxc_pins.h:92:29: error: conflicting types for 'gpio_cfg_pt3'; have 'mxc_gpio_cfg_t'
-   92 | extern const mxc_gpio_cfg_t gpio_cfg_pt3;
-      |                             ^~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:85:29: note: previous declaration of 'gpio_cfg_pt3' with type 'mxc_gpio_cfg_t'
-   85 | extern const mxc_gpio_cfg_t gpio_cfg_pt3;
-      |                             ^~~~~~~~~~~~
-inc/mxc_pins.h:94:29: error: conflicting types for 'gpio_cfg_pcif_P0_BITS_0_7'; have 'mxc_gpio_cfg_t'
-   94 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P0_BITS_0_7;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:87:29: note: previous declaration of 'gpio_cfg_pcif_P0_BITS_0_7' with type 'mxc_gpio_cfg_t'
-   87 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P0_BITS_0_7;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:95:29: error: conflicting types for 'gpio_cfg_pcif_P0_BITS_8_9'; have 'mxc_gpio_cfg_t'
-   95 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P0_BITS_8_9;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:88:29: note: previous declaration of 'gpio_cfg_pcif_P0_BITS_8_9' with type 'mxc_gpio_cfg_t'
-   88 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P0_BITS_8_9;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:96:29: error: conflicting types for 'gpio_cfg_pcif_P1_BITS_10_11'; have 'mxc_gpio_cfg_t'
-   96 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P1_BITS_10_11;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:89:29: note: previous declaration of 'gpio_cfg_pcif_P1_BITS_10_11' with type 'mxc_gpio_cfg_t'
-   89 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_P1_BITS_10_11;
-      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:97:29: error: conflicting types for 'gpio_cfg_pcif_hsync'; have 'mxc_gpio_cfg_t'
-   97 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_hsync;
-      |                             ^~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:90:29: note: previous declaration of 'gpio_cfg_pcif_hsync' with type 'mxc_gpio_cfg_t'
-   90 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_hsync;
-      |                             ^~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:98:29: error: conflicting types for 'gpio_cfg_pcif_vsync'; have 'mxc_gpio_cfg_t'
-   98 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_vsync;
-      |                             ^~~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:91:29: note: previous declaration of 'gpio_cfg_pcif_vsync' with type 'mxc_gpio_cfg_t'
-   91 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_vsync;
-      |                             ^~~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:99:29: error: conflicting types for 'gpio_cfg_pcif_xclk'; have 'mxc_gpio_cfg_t'
-   99 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_xclk;
-      |                             ^~~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:92:29: note: previous declaration of 'gpio_cfg_pcif_xclk' with type 'mxc_gpio_cfg_t'
-   92 | extern const mxc_gpio_cfg_t gpio_cfg_pcif_xclk;
-      |                             ^~~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:101:29: error: conflicting types for 'gpio_cfg_adc_ain0'; have 'mxc_gpio_cfg_t'
-  101 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain0;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:94:29: note: previous declaration of 'gpio_cfg_adc_ain0' with type 'mxc_gpio_cfg_t'
-   94 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain0;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:102:29: error: conflicting types for 'gpio_cfg_adc_ain1'; have 'mxc_gpio_cfg_t'
-  102 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain1;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:95:29: note: previous declaration of 'gpio_cfg_adc_ain1' with type 'mxc_gpio_cfg_t'
-   95 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain1;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:103:29: error: conflicting types for 'gpio_cfg_adc_ain2'; have 'mxc_gpio_cfg_t'
-  103 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain2;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:96:29: note: previous declaration of 'gpio_cfg_adc_ain2' with type 'mxc_gpio_cfg_t'
-   96 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain2;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:104:29: error: conflicting types for 'gpio_cfg_adc_ain3'; have 'mxc_gpio_cfg_t'
-  104 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain3;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:97:29: note: previous declaration of 'gpio_cfg_adc_ain3' with type 'mxc_gpio_cfg_t'
-   97 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain3;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:105:29: error: conflicting types for 'gpio_cfg_adc_ain4'; have 'mxc_gpio_cfg_t'
-  105 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain4;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:99:29: note: previous declaration of 'gpio_cfg_adc_ain4' with type 'mxc_gpio_cfg_t'
-   99 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain4;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:106:29: error: conflicting types for 'gpio_cfg_adc_ain4'; have 'mxc_gpio_cfg_t'
-  106 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain4;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:99:29: note: previous declaration of 'gpio_cfg_adc_ain4' with type 'mxc_gpio_cfg_t'
-   99 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain4;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:107:29: error: conflicting types for 'gpio_cfg_adc_ain5'; have 'mxc_gpio_cfg_t'
-  107 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain5;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:100:29: note: previous declaration of 'gpio_cfg_adc_ain5' with type 'mxc_gpio_cfg_t'
-  100 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain5;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:108:29: error: conflicting types for 'gpio_cfg_adc_ain6'; have 'mxc_gpio_cfg_t'
-  108 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain6;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:101:29: note: previous declaration of 'gpio_cfg_adc_ain6' with type 'mxc_gpio_cfg_t'
-  101 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain6;
-      |                             ^~~~~~~~~~~~~~~~~
-inc/mxc_pins.h:109:29: error: conflicting types for 'gpio_cfg_adc_ain7'; have 'mxc_gpio_cfg_t'
-  109 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain7;
-      |                             ^~~~~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_pins.h:102:29: note: previous declaration of 'gpio_cfg_adc_ain7' with type 'mxc_gpio_cfg_t'
-  102 | extern const mxc_gpio_cfg_t gpio_cfg_adc_ain7;
-      |                             ^~~~~~~~~~~~~~~~~
-In file included from inc/max78000.h:266,
-                 from /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/mxc_device.h:37:
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h:1628:39: error: conflicting types for '__NVIC_SetVector'; have 'void(IRQn_Type,  void (*)(void))'
- 1628 |   #define NVIC_SetVector              __NVIC_SetVector
-      |                                       ^~~~~~~~~~~~~~~~
-inc/nvic_table.h:56:6: note: in expansion of macro 'NVIC_SetVector'
-   56 | void NVIC_SetVector (IRQn_Type irqn, void (*irq_callback) (void));
-      |      ^~~~~~~~~~~~~~
-/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h:1911:22: note: previous definition of '__NVIC_SetVector' with type 'void(IRQn_Type,  uint32_t)' {aka 'void(IRQn_Type,  long unsigned int)'}
- 1911 | __STATIC_INLINE void __NVIC_SetVector(IRQn_Type IRQn, uint32_t vector)
-      |                      ^~~~~~~~~~~~~~~~
-In file included from src/application_processor.c:49:
-src/../../deployment/global_secrets.h:5:11: warning: excess elements in scalar initializer
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:5:11: note: (near initialization for 'external_aes_key')
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:5:17: warning: excess elements in scalar initializer
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |                 ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:5:17: note: (near initialization for 'external_aes_key')
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |                 ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:5:23: warning: excess elements in scalar initializer
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |                       ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:5:23: note: (near initialization for 'external_aes_key')
-    5 |     0x13, 0x9a, 0x35, 0x42,     \
-      |                       ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:9: warning: excess elements in scalar initializer
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:9: note: (near initialization for 'external_aes_key')
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:15: warning: excess elements in scalar initializer
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:15: note: (near initialization for 'external_aes_key')
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:21: warning: excess elements in scalar initializer
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:21: note: (near initialization for 'external_aes_key')
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:27: warning: excess elements in scalar initializer
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:6:27: note: (near initialization for 'external_aes_key')
-    6 |         0x2f, 0x1d, 0x61, 0xde, \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:9: warning: excess elements in scalar initializer
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:9: note: (near initialization for 'external_aes_key')
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:15: warning: excess elements in scalar initializer
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:15: note: (near initialization for 'external_aes_key')
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:21: warning: excess elements in scalar initializer
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:21: note: (near initialization for 'external_aes_key')
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:27: warning: excess elements in scalar initializer
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:7:27: note: (near initialization for 'external_aes_key')
-    7 |         0x3c, 0x91, 0x78, 0x7f, \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:9: warning: excess elements in scalar initializer
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:9: note: (near initialization for 'external_aes_key')
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |         ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:15: warning: excess elements in scalar initializer
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:15: note: (near initialization for 'external_aes_key')
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |               ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:21: warning: excess elements in scalar initializer
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:21: note: (near initialization for 'external_aes_key')
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |                     ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:27: warning: excess elements in scalar initializer
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:8:27: note: (near initialization for 'external_aes_key')
-    8 |         0xe0, 0x50, 0x7a, 0xfd  \
-      |                           ^~~~
-src/application_processor.c:174:45: note: in expansion of macro 'EXTERNAL_AES_KEY'
-  174 | const mxc_aes_enc_type_t external_aes_key = EXTERNAL_AES_KEY;
-      |                                             ^~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:11: warning: excess elements in scalar initializer
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:11: note: (near initialization for 'decrypt_aes_key')
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:17: warning: excess elements in scalar initializer
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |                 ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:17: note: (near initialization for 'decrypt_aes_key')
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |                 ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:23: warning: excess elements in scalar initializer
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |                       ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:13:23: note: (near initialization for 'decrypt_aes_key')
-   13 |     0x7F, 0x93, 0xE8, 0x5C,       \
-      |                       ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:9: warning: excess elements in scalar initializer
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:9: note: (near initialization for 'decrypt_aes_key')
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:15: warning: excess elements in scalar initializer
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:15: note: (near initialization for 'decrypt_aes_key')
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:21: warning: excess elements in scalar initializer
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:21: note: (near initialization for 'decrypt_aes_key')
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:27: warning: excess elements in scalar initializer
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:14:27: note: (near initialization for 'decrypt_aes_key')
-   14 |         0x27, 0x3A, 0x61, 0xF2,   \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:9: warning: excess elements in scalar initializer
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:9: note: (near initialization for 'decrypt_aes_key')
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:15: warning: excess elements in scalar initializer
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:15: note: (near initialization for 'decrypt_aes_key')
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:21: warning: excess elements in scalar initializer
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:21: note: (near initialization for 'decrypt_aes_key')
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:27: warning: excess elements in scalar initializer
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:15:27: note: (near initialization for 'decrypt_aes_key')
-   15 |         0x0B, 0xD4, 0x8E, 0x4A,   \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:9: warning: excess elements in scalar initializer
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:9: note: (near initialization for 'decrypt_aes_key')
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |         ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:15: warning: excess elements in scalar initializer
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:15: note: (near initialization for 'decrypt_aes_key')
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |               ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:21: warning: excess elements in scalar initializer
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:21: note: (near initialization for 'decrypt_aes_key')
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |                     ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:27: warning: excess elements in scalar initializer
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
-src/../../deployment/global_secrets.h:16:27: note: (near initialization for 'decrypt_aes_key')
-   16 |         0x19, 0x72, 0xC6, 0x9D    \
-      |                           ^~~~
-src/application_processor.c:175:44: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
-  175 | const mxc_aes_enc_type_t decrypt_aes_key = GLOBAL_AES_DECRYPTION_KEY;
-      |                                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/christopherbann/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+src/application_processor.c: In function 'AES_encrypt':
+src/application_processor.c:194:8: error: 'req' is a pointer; did you mean to use '->'?
+  194 |     req.length = MXC_AES_DATA_LENGTH;
+      |        ^
+      |        ->
+src/application_processor.c:195:8: error: 'req' is a pointer; did you mean to use '->'?
+  195 |     req.inputData = inputData;
+      |        ^
+      |        ->
+src/application_processor.c:196:8: error: 'req' is a pointer; did you mean to use '->'?
+  196 |     req.resultData = encryptedData;
+      |        ^
+      |        ->
+src/application_processor.c:197:8: error: 'req' is a pointer; did you mean to use '->'?
+  197 |     req.keySize = key;
+      |        ^
+      |        ->
+src/application_processor.c:198:8: error: 'req' is a pointer; did you mean to use '->'?
+  198 |     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+      |        ^
+      |        ->
+src/application_processor.c:202:30: warning: passing argument 1 of 'MXC_AES_EncryptAsync' from incompatible pointer type [-Wincompatible-pointer-types]
+  202 |         MXC_AES_EncryptAsync(&req);
+      |                              ^~~~
+      |                              |
+      |                              mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+In file included from src/application_processor.c:44:
+inc/aes.h:262:41: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  262 | int MXC_AES_EncryptAsync(mxc_aes_req_t *req);
+      |                          ~~~~~~~~~~~~~~~^~~
+src/application_processor.c:211:31: warning: passing argument 1 of 'MXC_AES_Encrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  211 |         err = MXC_AES_Encrypt(&req);
+      |                               ^~~~
+      |                               |
+      |                               mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+inc/aes.h:214:36: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  214 | int MXC_AES_Encrypt(mxc_aes_req_t *req);
+      |                     ~~~~~~~~~~~~~~~^~~
 src/application_processor.c: In function 'secure_send':
-src/application_processor.c:226:21: warning: passing argument 1 of 'AES_encrypt' makes integer from pointer without a cast [-Wint-conversion]
-  226 |         AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
-      |                     ^~~~~~~~~~~~~~~
-      |                     |
-      |                     uint8_t * {aka unsigned char *}
-src/application_processor.c:186:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  186 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
-      |                 ~~~~^~~~~~~~~~~~
+src/application_processor.c:240:12: error: 'encryptedBuffer' undeclared (first use in this function); did you mean 'encryptedBuffr'?
+  240 |     memset(encryptedBuffer, 0, sizeof(encryptedBuffer));
+      |            ^~~~~~~~~~~~~~~
+      |            encryptedBuffr
+src/application_processor.c:240:12: note: each undeclared identifier is reported only once for each function it appears in
+src/application_processor.c:257:41: warning: passing argument 3 of 'AES_encrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  257 |         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment);
+      |                                         ^~~~~~~~~~~~~~~~~
+      |                                         |
+      |                                         uint8_t * {aka unsigned char *}
+src/application_processor.c:187:65: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  187 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+      |                                                       ~~~~~~~~~~^~~~~~~~~
+src/application_processor.c:257:9: error: too few arguments to function 'AES_encrypt'
+  257 |         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment);
+      |         ^~~~~~~~~~~
+src/application_processor.c:187:5: note: declared here
+  187 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+      |     ^~~~~~~~~~~
+src/application_processor.c:261:40: error: 'encryptBuffer' undeclared (first use in this function); did you mean 'encryptedBuffr'?
+  261 |     return send_packet(address, sizeof(encryptBuffer), encryptedBuffer);
+      |                                        ^~~~~~~~~~~~~
+      |                                        encryptedBuffr
+src/application_processor.c:239:13: warning: unused variable 'encryptedBuffr' [-Wunused-variable]
+  239 |     uint8_t encryptedBuffr[totalSegments * segmentSize];
+      |             ^~~~~~~~~~~~~~
+src/application_processor.c: In function 'AES_decrypt':
+src/application_processor.c:275:8: error: 'req' is a pointer; did you mean to use '->'?
+  275 |     req.length = MXC_AES_DATA_LENGTH;
+      |        ^
+      |        ->
+src/application_processor.c:276:8: error: 'req' is a pointer; did you mean to use '->'?
+  276 |     req.inputData = inputData;
+      |        ^
+      |        ->
+src/application_processor.c:277:8: error: 'req' is a pointer; did you mean to use '->'?
+  277 |     req.resultData = decryptedData;
+      |        ^
+      |        ->
+src/application_processor.c:278:8: error: 'req' is a pointer; did you mean to use '->'?
+  278 |     req.keySize = key;
+      |        ^
+      |        ->
+src/application_processor.c:279:8: error: 'req' is a pointer; did you mean to use '->'?
+  279 |     req.encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
+      |        ^
+      |        ->
+src/application_processor.c:282:36: warning: passing argument 1 of 'MXC_AES_DecryptAsync' from incompatible pointer type [-Wincompatible-pointer-types]
+  282 |         err = MXC_AES_DecryptAsync(&req);
+      |                                    ^~~~
+      |                                    |
+      |                                    mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+inc/aes.h:272:41: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  272 | int MXC_AES_DecryptAsync(mxc_aes_req_t *req);
+      |                          ~~~~~~~~~~~~~~~^~~
+src/application_processor.c:291:31: warning: passing argument 1 of 'MXC_AES_Decrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  291 |         err = MXC_AES_Decrypt(&req);
+      |                               ^~~~
+      |                               |
+      |                               mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+inc/aes.h:224:36: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  224 | int MXC_AES_Decrypt(mxc_aes_req_t *req);
+      |                     ~~~~~~~~~~~~~~~^~~
 src/application_processor.c: In function 'secure_receive':
-src/application_processor.c:294:21: warning: passing argument 1 of 'AES_decrypt' makes integer from pointer without a cast [-Wint-conversion]
-  294 |         AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
-      |                     ^~~~~~~~~~~~~~~
-      |                     |
-      |                     uint8_t * {aka unsigned char *}
-src/application_processor.c:233:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  233 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
-      |                 ~~~~^~~~~~~~~~~~
-src/application_processor.c: In function 'boot':
-src/application_processor.c:539:16: error: 'LED3' undeclared (first use in this function); did you mean 'LED1'?
-  539 |         LED_On(LED3);
-      |                ^~~~
-      |                LED1
-src/application_processor.c:539:16: note: each undeclared identifier is reported only once for each function it appears in
-make: *** [/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
+src/application_processor.c:326:26: error: too many arguments to function 'poll_and_receive_packet'
+  326 |     int receivedLength = poll_and_receive_packet(address, encryptedBuffer, sizeof(encryptedBuffer));
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~
+In file included from src/application_processor.c:28:
+inc/board_link.h:62:5: note: declared here
+   62 | int poll_and_receive_packet(i2c_addr_t address, uint8_t* packet);
+      |     ^~~~~~~~~~~~~~~~~~~~~~~
+src/application_processor.c:355:61: error: incompatible type for argument 3 of 'AES_decrypt'
+  355 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                                                             ^~~~~~~
+      |                                                             |
+      |                                                             uint8_t * {aka unsigned char *}
+src/application_processor.c:268:74: note: expected 'mxc_aes_enc_type_t' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |                                                       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+src/application_processor.c:355:70: warning: passing argument 4 of 'AES_decrypt' makes pointer from integer without a cast [-Wint-conversion]
+  355 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                                                                      ^~~~~~~~~~~~~~
+      |                                                                      |
+      |                                                                      uint8_t {aka unsigned char}
+src/application_processor.c:268:96: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t' {aka 'unsigned char'}
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |                                                                                      ~~~~~~~~~~^~~~~~~~~
+src/application_processor.c:355:29: error: too few arguments to function 'AES_decrypt'
+  355 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                             ^~~~~~~~~~~
+src/application_processor.c:268:5: note: declared here
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |     ^~~~~~~~~~~
+src/application_processor.c: In function 'secure_send':
+src/application_processor.c:262:1: warning: control reaches end of non-void function [-Wreturn-type]
+  262 | }
+      | ^
+make: *** [/Users/christopherbann/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
 
-2024-02-16 13:03:50.416 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
-ERROR: Failed to build Application processor.
+2024-02-21 15:35:01.450 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+
