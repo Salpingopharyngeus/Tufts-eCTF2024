@@ -117,10 +117,6 @@ typedef enum {
  * **********************************/
 // Variable for information stored in flash memory
 flash_entry flash_status;
-uint32_t inputData[MXC_AES_DATA_LENGTH] = {0x873AC125, 0x2F45A7C8, 0x3EB7190,
-                                           0x486FA931, 0x94AE56F2, 0x89B4D0C1,
-                                           0x2F45A7C8, 0x3EB7190};
-uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
 
 /********************************* REFERENCE FLAG
@@ -174,8 +170,6 @@ kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
 const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
 const mxc_aes_enc_type_t decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
 
-mxc_aes_req_t req;
-
 volatile int dma_flag = 0;
 
 void DMA0_IRQHandler() {
@@ -183,24 +177,44 @@ void DMA0_IRQHandler() {
     dma_flag++;
 }
 
-int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+/**
+ * FUNCTION CONTRACT TO DO
+ *
+ *
+ * Can only encrypt using external key
+ */
+// Easiest way would be to pass in a parameter of type mxc_aes_req_t, the MXC_AES functions utilize that
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+    int err = E_NO_ERROR;
+    err = MXC_AES_Init();
+    if (err) return err; // TODO: check if this is secure against some kind of attack?
+
+    // Declare data for an AES request
+    mxc_aes_req_t* req;
     req.length = MXC_AES_DATA_LENGTH;
     req.inputData = inputData;
     req.resultData = encryptedData;
     req.keySize = key;
     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
-    MXC_AES_Init();
-
+    // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
         MXC_AES_EncryptAsync(&req);
+        if (err) return err;
 
-        while (dma_flag == 0)
-            ;
+        // Blocking Loop?
+        while (dma_flag == 0);
         dma_flag = 0;
     }
+    else {
+        // Non-asynchronous encrypt function
+        err = MXC_AES_Encrypt(&req);
+        if (err) return err;
+    }
+    
+    MXC_AES_Shutdown();
 
-    return E_NO_ERROR;
+    return err;
 }
 
 /**
@@ -217,39 +231,70 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
  * the security requirements.
  */
 int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
-    // Calculate the number of 128-bit segments
-    uint8_t num_segments =
-        (len + 15) / 16; // Round up to the nearest 128-bit segment
+    // Each segment is 32 bytes (256 bits)
+    const uint8_t segmentSize = 32;
+    
+    // Calculate the total size needed for encrypted data (round up to nearest segment)
+    uint8_t totalSegments = (len + segmentSize - 1) / segmentSize;
+    uint8_t encryptedBuffr[totalSegments * segmentSize];
+    memset(encryptedBuffer, 0, sizeof(encryptedBuffer));
+    for (uint8_t i = 0; i < totalSegments; ++i) {
+        uint32_t segment[segmentSize / 4]; // Temporary buffer for the current segment
+        memset(segment, 0, sizeof(segment)); // Clear the segment buffer
+        
+        // Calculate the number of bytes to copy for this segment
+        uint8_t bytesToCopy = len - (i * segmentSize);
+        if (bytesToCopy > segmentSize) {
+            bytesToCopy = segmentSize;
+        }
+        
+        // Copy the current segment of the original buffer into the temporary buffer
+        memcpy(segment, buffer + (i * segmentSize), bytesToCopy);
 
-    // Encrypt each 128-bit segment of len and concatenate them together
-    for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_encrypt(0, MXC_AES_128BITS);
+        // Encrypt the segment
+        // Assuming AES_encrypt has been adjusted to accept uint8_t* and segment size
+        // 2. Pass in this struct, pointer to the one you just created
+        AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment);
+
+        memcpy(encryptedBuffer + (i * segmentSize), segment, segmentSize);
     }
-
-    // Now, securely send the encrypted data over I2C
-    return send_packet(address, len, buffer);
+    return send_packet(address, sizeof(encryptBuffer), encryptedBuffer);
 }
 
-int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
+/**
+ * TODO: Function CONTRACT
+ * can decrypt using external or internal key
+ */
+int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+    int err = E_NO_ERROR;
+    err = MXC_AES_Init();
+    if (err) return err; // TODO: check if this is secure against some kind of attack?
+
+    // Declare data for an AES request
+    mxc_aes_req_t* req;
     req.length = MXC_AES_DATA_LENGTH;
-    req.inputData = encryptedData;
+    req.inputData = inputData;
     req.resultData = decryptedData;
     req.keySize = key;
-    req.encryption = MXC_AES_DECRYPT_INT_KEY;
+    req.encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
 
     if (asynchronous) {
-        MXC_AES_DecryptAsync(&req);
+        err = MXC_AES_DecryptAsync(&req);
+        if (err) return err;
 
-        while (dma_flag == 0)
-            ;
+        // Blocking Loop
+        while (dma_flag == 0) {}
 
         dma_flag = 0;
+
     } else {
-        MXC_AES_Decrypt(&req);
+        err = MXC_AES_Decrypt(&req);
+        if (err) return err;
     }
 
     MXC_AES_Shutdown();
 
+    
     if (memcmp(inputData, decryptedData, MXC_AES_DATA_LENGTH) == 0) {
         printf("\nData Verified");
         return E_NO_ERROR;
@@ -257,7 +302,7 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
 
     printf("\nData Mismatch");
 
-    return 1;
+    return err;
 }
 
 /**
@@ -285,16 +330,195 @@ int secure_receive(i2c_addr_t address, uint8_t *buffer) {
     // Note: You may need to adjust the decryption mechanism based on your
     // security requirements
 
-    // Calculate the number of 128-bit segments
+    // Calculate the number of 256-bit segments
     uint8_t num_segments =
-        (bytes_received + 15) / 16; // Round up to the nearest 128-bit segment
+        (bytes_received + 15) / 8; // Round up to the nearest 256-bit segment
 
-    // Decrypt each 128-bit segment of the buffer
+    // Decrypt each 256-bit segment of the buffer
     for (uint8_t i = 0; i < num_segments; ++i) {
-        AES_decrypt(0, MXC_AES_128BITS);
+        AES_decrypt(0, MXC_AES_256BITS);
     }
 
     return bytes_received; // Return the number of bytes received
+}
+
+
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* result) {
+    int err = E_NO_ERROR;
+    err = MXC_AES_Init();
+    if (err) return err; // TODO: check if this is secure against some kind of attack?
+
+    // Declare data for a AES request
+    mxc_aes_req_t* req;
+    req.length = MXC_AES_DATA_LENGTH;
+    req.inputData = inputData;
+    req.resultData = result;
+    req.keySize = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+
+    // TODO: check if asynchronous compatability works, and if we need it.
+    if (asynchronous) {
+        MXC_AES_EncryptAsync(&req);
+        if (err) return err;
+
+        // Blocking Loop?
+        while (dma_flag == 0);
+        dma_flag = 0;
+    }
+    else {
+        // Non-asynchronous encrypt function
+        err = MXC_AES_Encrypt(&req);
+        if (err) return err;
+    }
+    
+    MXC_AES_Shutdown();
+
+    return err;
+}
+
+/**
+ * @brief Secure Send
+ *
+ * @param address: i2c_addr_t, I2C address of recipient
+ * @param buffer: uint8_t*, pointer to data to be sent
+ * @param len: uint8_t, size of data to be sent
+ *
+ * @return int: status of the sending process
+ *
+ * Securely send data over I2C. This function is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team to align with
+ * the security requirements.
+ */
+int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
+    // Each segment is 32 bytes (256 bits)
+    const uint8_t segmentSize = 32;
+    
+    // Calculate the total size needed for encrypted data (round up to nearest segment)
+    uint8_t totalSegments = (len + segmentSize - 1) / segmentSize;
+    uint8_t encryptedBuffr[totalSegments * segmentSize];
+    memset(encryptedBuffer, 0, sizeof(encryptedBuffer));
+    for (uint8_t i = 0; i < totalSegments; ++i) {
+        uint32_t segment[segmentSize / 4]; // Temporary buffer for the current segment
+        memset(segment, 0, sizeof(segment)); // Clear the segment buffer
+        
+        // Calculate the number of bytes to copy for this segment
+        uint8_t bytesToCopy = len - (i * segmentSize);
+        if (bytesToCopy > segmentSize) {
+            bytesToCopy = segmentSize;
+        }
+        
+        // Copy the current segment of the original buffer into the temporary buffer
+        memcpy(segment, buffer + (i * segmentSize), bytesToCopy);
+
+        // Encrypt the segment
+        // Assuming AES_encrypt has been adjusted to accept uint8_t* and segment size
+        // 2. Pass in this struct, pointer to the one you just created
+        AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment);
+
+        memcpy(encryptedBuffer + (i * segmentSize), segment, segmentSize);
+    }
+    return send_packet(address, sizeof(encryptBuffer), encryptedBuffer);
+}
+
+int AES_decrypt(int asynchronous, mxc_aes_keys_t key, uint8_t* inputData, uint32_t inputLength) {
+    // Assuming the existence of a global buffer to hold decrypted data, similar to encryptedData in AES_encrypt
+    extern uint32_t decryptedData[];
+
+    // Setup AES request structure
+    mxc_aes_req_t req;
+    req.length = inputLength; // Set the input data length
+    req.inputData = (uint32_t)inputData; // Cast inputData to (uint32_t) if necessary for your AES API
+    req.resultData = decryptedData; // Point to the global decryptedData buffer
+    req.keySize = key; // Set the AES key size (e.g., MXC_AES_256BITS)
+    req.encryption = MXC_AES_DECRYPT_EXT_KEY; // Set the operation to decryption with an external key
+
+    // Initialize the AES module
+    MXC_AES_Init();
+
+    int result;
+    if (asynchronous) {
+        // Perform asynchronous decryption
+        MXC_AES_DecryptAsync(&req);
+        // Here you would need to handle the asynchronous completion, e.g., through an interrupt or a polling mechanism
+        result = E_NO_ERROR; // Example success status, adjust based on your implementation
+    } else {
+        // Perform synchronous/blocking decryption
+        result = MXC_AES_Decrypt(&req);
+    }
+
+    // Shutdown the AES module if done with decryption tasks
+    MXC_AES_Shutdown();
+
+    // Assuming the decrypted data is now in decryptedData and result indicates success/failure
+    // Copy the decrypted data back to inputData for use in secure_receive
+    if (result == E_NO_ERROR) {
+        memcpy(inputData, decryptedData, inputLength); // Ensure this does not exceed the buffer size
+    }
+
+    return result; // Return the result of the decryption operation
+}
+
+/**
+ * @brief Secure Receive
+ *
+ * @param address: i2c_addr_t, I2C address of sender
+ * @param buffer: uint8_t*, pointer to buffer to receive data to
+ *
+ * @return int: number of bytes received, negative if error
+ *
+ * Securely receive data over I2C. This function is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team to align with
+ * the security requirements.
+ */
+int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
+    // Buffer to hold the received encrypted data
+    uint8_t encryptedBuffer[max_len];
+    memset(encryptedBuffer, 0, sizeof(encryptedBuffer)); // Initialize buffer with zeros
+    
+    // Receive the encrypted data over I2C
+    int receivedLength = poll_and_receive_packet(address, encryptedBuffer, sizeof(encryptedBuffer));
+    if (receivedLength <= 0) {
+        // Error in receiving data or no data received
+        return receivedLength;
+    }
+
+    // Each segment is 32 bytes (256 bits)
+    const uint8_t segmentSize = 32;
+    // Calculate the total number of segments received
+    uint8_t totalSegments = (receivedLength + segmentSize - 1) / segmentSize;
+
+    // Assuming decryptedData is a global buffer similar to the encryptedData in AES_encrypt
+    extern uint32_t decryptedData[];
+
+    for (uint8_t i = 0; i < totalSegments; ++i) {
+        // Prepare a segment-sized buffer to hold the current segment for decryption
+        uint8_t segment[segmentSize];
+        memset(segment, 0, sizeof(segment)); // Clear the segment buffer
+
+        // Calculate actual bytes to process for this segment, considering the last segment might be smaller
+        uint8_t bytesToProcess = segmentSize;
+        if ((i * segmentSize + segmentSize) > receivedLength) {
+            bytesToProcess = receivedLength % segmentSize;
+        }
+
+        // Copy the current segment of the encrypted buffer into the segment buffer
+        memcpy(segment, encryptedBuffer + (i * segmentSize), bytesToProcess);
+
+        // Decrypt the segment
+        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+        if (decryptResult != E_NO_ERROR) {
+            // Handle decryption error (optional)
+            return decryptResult; // Or another error code indicating decryption failure
+        }
+
+        // Copy the decrypted segment back into the buffer provided by the caller
+        // Ensure not to exceed max_len
+        int copyLength = ((i * segmentSize + segmentSize) <= max_len) ? segmentSize : max_len % segmentSize;
+        memcpy(buffer + (i * segmentSize), decryptedData, copyLength);
+    }
+    
+    // Return the length of the decrypted data, adjusted for possibly incomplete final segment
+    return receivedLength; // This assumes the decrypted data size equals the encrypted data size
 }
 
 /**
@@ -348,6 +572,9 @@ void init() {
     board_link_init();
 }
 
+
+// TODO: if merging this branch (jake_being_silly) directly with another branch
+//       THIS FUNCTION MUST BE LOOKED AT!
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t *transmit, uint8_t *receive) {
     // Send message
