@@ -233,27 +233,44 @@ void process_validate() {
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
-int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+/**
+ * FUNCTION CONTRACT TO DO
+ *
+ *
+ * Can only encrypt using external key
+ */
+// Easiest way would be to pass in a parameter of type mxc_aes_req_t, the MXC_AES functions utilize that
+int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+    int err = E_NO_ERROR;
+    err = MXC_AES_Init();
+    if (err) return err; // TODO: check if this is secure against some kind of attack?
+
+    // Declare data for an AES request
+    mxc_aes_req_t* req;
     req.length = MXC_AES_DATA_LENGTH;
     req.inputData = inputData;
     req.resultData = encryptedData;
     req.keySize = key;
     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
-    MXC_AES_Init();
-
+    // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
         MXC_AES_EncryptAsync(&req);
+        if (err) return err;
 
-        while (dma_flag == 0)
-            ;
-
+        // Blocking Loop?
+        while (dma_flag == 0);
         dma_flag = 0;
-    } else {
-        MXC_AES_Encrypt(&req);
     }
+    else {
+        // Non-asynchronous encrypt function
+        err = MXC_AES_Encrypt(&req);
+        if (err) return err;
+    }
+    
+    MXC_AES_Shutdown();
 
-    return E_NO_ERROR;
+    return err;
 }
 
 void process_attest() {

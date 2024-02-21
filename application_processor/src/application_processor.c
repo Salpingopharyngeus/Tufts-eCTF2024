@@ -236,7 +236,7 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
     
     // Calculate the total size needed for encrypted data (round up to nearest segment)
     uint8_t totalSegments = (len + segmentSize - 1) / segmentSize;
-    uint8_t encryptedBuffr[totalSegments * segmentSize];
+    uint8_t encryptedBuffer[totalSegments * segmentSize];
     memset(encryptedBuffer, 0, sizeof(encryptedBuffer));
     for (uint8_t i = 0; i < totalSegments; ++i) {
         uint32_t segment[segmentSize / 4]; // Temporary buffer for the current segment
@@ -254,7 +254,7 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
         // Encrypt the segment
         // Assuming AES_encrypt has been adjusted to accept uint8_t* and segment size
         // 2. Pass in this struct, pointer to the one you just created
-        AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment);
+        AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment, encryptedBuffer);
 
         memcpy(encryptedBuffer + (i * segmentSize), segment, segmentSize);
     }
@@ -317,13 +317,13 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_met
  * functionality. This function must be implemented by your team to align with
  * the security requirements.
  */
-int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
+int secure_receive(uint8_t address, uint8_t *decryptedData, uint8_t max_len) {
     // Buffer to hold the received encrypted data
     uint8_t encryptedBuffer[max_len];
     memset(encryptedBuffer, 0, sizeof(encryptedBuffer)); // Initialize buffer with zeros
     
     // Receive the encrypted data over I2C
-    int receivedLength = poll_and_receive_packet(address, encryptedBuffer, sizeof(encryptedBuffer));
+    int receivedLength = poll_and_receive_packet(address, encryptedBuffer);
     if (receivedLength <= 0) {
         // Error in receiving data or no data received
         return receivedLength;
@@ -334,8 +334,9 @@ int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
     // Calculate the total number of segments received
     uint8_t totalSegments = (receivedLength + segmentSize - 1) / segmentSize;
 
-    // Assuming decryptedData is a global buffer similar to the encryptedData in AES_encrypt
-    extern uint32_t decryptedData[];
+    // // Assuming decryptedData is a global buffer similar to the encryptedData in AES_encrypt
+    // extern uint32_t decryptedData[];
+    // - Remy: Changed this to use the *buffer in params (?) also doesnt seem to be used?
 
     for (uint8_t i = 0; i < totalSegments; ++i) {
         // Prepare a segment-sized buffer to hold the current segment for decryption
