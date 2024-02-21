@@ -70,6 +70,7 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
+    
 } command_message;
 
 // Data type for receiving a validate message
@@ -124,68 +125,52 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    // Maximum size of buffer should be MAX_I2C_MESSAGE_LEN 256 bytes
-    // Let uint8_t len be the size of the first data stored in the buffer
-    // Append 16 byte H(authkey + E(data)) hash to buffer
-    // Next, Append random number to buffer
-    
-    print_debug("Given buffer: ");
-    print_hex_debug(buffer, MAX_I2C_MESSAGE_LEN);
-    uint32_t example_random;
-    example_random = 1234567;
-    
-    // Allocate memory for data portion of buffer
-    uint8_t* data = (uint8_t*)malloc(len);
-    // Copy the first len bytes from the buffer to the data buffer
-    memcpy(data, buffer, len);
-    print_debug("Data in buffer: ");
-    print_hex_debug(data, len);
+    if (len > MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t)) {
+        print_error("Message too long");
+        return -1;
+    }
 
-    // Create hash of data + key
-    char* data_to_str = (char*)data;
-    char* key = KEY;
-    // Calculate the length of the concatenated string
-    size_t total_length = strlen(data_to_str) + strlen(key);
-    
-    // Allocate memory for the concatenated string
-    char* data_and_key = (char*)malloc(total_length + 1); 
-    // Copy data_to_str to concatenated
-    strcpy(data_and_key, data_to_str);
-    // Concatenate key to concatenated
-    strcat(data_and_key, key);
+    uint8_t temp_buffer[MAX_I2C_MESSAGE_LEN] = {0};
 
-    print_debug("Data + Key: %s", data_and_key);
+    // Copy the original data into temp_buffer
+    memcpy(temp_buffer, buffer, len);
 
-    // Hash data+key 
+    // Assuming KEY is defined and has a known size
+    size_t key_len = strlen(KEY);
+
+    // Prepare data for hashing (data + key)
+    size_t data_and_key_len = len + key_len;
+    uint8_t* data_and_key = malloc(data_and_key_len);
+    if (!data_and_key) {
+        print_error("Memory allocation failed for data_and_key");
+        return ERROR_RETURN;
+    }
+    memcpy(data_and_key, temp_buffer, len);
+    memcpy(data_and_key + len, KEY, key_len);
+
+    // Hash data+key
     uint8_t hash_out[HASH_SIZE];
-    hash(data_and_key, HASH_SIZE, hash_out);
-    print_debug("HASH: ");
-    print_hex_debug(hash_out, HASH_SIZE);
-
-     // Calculate the position to copy the hash into buffer
-    size_t hash_position = MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t);
-
-    // Copy hash_out to the correct position in buffer
-    memcpy(buffer + hash_position, hash_out, HASH_SIZE);
-
-    print_debug("Data + hash in buffer: ");
-    print_hex_debug(buffer, MAX_I2C_MESSAGE_LEN);
-
-    // Calculate the position to copy the random number into buffer
-    size_t random_position = MAX_I2C_MESSAGE_LEN - sizeof(uint32_t);
-
-    // Copy the random number to the correct position in buffer
-    memcpy(buffer + random_position, &example_random, sizeof(uint32_t));
-
-    print_debug("buffer final: ");
-    print_hex_debug(buffer, MAX_I2C_MESSAGE_LEN);
-    
-    // Free dynamically allocated memory
-    free(data);
+    hash(data_and_key, data_and_key_len, hash_out);
     free(data_and_key);
 
-    return SUCCESS_RETURN;
-    //return send_packet(address, len, buffer);
+    // Append hash to the message
+    memcpy(temp_buffer + len, hash_out, HASH_SIZE);
+
+    // Generate and append random number
+    uint32_t random_number = 12345;
+    memcpy(temp_buffer + len + HASH_SIZE, &random_number, sizeof(random_number));
+
+    // Debug output
+    print_debug("Final buffer:");
+    print_hex_debug(temp_buffer, len + HASH_SIZE + sizeof(random_number));
+
+    // Send the packet
+    int send_result = send_packet(address, len + HASH_SIZE + sizeof(random_number), temp_buffer);
+    if (send_result != 0) {
+        print_error("Failed to send packet");
+        return ERROR_RETURN;
+    }
+    return SUCCESS_RETURN;// Success
 }
 
 int test_secure_send() {
@@ -458,6 +443,7 @@ int attest_component(uint32_t component_id) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
+
 
     // Print out attestation data 
     print_info("C>0x%08x\n", component_id);

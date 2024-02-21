@@ -146,7 +146,30 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(uint8_t* buffer) {
-    return wait_and_receive_packet(buffer);
+    
+    uint8_t len = wait_and_receive_packet(buffer);
+    print_debug("Received buffer: \n");
+    print_hex_debug(buffer, MAX_I2C_MESSAGE_LEN);
+
+    // Extract data from buffer
+    uint8_t data[MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t)];
+    memcpy(data, buffer, sizeof(data));
+    print_debug("\nData: \n");
+    print_hex_debug(data, sizeof(data));
+
+    // Extract hash from buffer
+    uint8_t hash_out[HASH_SIZE];
+    size_t hash_position = MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t);
+    memcpy(hash_out, buffer + hash_position, HASH_SIZE);
+    print_debug("\nHash: \n");
+    print_hex_debug(hash_out, HASH_SIZE);
+
+    // Extract random number from buffer
+    uint32_t example_random;
+    size_t random_position = MAX_I2C_MESSAGE_LEN - sizeof(uint32_t);
+    memcpy(&example_random, buffer + random_position, sizeof(uint32_t));
+    print_debug("\nRandom Number: %u\n", example_random);
+    return len;
 }
 
 /******************************* FUNCTION DEFINITIONS *********************************/
@@ -333,7 +356,8 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
-        wait_and_receive_packet(receive_buffer);
-        component_process_cmd();
+        //wait_and_receive_packet(receive_buffer);
+        secure_receive(receive_buffer);
+        //component_process_cmd();
     }
 }
