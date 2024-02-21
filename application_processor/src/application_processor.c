@@ -70,7 +70,7 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    
+
 } command_message;
 
 // Data type for receiving a validate message
@@ -125,12 +125,14 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    if (len > MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t)) {
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN-1;
+    print_debug("SECURE SEND CALLED!");
+    if (len > MAX_PACKET_SIZE  - HASH_SIZE - sizeof(uint32_t)) {
         print_error("Message too long");
         return -1;
     }
-
-    uint8_t temp_buffer[MAX_I2C_MESSAGE_LEN] = {0};
+   
+    uint8_t temp_buffer[MAX_PACKET_SIZE];
 
     // Copy the original data into temp_buffer
     memcpy(temp_buffer, buffer, len);
@@ -152,20 +154,24 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     uint8_t hash_out[HASH_SIZE];
     hash(data_and_key, data_and_key_len, hash_out);
     free(data_and_key);
+    print_debug("Hash:");
+    print_hex_debug(hash_out, HASH_SIZE);
 
     // Append hash to the message
-    memcpy(temp_buffer + len, hash_out, HASH_SIZE);
+    size_t hash_position = MAX_PACKET_SIZE  - HASH_SIZE - sizeof(uint32_t);
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
 
     // Generate and append random number
     uint32_t random_number = 12345;
-    memcpy(temp_buffer + len + HASH_SIZE, &random_number, sizeof(random_number));
+    size_t random_number_position = MAX_PACKET_SIZE  - sizeof(uint32_t);
+    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t));
 
     // Debug output
     print_debug("Final buffer:");
-    print_hex_debug(temp_buffer, len + HASH_SIZE + sizeof(random_number));
+    print_hex_debug(temp_buffer, MAX_PACKET_SIZE );
 
     // Send the packet
-    int send_result = send_packet(address, len + HASH_SIZE + sizeof(random_number), temp_buffer);
+    int send_result = send_packet(address, MAX_PACKET_SIZE , temp_buffer);
     if (send_result != 0) {
         print_error("Failed to send packet");
         return ERROR_RETURN;
@@ -175,7 +181,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
 
 int test_secure_send() {
     // Buffers for board link communication
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN-1];
     // Send validate command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
@@ -269,7 +275,8 @@ void attach_key(command_message* command){
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     // Send message
-    int result = send_packet(addr, HASH_SIZE+1, transmit);
+    size_t PACKET_SIZE = HASH_SIZE + 1;
+    int result = send_packet(addr, PACKET_SIZE, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
