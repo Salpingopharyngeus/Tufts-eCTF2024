@@ -317,7 +317,7 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_met
  * functionality. This function must be implemented by your team to align with
  * the security requirements.
  */
-int secure_receive(uint8_t address, uint8_t *decryptedData, uint8_t max_len) {
+int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
     // Buffer to hold the received encrypted data
     uint8_t encryptedBuffer[max_len];
     memset(encryptedBuffer, 0, sizeof(encryptedBuffer)); // Initialize buffer with zeros
@@ -329,46 +329,44 @@ int secure_receive(uint8_t address, uint8_t *decryptedData, uint8_t max_len) {
         return receivedLength;
     }
 
-    // Each segment is  32 bytes (256 bits)
+    // Each segment is 32 bytes (256 bits)
     const uint8_t segmentSize = 32;
     // Calculate the total number of segments received
     uint8_t totalSegments = (receivedLength + segmentSize - 1) / segmentSize;
 
-    // // Assuming decryptedData is a global buffer similar to the encryptedData in AES_encrypt
-    // extern uint32_t decryptedData[];
-    // - Remy: Changed this to use the *buffer in params (?) also doesnt seem to be used?
-    // - Changed the second parameter to adjust for this...
-
     for (uint8_t i = 0; i < totalSegments; ++i) {
-        // Prepare a segment-sized buffer to hold the current segment for decryption
-        uint8_t segment[segmentSize];
+        // Prepare a segment-sized buffer to hold the current segment for decryption, aligning it as uint32_t
+        uint32_t segment[segmentSize / sizeof(uint32_t)];
         memset(segment, 0, sizeof(segment)); // Clear the segment buffer
 
-        // Calculate actual bytes to process for this segment, considering the last segment might be smaller
-        uint8_t bytesToProcess = segmentSize;
-        if ((i * segmentSize + segmentSize) > receivedLength) {
-            bytesToProcess = receivedLength % segmentSize;
-        }
-
-        // Copy the current segment of the encrypted buffer into the segment buffer
-        memcpy(segment, encryptedBuffer + (i * segmentSize), bytesToProcess);
+        // Copy the current encrypted segment into the uint32_t aligned buffer
+        memcpy(segment, encryptedBuffer + (i * segmentSize), segmentSize);
+        
+        // Prepare a buffer for the decrypted data, properly typed
+        uint32_t decryptedSegment[segmentSize / sizeof(uint32_t)];
+        memset(decryptedSegment, 0, sizeof(decryptedSegment)); // Clear the decrypted segment buffer
 
         // Decrypt the segment
-        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, GLOBAL_AES_DECRYPTION_KEY, segment, decryptedSegment);
         if (decryptResult != E_NO_ERROR) {
-            // Handle decryption error (optional)
-            return decryptResult; // Or another error code indicating decryption failure
+            // Handle decryption error
+            return decryptResult; // or another appropriate error code
         }
-
-        // Copy the decrypted segment back into the buffer provided by the caller
+        
+        // Copy the decrypted data back to the buffer, converting it to uint8_t* for the caller
         // Ensure not to exceed max_len
-        int copyLength = ((i * segmentSize + segmentSize) <= max_len) ? segmentSize : max_len % segmentSize;
-        memcpy(buffer + (i * segmentSize), decryptedData, copyLength);
+        int bytesToCopy = segmentSize;
+        if ((i * segmentSize + segmentSize) > max_len) {
+            bytesToCopy = max_len % segmentSize;
+        }
+        memcpy(buffer + (i * segmentSize), decryptedSegment, bytesToCopy);
     }
     
-    // Return the length of the decrypted data, adjusted for possibly incomplete final segment
+    // Return the length of the decrypted data
     return receivedLength; // This assumes the decrypted data size equals the encrypted data size
 }
+
+
 
 /**
  * @brief Get Provisioned IDs
