@@ -247,15 +247,15 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
 
     // Declare data for an AES request
     mxc_aes_req_t* req;
-    req.length = MXC_AES_DATA_LENGTH;
-    req.inputData = inputData;
-    req.resultData = encryptedData;
-    req.keySize = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    req->length = MXC_AES_DATA_LENGTH;
+    req->inputData = inputData;
+    req->resultData = encryptedData;
+    req->keySize = key;
+    req->encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
     // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
-        MXC_AES_EncryptAsync(&req);
+        MXC_AES_EncryptAsync(req);
         if (err) return err;
 
         // Blocking Loop?
@@ -264,7 +264,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
     }
     else {
         // Non-asynchronous encrypt function
-        err = MXC_AES_Encrypt(&req);
+        err = MXC_AES_Encrypt(req);
         if (err) return err;
     }
     
@@ -277,17 +277,15 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
     uint32_t len =
         sprintf((char *)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
-                ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) +
-        1;
+                ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
-    // Calculate the number of 128-bit segments
-    uint32_t num_segments =
-        (len + 15) / 16; // Round up to the nearest 128-bit segment
+    const uint8_t segmentSize = 32;
+    // Calculate the total size needed for encrypted data (round up to nearest segment)
+    uint8_t totalSegments = 1;
+    uint8_t encryptedBuffer[totalSegments * segmentSize];
+    memset(encryptedBuffer, 0, sizeof(encryptedBuffer));
+    AES_encrypt(0, MXC_AES_256BITS, len, encryptedBuffer);
 
-    // Encrypt each 128-bit segment of len and concatenate them together
-    for (uint32_t i = 0; i < num_segments; ++i) {
-        AES_encrypt(0, MXC_AES_256BITS); // Encrypt 128-bit segment (16 bytes)
-    }
 
     // Send the encrypted len and the attestation data
     send_packet_and_ack(len, transmit_buffer);
