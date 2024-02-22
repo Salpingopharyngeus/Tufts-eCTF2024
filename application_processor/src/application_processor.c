@@ -199,7 +199,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
 
     // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
-        MXC_AES_EncryptAsync(&req);
+        MXC_AES_EncryptAsync(req);
         if (err) return err;
 
         // Blocking Loop?
@@ -208,7 +208,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
     }
     else {
         // Non-asynchronous encrypt function
-        err = MXC_AES_Encrypt(&req);
+        err = MXC_AES_Encrypt(req);
         if (err) return err;
     }
     
@@ -258,7 +258,7 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
 
         memcpy(encryptedBuffer + (i * segmentSize), segment, segmentSize);
     }
-    return send_packet(address, sizeof(encryptBuffer), encryptedBuffer);
+    return send_packet(address, sizeof(encryptedBuffer), encryptedBuffer);
 }
 
 /**
