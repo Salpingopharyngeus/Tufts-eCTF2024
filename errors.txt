@@ -1,4 +1,4 @@
-2024-02-22 12:13:01.729 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+2024-02-22 12:35:37.654 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
 warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
@@ -39,34 +39,21 @@ src/application_processor.c:291:31: warning: passing argument 1 of 'MXC_AES_Decr
 inc/aes.h:224:36: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
   224 | int MXC_AES_Decrypt(mxc_aes_req_t *req);
       |                     ~~~~~~~~~~~~~~~^~~
+In file included from src/application_processor.c:49:
 src/application_processor.c: In function 'secure_receive':
-src/application_processor.c:357:61: error: incompatible type for argument 3 of 'AES_decrypt'
-  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
-      |                                                             ^~~~~~~
-      |                                                             |
-      |                                                             uint8_t * {aka unsigned char *}
-src/application_processor.c:268:74: note: expected 'mxc_aes_enc_type_t' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
-  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
-      |                                                       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
-src/application_processor.c:357:70: warning: passing argument 4 of 'AES_decrypt' makes pointer from integer without a cast [-Wint-conversion]
-  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
-      |                                                                      ^~~~~~~~~~~~~~
-      |                                                                      |
-      |                                                                      uint8_t {aka unsigned char}
-src/application_processor.c:268:96: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t' {aka 'unsigned char'}
-  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
-      |                                                                                      ~~~~~~~~~~^~~~~~~~~
-src/application_processor.c:357:29: error: too few arguments to function 'AES_decrypt'
-  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+src/../../deployment/global_secrets.h:13:3: error: expected expression before '{' token
+   13 |   {                               \
+      |   ^
+src/application_processor.c:350:61: note: in expansion of macro 'GLOBAL_AES_DECRYPTION_KEY'
+  350 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, GLOBAL_AES_DECRYPTION_KEY, segment, decryptedSegment);
+      |                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/application_processor.c:350:29: error: too few arguments to function 'AES_decrypt'
+  350 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, GLOBAL_AES_DECRYPTION_KEY, segment, decryptedSegment);
       |                             ^~~~~~~~~~~
 src/application_processor.c:268:5: note: declared here
   268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
       |     ^~~~~~~~~~~
-src/application_processor.c:366:16: error: 'buffer' undeclared (first use in this function); did you mean 'setbuffer'?
-  366 |         memcpy(buffer + (i * segmentSize), decryptedData, copyLength);
-      |                ^~~~~~
-      |                setbuffer
-src/application_processor.c:366:16: note: each undeclared identifier is reported only once for each function it appears in
 make: *** [/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
 
-2024-02-22 12:13:01.729 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+2024-02-22 12:35:37.655 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+
