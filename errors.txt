@@ -1,33 +1,72 @@
-2024-02-22 11:33:03.839 | INFO     | ectf_tools.build_ap:build_ap:52 - Creating parameters for build
-2024-02-22 11:33:03.840 | INFO     | ectf_tools.build_ap:build_ap:69 - Checking output paths
-2024-02-22 11:33:03.840 | INFO     | ectf_tools.build_ap:build_ap:80 - Running build
-2024-02-22 11:33:03.841 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd application_processor &&  make clean &&  make && make release &&  cp build/max78000.elf /home/kali/Desktop/Tufts-eCTF2024/build/ap.elf &&  cp build/max78000.bin /home/kali/Desktop/Tufts-eCTF2024/build/ap.bin"'
-2024-02-22 11:33:08.322 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
-/home/kali/Desktop/Tufts-eCTF2024
+2024-02-22 12:13:01.729 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+src/application_processor.c: In function 'secure_send':
+src/application_processor.c:257:41: warning: passing argument 3 of 'AES_encrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  257 |         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment, encryptedBuffer);
+      |                                         ^~~~~~~~~~~~~~~~~
+      |                                         |
+      |                                         uint8_t * {aka unsigned char *}
+src/application_processor.c:187:65: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  187 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+      |                                                       ~~~~~~~~~~^~~~~~~~~
+src/application_processor.c:257:60: warning: passing argument 4 of 'AES_encrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  257 |         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment, encryptedBuffer);
+      |                                                            ^~~~~~~~~~~~~~~
+      |                                                            |
+      |                                                            uint8_t * {aka unsigned char *}
+src/application_processor.c:187:86: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  187 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
+      |                                                                            ~~~~~~~~~~^~~~~~~~~~~~~
+src/application_processor.c: In function 'AES_decrypt':
+src/application_processor.c:282:36: warning: passing argument 1 of 'MXC_AES_DecryptAsync' from incompatible pointer type [-Wincompatible-pointer-types]
+  282 |         err = MXC_AES_DecryptAsync(&req);
+      |                                    ^~~~
+      |                                    |
+      |                                    mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+In file included from src/application_processor.c:44:
+inc/aes.h:272:41: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  272 | int MXC_AES_DecryptAsync(mxc_aes_req_t *req);
+      |                          ~~~~~~~~~~~~~~~^~~
+src/application_processor.c:291:31: warning: passing argument 1 of 'MXC_AES_Decrypt' from incompatible pointer type [-Wincompatible-pointer-types]
+  291 |         err = MXC_AES_Decrypt(&req);
+      |                               ^~~~
+      |                               |
+      |                               mxc_aes_req_t ** {aka struct _mxc_aes_cipher_req_t **}
+inc/aes.h:224:36: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
+  224 | int MXC_AES_Decrypt(mxc_aes_req_t *req);
+      |                     ~~~~~~~~~~~~~~~^~~
+src/application_processor.c: In function 'secure_receive':
+src/application_processor.c:357:61: error: incompatible type for argument 3 of 'AES_decrypt'
+  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                                                             ^~~~~~~
+      |                                                             |
+      |                                                             uint8_t * {aka unsigned char *}
+src/application_processor.c:268:74: note: expected 'mxc_aes_enc_type_t' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |                                                       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
+src/application_processor.c:357:70: warning: passing argument 4 of 'AES_decrypt' makes pointer from integer without a cast [-Wint-conversion]
+  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                                                                      ^~~~~~~~~~~~~~
+      |                                                                      |
+      |                                                                      uint8_t {aka unsigned char}
+src/application_processor.c:268:96: note: expected 'uint32_t *' {aka 'long unsigned int *'} but argument is of type 'uint8_t' {aka 'unsigned char'}
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |                                                                                      ~~~~~~~~~~^~~~~~~~~
+src/application_processor.c:357:29: error: too few arguments to function 'AES_decrypt'
+  357 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, bytesToProcess);
+      |                             ^~~~~~~~~~~
+src/application_processor.c:268:5: note: declared here
+  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
+      |     ^~~~~~~~~~~
+src/application_processor.c:366:16: error: 'buffer' undeclared (first use in this function); did you mean 'setbuffer'?
+  366 |         memcpy(buffer + (i * segmentSize), decryptedData, copyLength);
+      |                ^~~~~~
+      |                setbuffer
+src/application_processor.c:366:16: note: each undeclared identifier is reported only once for each function it appears in
+make: *** [/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
 
-2024-02-22 11:33:08.323 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
-error: Server does not allow request for unadvertised object 8373c9f74993e218a08819cbcdbab3f3564bbeba
-warning: could not update mtime for file '/home/kali/.cache/nix/gitv3/12al4cm564mh7hmc3m0ggs7g7yc6v9xink2q6ckagk4lkc4gqc7k/refs/heads/master': No such file or directory
-error:
-       … while calling the 'derivationStrict' builtin
-         at <nix/derivation-internal.nix>:9:12:
-            8|
-            9|   strict = derivationStrict drvAttrs;
-             |            ^
-           10|
-
-       … while evaluating derivation 'nix-shell'
-         whose name attribute is located at /nix/store/03aa260spvpc4gx7vqhnhp5b9hmk3zns-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:353:7
-
-       … while evaluating attribute 'buildInputs' of derivation 'nix-shell'
-         at /nix/store/03aa260spvpc4gx7vqhnhp5b9hmk3zns-nixpkgs/nixpkgs/pkgs/stdenv/generic/make-derivation.nix:400:7:
-          399|       depsHostHost                = elemAt (elemAt dependencies 1) 0;
-          400|       buildInputs                 = elemAt (elemAt dependencies 1) 1;
-             |       ^
-          401|       depsTargetTarget            = elemAt (elemAt dependencies 2) 0;
-
-       (stack trace truncated; use '--show-trace' to show the full trace)
-
-       error: Cannot find Git revision '8373c9f74993e218a08819cbcdbab3f3564bbeba' in ref 'refs/heads/master' of repository 'https://git.savannah.nongnu.org/git/git2cl.git'! Please make sure that the rev exists on the ref you've specified or add allRefs = true; to fetchGit.
-
-2024-02-22 11:33:08.324 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+2024-02-22 12:13:01.729 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
