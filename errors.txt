@@ -1,4 +1,4 @@
-2024-02-22 13:51:27.598 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+2024-02-22 13:58:07.976 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
 warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
@@ -90,6 +90,7 @@ signalr.c:(.text._kill_r+0x12): warning: _kill is not implemented and will alway
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
 
-2024-02-22 13:51:27.600 | INFO     | ectf_tools.build_ap:build_ap:96 - Built application processor
-2024-02-22 13:51:27.600 | INFO     | ectf_tools.build_ap:build_ap:98 - Packaging binary
-2024-02-22 13:51:27.601 | INFO     | ectf_tools.build_ap:build_ap:100 - Binary packaged
+2024-02-22 13:58:07.978 | INFO     | ectf_tools.build_ap:build_ap:96 - Built application processor
+2024-02-22 13:58:07.978 | INFO     | ectf_tools.build_ap:build_ap:98 - Packaging binary
+2024-02-22 13:58:07.979 | INFO     | ectf_tools.build_ap:build_ap:100 - Binary packaged
+
