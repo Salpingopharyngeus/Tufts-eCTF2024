@@ -191,11 +191,11 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
 
     // Declare data for an AES request
     mxc_aes_req_t* req;
-    req.length = MXC_AES_DATA_LENGTH;
-    req.inputData = inputData;
-    req.resultData = encryptedData;
-    req.keySize = key;
-    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    req->length = MXC_AES_DATA_LENGTH;
+    req->inputData = inputData;
+    req->resultData = encryptedData;
+    req->keySize = key;
+    req->encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
     // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
@@ -272,11 +272,11 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_met
 
     // Declare data for an AES request
     mxc_aes_req_t* req;
-    req.length = MXC_AES_DATA_LENGTH;
-    req.inputData = inputData;
-    req.resultData = decryptedData;
-    req.keySize = key;
-    req.encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
+    req->length = MXC_AES_DATA_LENGTH;
+    req->inputData = inputData;
+    req->resultData = decryptedData;
+    req->keySize = key;
+    req->encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
 
     if (asynchronous) {
         err = MXC_AES_DecryptAsync(&req);

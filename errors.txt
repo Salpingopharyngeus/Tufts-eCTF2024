@@ -5,26 +5,6 @@ warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to t
 /Users/christopherbann/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
 src/application_processor.c: In function 'AES_encrypt':
-src/application_processor.c:194:8: error: 'req' is a pointer; did you mean to use '->'?
-  194 |     req.length = MXC_AES_DATA_LENGTH;
-      |        ^
-      |        ->
-src/application_processor.c:195:8: error: 'req' is a pointer; did you mean to use '->'?
-  195 |     req.inputData = inputData;
-      |        ^
-      |        ->
-src/application_processor.c:196:8: error: 'req' is a pointer; did you mean to use '->'?
-  196 |     req.resultData = encryptedData;
-      |        ^
-      |        ->
-src/application_processor.c:197:8: error: 'req' is a pointer; did you mean to use '->'?
-  197 |     req.keySize = key;
-      |        ^
-      |        ->
-src/application_processor.c:198:8: error: 'req' is a pointer; did you mean to use '->'?
-  198 |     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
-      |        ^
-      |        ->
 src/application_processor.c:202:30: warning: passing argument 1 of 'MXC_AES_EncryptAsync' from incompatible pointer type [-Wincompatible-pointer-types]
   202 |         MXC_AES_EncryptAsync(&req);
       |                              ^~~~
@@ -70,26 +50,6 @@ src/application_processor.c:239:13: warning: unused variable 'encryptedBuffr' [-
   239 |     uint8_t encryptedBuffr[totalSegments * segmentSize];
       |             ^~~~~~~~~~~~~~
 src/application_processor.c: In function 'AES_decrypt':
-src/application_processor.c:275:8: error: 'req' is a pointer; did you mean to use '->'?
-  275 |     req.length = MXC_AES_DATA_LENGTH;
-      |        ^
-      |        ->
-src/application_processor.c:276:8: error: 'req' is a pointer; did you mean to use '->'?
-  276 |     req.inputData = inputData;
-      |        ^
-      |        ->
-src/application_processor.c:277:8: error: 'req' is a pointer; did you mean to use '->'?
-  277 |     req.resultData = decryptedData;
-      |        ^
-      |        ->
-src/application_processor.c:278:8: error: 'req' is a pointer; did you mean to use '->'?
-  278 |     req.keySize = key;
-      |        ^
-      |        ->
-src/application_processor.c:279:8: error: 'req' is a pointer; did you mean to use '->'?
-  279 |     req.encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
-      |        ^
-      |        ->
 src/application_processor.c:282:36: warning: passing argument 1 of 'MXC_AES_DecryptAsync' from incompatible pointer type [-Wincompatible-pointer-types]
   282 |         err = MXC_AES_DecryptAsync(&req);
       |                                    ^~~~
