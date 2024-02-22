@@ -1,13 +1,17 @@
-2024-02-22 12:48:28.053 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+2024-02-22 13:51:27.598 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
 warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to the one defined in the 'passwd' file ('/var/root')
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
-
-src/application_processor.c:170:63: error: expected expression before ';' token
-  170 | const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
-      |                                                               ^
+In file included from src/application_processor.c:42:
+../deployment/global_secrets.h:4:26: warning: backslash and newline separated by space
+    4 | #define EXTERNAL_AES_KEY \
+      |                           
+In file included from src/application_processor.c:49:
+src/../../deployment/global_secrets.h:4:26: warning: backslash and newline separated by space
+    4 | #define EXTERNAL_AES_KEY \
+      |                           
 src/application_processor.c: In function 'secure_send':
 src/application_processor.c:257:41: warning: passing argument 3 of 'AES_encrypt' from incompatible pointer type [-Wincompatible-pointer-types]
   257 |         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment, encryptedBuffer);
@@ -43,18 +47,49 @@ src/application_processor.c:291:31: warning: passing argument 1 of 'MXC_AES_Decr
 inc/aes.h:224:36: note: expected 'mxc_aes_req_t *' {aka 'struct _mxc_aes_cipher_req_t *'} but argument is of type 'mxc_aes_req_t **' {aka 'struct _mxc_aes_cipher_req_t **'}
   224 | int MXC_AES_Decrypt(mxc_aes_req_t *req);
       |                     ~~~~~~~~~~~~~~~^~~
-src/application_processor.c: In function 'secure_receive':
-src/application_processor.c:350:95: error: expected expression before ',' token
-  350 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, GLOBAL_AES_DECRYPTION_KEY, decryptedSegment);
-      |                                                                                               ^
-src/application_processor.c:350:61: error: incompatible type for argument 3 of 'AES_decrypt'
-  350 |         int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, GLOBAL_AES_DECRYPTION_KEY, decryptedSegment);
-      |                                                             ^~~~~~~
-      |                                                             |
-      |                                                             uint32_t * {aka long unsigned int *}
-src/application_processor.c:268:74: note: expected 'mxc_aes_enc_type_t' but argument is of type 'uint32_t *' {aka 'long unsigned int *'}
-  268 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_method, uint32_t* inputData, uint32_t* decryptedData) {
-      |                                                       ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
-make: *** [/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
+src/application_processor.c: In function 'AES_encrypt':
+src/application_processor.c:194:17: warning: 'req' may be used uninitialized [-Wmaybe-uninitialized]
+  194 |     req->length = MXC_AES_DATA_LENGTH;
+      |                 ^
+src/application_processor.c:193:20: note: 'req' was declared here
+  193 |     mxc_aes_req_t* req;
+      |                    ^~~
+src/ucl_aes.c: In function 'ucl_aes':
+src/ucl_aes.c:41:7: warning: unused variable 'resu' [-Wunused-variable]
+   41 |   int resu;
+      |       ^~~~
+src/ucl_aes_cbc.c: In function 'ucl_aes_cbc_init':
+src/ucl_aes_cbc.c:82:7: warning: unused variable 'resu' [-Wunused-variable]
+   82 |   int resu;
+      |       ^~~~
+src/ucl_aes_cbc.c: In function 'ucl_aes_cbc_core':
+src/ucl_aes_cbc.c:108:7: warning: unused variable 'ret' [-Wunused-variable]
+  108 |   int ret;
+      |       ^~~
+src/ucl_aes_cbc_mac.c: In function 'ucl_aes_cbc_mac':
+src/ucl_aes_cbc_mac.c:73:8: warning: unused variable 'mac' [-Wunused-variable]
+   73 |     u8 mac[UCL_AES_BLOCKSIZE];
+      |        ^~~
+src/ucl_aes_cbc_mac.c: In function 'ucl_aes_cbc_mac_init':
+src/ucl_aes_cbc_mac.c:111:7: warning: unused variable 'i' [-Wunused-variable]
+  111 |   int i;
+      |       ^
+src/ucl_aes_ecb.c: In function 'ucl_aes_ecb':
+src/ucl_aes_ecb.c:45:9: warning: unused variable 'ret' [-Wunused-variable]
+   45 |     int ret;
+      |         ^~~
+src/ucl_aes_ecb.c: In function 'ucl_aes_ecb_core':
+src/ucl_aes_ecb.c:94:9: warning: unused variable 'ret' [-Wunused-variable]
+   94 |     int ret;
+      |         ^~~
+/nix/store/4l3l4rkbbpbmrpdp3lqjpmi43ga5pbrr-gcc-arm-embedded-12.3.rel1/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: /nix/store/4l3l4rkbbpbmrpdp3lqjpmi43ga5pbrr-gcc-arm-embedded-12.3.rel1/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/nofp/libc.a(libc_a-signalr.o): in function `_getpid_r':
+signalr.c:(.text._getpid_r+0x0): warning: _getpid is not implemented and will always fail
+/nix/store/4l3l4rkbbpbmrpdp3lqjpmi43ga5pbrr-gcc-arm-embedded-12.3.rel1/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: /nix/store/4l3l4rkbbpbmrpdp3lqjpmi43ga5pbrr-gcc-arm-embedded-12.3.rel1/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m/nofp/libc.a(libc_a-signalr.o): in function `_kill_r':
+signalr.c:(.text._kill_r+0x12): warning: _kill is not implemented and will always fail
+/nix/store/4l3l4rkbbpbmrpdp3lqjpmi43ga5pbrr-gcc-arm-embedded-12.3.rel1/bin/../lib/gcc/arm-none-eabi/12.3.1/../../../../arm-none-eabi/bin/ld: warning: /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/max78000.elf has a LOAD segment with RWX permissions
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
 
-2024-02-22 12:48:28.054 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+2024-02-22 13:51:27.600 | INFO     | ectf_tools.build_ap:build_ap:96 - Built application processor
+2024-02-22 13:51:27.600 | INFO     | ectf_tools.build_ap:build_ap:98 - Packaging binary
+2024-02-22 13:51:27.601 | INFO     | ectf_tools.build_ap:build_ap:100 - Binary packaged
