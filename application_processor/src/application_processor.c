@@ -271,12 +271,12 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_met
     if (err) return err; // TODO: check if this is secure against some kind of attack?
 
     // Declare data for an AES request
-    mxc_aes_req_t* req;
-    req->length = MXC_AES_DATA_LENGTH;
-    req->inputData = inputData;
-    req->resultData = decryptedData;
-    req->keySize = key;
-    req->encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
+    mxc_aes_req_t req;
+    req.length = MXC_AES_DATA_LENGTH;
+    req.inputData = inputData;
+    req.resultData = decryptedData;
+    req.keySize = key;
+    req.encryption = key_method; // From param, must tell if decryption is done via ext. or internal key.
 
     if (asynchronous) {
         err = MXC_AES_DecryptAsync(&req);
