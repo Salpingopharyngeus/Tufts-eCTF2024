@@ -190,16 +190,16 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
     if (err) return err; // TODO: check if this is secure against some kind of attack?
 
     // Declare data for an AES request
-    mxc_aes_req_t* req;
-    req->length = MXC_AES_DATA_LENGTH;
-    req->inputData = inputData;
-    req->resultData = encryptedData;
-    req->keySize = key;
-    req->encryption = MXC_AES_ENCRYPT_EXT_KEY;
+    mxc_aes_req_t req;
+    req.length = MXC_AES_DATA_LENGTH;
+    req.inputData = inputData;
+    req.resultData = encryptedData;
+    req.keySize = key;
+    req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
 
     // TODO: check if asynchronous compatability works, and if we need it.
     if (asynchronous) {
-        MXC_AES_EncryptAsync(req);
+        MXC_AES_EncryptAsync(&req);
         if (err) return err;
 
         // Blocking Loop?
@@ -208,7 +208,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
     }
     else {
         // Non-asynchronous encrypt function
-        err = MXC_AES_Encrypt(req);
+        err = MXC_AES_Encrypt(&req);
         if (err) return err;
     }
     
@@ -752,7 +752,14 @@ int main() {
         } else {
             print_error("Unrecognized command '%s'\n", buf);
         }
+
+
+
+
+
     }
+
+
 
     // Code never reaches here
     return 0;
