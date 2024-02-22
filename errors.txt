@@ -4,20 +4,7 @@ warning: $HOME ('/Users/christopherbann') is not owned by you, falling back to t
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
 /Users/christopherbann/Desktop/eCTF/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
-In file included from src/application_processor.c:42:
-../deployment/global_secrets.h:5:3: error: expected identifier or '(' before '{' token
-    5 |   { 0x13, 0x9a, 0x35, 0x42, 0x2f, 0x1d, 0x61, 0xde, 0x3c, 0x91, 0x78, 0x7f, 0xe0, 0x50, 0x7a, 0xfd }
-      |   ^
-../deployment/global_secrets.h:8:3: error: expected identifier or '(' before '{' token
-    8 |   { 0x7F, 0x93, 0xE8, 0x5C, 0x27, 0x3A, 0x61, 0xF2, 0x0B, 0xD4, 0x8E, 0x4A, 0x19, 0x72, 0xC6, 0x9D }
-      |   ^
-In file included from src/application_processor.c:49:
-src/../../deployment/global_secrets.h:5:3: error: expected identifier or '(' before '{' token
-    5 |   { 0x13, 0x9a, 0x35, 0x42, 0x2f, 0x1d, 0x61, 0xde, 0x3c, 0x91, 0x78, 0x7f, 0xe0, 0x50, 0x7a, 0xfd }
-      |   ^
-src/../../deployment/global_secrets.h:8:3: error: expected identifier or '(' before '{' token
-    8 |   { 0x7F, 0x93, 0xE8, 0x5C, 0x27, 0x3A, 0x61, 0xF2, 0x0B, 0xD4, 0x8E, 0x4A, 0x19, 0x72, 0xC6, 0x9D }
-      |   ^
+
 src/application_processor.c:170:63: error: expected expression before ';' token
   170 | const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
       |                                                               ^

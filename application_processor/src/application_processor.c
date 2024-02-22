@@ -346,8 +346,8 @@ int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
         uint32_t decryptedSegment[segmentSize / sizeof(uint32_t)];
         memset(decryptedSegment, 0, sizeof(decryptedSegment)); // Clear the decrypted segment buffer
 
-        // Decrypt the segment
-        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, GLOBAL_AES_DECRYPTION_KEY, decryptedSegment);
+        // Decrypt the segments
+        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, segment, decryptedSegment);
 
         if (decryptResult != E_NO_ERROR) {
             // Handle decryption error
