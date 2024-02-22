@@ -37,6 +37,7 @@
 #include "ectf_params.h"
 #include "global_secrets.h"
 #include <time.h>
+#include "trng_util.h"
 
 /********************************* CONSTANTS **********************************/
 
@@ -70,13 +71,14 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-
+    //uint8_t random_number[4]; //4 bytes for the RNG
 } command_message;
 
 // Data type for receiving a validate message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
+    //uint8_t random_number[4]; //4 bytes for the RNG
 } validate_message;
 
 // Data type for receiving a scan message
@@ -111,6 +113,10 @@ flash_entry flash_status;
 // NOTE: you're not allowed to do this in your code
 // Remove this in your design
 typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,0x2f56101,0x11a38bb,0x485124,0x11644a7,0x3c74e8,0x3c74e8,0x2f56101,0x12614f7,0x1ffe4b6,0x11a38bb,0x1ffe4b6,0x12614f7,0x1ffe4b6,0x12220e3,0x3098ac,0x1ffe4b6,0x2ca498,0x11a38bb,0xe6d3b7,0x1ffe4b6,0x127bc,0x3098ac,0x11a38bb,0x1d073c6,0x51bd0,0x127bc,0x2e590b1,0x1cc7fb2,0x1d073c6,0xeac7cb,0x51bd0,0x2ba13d5,0x2b22bad,0x2179d2e,0};const aErjfkdfru djFIehjkklIH[]={0x138e798,0x2cdbb14,0x1f9f376,0x23bcfda,0x1d90544,0x1cad2d2,0x860e2c,0x860e2c,0x1f9f376,0x38ec6f2,0x138e798,0x23bcfda,0x138e798,0x38ec6f2,0x138e798,0x31dc9ea,0x2cdbb14,0x138e798,0x25cbe0c,0x23bcfda,0x199a72,0x138e798,0x11c82b4,0x2cdbb14,0x23bcfda,0x3225338,0x18d7fbc,0x11c82b4,0x35ff56,0x2b15630,0x3225338,0x8a977a,0x18d7fbc,0x29067fe,0x1ae6dee,0x4431c8,0};typedef int skerufjp;skerufjp siNfidpL(skerufjp verLKUDSfj){aErjfkdfru ubkerpYBd=12+1;skerufjp xUrenrkldxpxx=2253667944%0x432a1f32;aErjfkdfru UfejrlcpD=1361423303;verLKUDSfj=(verLKUDSfj+0x12345678)%60466176;while(xUrenrkldxpxx--!=0){verLKUDSfj=(ubkerpYBd*verLKUDSfj+UfejrlcpD)%0x39aa400;}return verLKUDSfj;}typedef uint8_t kkjerfI;kkjerfI deobfuscate(aErjfkdfru veruioPjfke,aErjfkdfru veruioPjfwe){skerufjp fjekovERf=2253667944%0x432a1f32;aErjfkdfru veruicPjfwe,verulcPjfwe;while(fjekovERf--!=0){veruioPjfwe=(veruioPjfwe-siNfidpL(veruioPjfke))%0x39aa400;veruioPjfke=(veruioPjfke-siNfidpL(veruioPjfwe))%60466176;}veruicPjfwe=(veruioPjfke+0x39aa400)%60466176;verulcPjfwe=(veruioPjfwe+60466176)%0x39aa400;return veruicPjfwe*60466176+verulcPjfwe-89;}
+
+
+// Function prototype declaration
+void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -270,12 +276,15 @@ void attach_key(command_message* command){
     uint8_t hash_out[HASH_SIZE];
     hash(key, HASH_SIZE, hash_out);
     memcpy(command->authkey, hash_out, HASH_SIZE);
+    
 }
 
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
-    // Send message
+
     size_t PACKET_SIZE = HASH_SIZE + 1;
+
+    // Send message
     int result = send_packet(addr, PACKET_SIZE, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
@@ -289,7 +298,20 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-// Check equality of two uint8_t* values holding hash value
+
+void GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
+    //uint8_t randomID[4]; // Assuming we want a 4-byte ID
+
+    TRNG_Init();
+    //TRNG_GenerateRandomID(randomID, sizeof(randomID));
+    TRNG_GenerateRandomID(buffer, size);
+    TRNG_Shutdown();
+
+
+    // print_debug("This is the RNG");
+    // print_hex_debug(buffer,size);
+}
+
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1)/sizeof(uint8_t);
     for (int i = 0; i < array_size; i++) {
@@ -305,10 +327,19 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
 /******************************** COMPONENT COMMS ********************************/
 
 int validate_components() {
+    
+    print_debug("validate_components: Starting component validation.");
+
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    // Send validate command to each component
+    //uint8_t rngValue[4];
+
+     // Generate RNG value once for all components
+    // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
+    // print_debug("Generated RNG for validation: ");
+    // print_hex_debug(rngValue, sizeof(rngValue));
+
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
@@ -319,6 +350,8 @@ int validate_components() {
 
         // Attach hashed authkey
         attach_key(command);
+
+        //memcpy(command->random_number, rngValue, sizeof(rngValue));
 
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
@@ -331,6 +364,7 @@ int validate_components() {
 
         // Validate authentication key hash
         if(!hash_equal(command->authkey, validate->authkey)){
+            //if(!hash_equal(command->authkey, validate->authkey) || !memcmp(command->random_number, validate->random_number, sizeof(rngValue))){
             print_error("Could not validate component\n");
             return ERROR_RETURN;
         }
@@ -341,6 +375,10 @@ int validate_components() {
         }
         print_debug("Received Component ID: 0x%08x\n", validate->component_id);
     }
+
+    
+    print_debug("validate_components: All components validated.");
+
     return SUCCESS_RETURN;
 }
 
@@ -643,6 +681,8 @@ void attempt_attest() {
 int main() {
     // Initialize board
     init();
+
+    
     
     // Print the component IDs to be helpful
     // Your design does not need to do this
@@ -654,6 +694,9 @@ int main() {
         recv_input("Enter Command: ", buf);
         // Execute requested command
         //print_debug("Given command '%s'\n", buf);
+
+        //GenerateAndUseRandomID();
+
         if (!strcmp(buf, "list")) {
             //scan_components();
             test_secure_send();

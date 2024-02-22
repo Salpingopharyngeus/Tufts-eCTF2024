@@ -76,6 +76,7 @@ typedef enum {
 typedef struct {
     uint8_t opcode;
     uint8_t authkey[HASH_SIZE];
+
 } command_message;
 
 typedef struct {
