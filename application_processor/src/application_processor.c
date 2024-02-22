@@ -125,19 +125,25 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN-1;
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     print_debug("SECURE SEND CALLED!");
-    if (len > MAX_PACKET_SIZE  - HASH_SIZE - sizeof(uint32_t)) {
+    if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
         print_error("Message too long");
         return -1;
     }
-   
-    uint8_t temp_buffer[MAX_PACKET_SIZE];
 
-    // Copy the original data into temp_buffer
+    uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
+    memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
+
+    // Correct the position calculations based on your requirements
+    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; // Hash is 16 bytes before the last 5 bytes
+    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); // Data length is 1 byte before the last 4 bytes
+    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t); // Random number is the last 4 bytes
+
+    // Copy the original data into temp_buffer, ensuring not to overwrite the hash, data length, and random number positions
     memcpy(temp_buffer, buffer, len);
 
-    // Assuming KEY is defined and has a known size
+    // Assuming KEY is defined and has a known size for the hash operation
     size_t key_len = strlen(KEY);
 
     // Prepare data for hashing (data + key)
@@ -147,36 +153,30 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
         print_error("Memory allocation failed for data_and_key");
         return ERROR_RETURN;
     }
-    memcpy(data_and_key, temp_buffer, len);
+    memcpy(data_and_key, buffer, len);
     memcpy(data_and_key + len, KEY, key_len);
 
     // Hash data+key
     uint8_t hash_out[HASH_SIZE];
     hash(data_and_key, data_and_key_len, hash_out);
     free(data_and_key);
+    
     print_debug("Hash:");
     print_hex_debug(hash_out, HASH_SIZE);
 
-    // Append hash to the message
-    size_t hash_position = MAX_PACKET_SIZE  - HASH_SIZE - sizeof(uint32_t);
-    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
 
-    // Generate and append random number
-    uint32_t random_number = 12345;
-    size_t random_number_position = MAX_PACKET_SIZE  - sizeof(uint32_t);
+    // Append hash, data length, and random number to the buffer at their specified positions
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
+    temp_buffer[data_len_position] = len; // Ensure len is suitable for a uint8_t
+    uint32_t random_number = 12345; // Example random number
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t));
 
     // Debug output
     print_debug("Final buffer:");
-    print_hex_debug(temp_buffer, MAX_PACKET_SIZE );
+    print_hex_debug(temp_buffer, MAX_PACKET_SIZE);
 
     // Send the packet
-    int send_result = send_packet(address, MAX_PACKET_SIZE , temp_buffer);
-    if (send_result != 0) {
-        print_error("Failed to send packet");
-        return ERROR_RETURN;
-    }
-    return SUCCESS_RETURN;// Success
+    return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
 }
 
 int test_secure_send() {

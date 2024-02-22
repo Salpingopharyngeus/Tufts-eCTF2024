@@ -145,31 +145,58 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
  * This function must be implemented by your team to align with the security requirements.
 */
-int secure_receive(uint8_t* buffer) {
-    
-    uint8_t len = wait_and_receive_packet(buffer);
+void secure_receive(uint8_t* buffer) {
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+    // Assuming wait_and_receive_packet is defined elsewhere and fills buffer while returning the length of the received data
+    uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
     print_debug("Received buffer: \n");
-    print_hex_debug(buffer, MAX_I2C_MESSAGE_LEN);
+    print_hex_debug(buffer, len); // Print the actual length of received data, not MAX_PACKET_SIZE
 
-    // Extract data from buffer
-    uint8_t data[MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t)];
-    memcpy(data, buffer, sizeof(data));
-    print_debug("\nData: \n");
-    print_hex_debug(data, sizeof(data));
+    // Extract the random number
+    uint32_t random_number;
+    memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+    print_debug("Random number: %u\n", random_number);
 
-    // Extract hash from buffer
-    uint8_t hash_out[HASH_SIZE];
-    size_t hash_position = MAX_I2C_MESSAGE_LEN - HASH_SIZE - sizeof(uint32_t);
-    memcpy(hash_out, buffer + hash_position, HASH_SIZE);
-    print_debug("\nHash: \n");
-    print_hex_debug(hash_out, HASH_SIZE);
+    // Extract the data length
+    uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
+    print_debug("Data length: %u\n", data_len);
 
-    // Extract random number from buffer
-    uint32_t example_random;
-    size_t random_position = MAX_I2C_MESSAGE_LEN - sizeof(uint32_t);
-    memcpy(&example_random, buffer + random_position, sizeof(uint32_t));
-    print_debug("\nRandom Number: %u\n", example_random);
-    return len;
+    // Extract the hash
+    uint8_t received_hash[HASH_SIZE];
+    memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
+    print_debug("Recevied Hash: \n");
+    print_hex_debug(received_hash, HASH_SIZE);
+
+    // Recreate authkey hash to check authenticity of receive_buffer
+    // Assuming KEY is defined and has a known size for the hash operation
+    size_t key_len = strlen(KEY);
+
+    // Prepare data for hashing (data + key)
+    size_t data_and_key_len = data_len + key_len;
+    uint8_t* data_and_key = malloc(data_and_key_len);
+    if (!data_and_key) {
+        print_error("Memory allocation failed for data_and_key");
+        return ERROR_RETURN;
+    }
+    memcpy(data_and_key, buffer, data_len);
+    memcpy(data_and_key + data_len, KEY, key_len);
+
+    // Hash data+key
+    uint8_t check_hash[HASH_SIZE];
+    hash(data_and_key, data_and_key_len, check_hash);
+    print_debug("Check Hash: \n");
+    print_hex_debug(check_hash, HASH_SIZE);
+
+    free(data_and_key);
+
+    // Extract the original message
+    uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    memcpy(original_message, buffer, data_len);
+    original_message[data_len] = '\0'; // Null-terminate the string
+
+    print_debug("Original message: ");
+    print_debug("%s\n", original_message);
+    // Here, you could also verify the hash against the original message + key, if necessary
 }
 
 /******************************* FUNCTION DEFINITIONS *********************************/
