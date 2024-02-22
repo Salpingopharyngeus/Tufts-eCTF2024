@@ -347,7 +347,8 @@ int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
         memset(decryptedSegment, 0, sizeof(decryptedSegment)); // Clear the decrypted segment buffer
 
         // Decrypt the segment
-        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, GLOBAL_AES_DECRYPTION_KEY, segment, decryptedSegment);
+        int decryptResult = AES_decrypt(0, MXC_AES_256BITS, segment, GLOBAL_AES_DECRYPTION_KEY, decryptedSegment);
+
         if (decryptResult != E_NO_ERROR) {
             // Handle decryption error
             return decryptResult; // or another appropriate error code
@@ -365,8 +366,6 @@ int secure_receive(uint8_t address, uint8_t *buffer, uint8_t max_len) {
     // Return the length of the decrypted data
     return receivedLength; // This assumes the decrypted data size equals the encrypted data size
 }
-
-
 
 /**
  * @brief Get Provisioned IDs
