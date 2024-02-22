@@ -298,8 +298,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-
-void GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
+uint16_t GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
     //uint8_t randomID[4]; // Assuming we want a 4-byte ID
 
     TRNG_Init();
