@@ -139,6 +139,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     }
 
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
+    uint32_t random_number = 12345;
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
 
     // Correct the position calculations based on your requirements
@@ -153,19 +154,20 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     size_t key_len = strlen(KEY);
 
     // Prepare data for hashing (data + key)
-    size_t data_and_key_len = len + key_len;
-    uint8_t* data_and_key = malloc(data_and_key_len);
-    if (!data_and_key) {
-        print_error("Memory allocation failed for data_and_key");
+    size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
     }
-    memcpy(data_and_key, buffer, len);
-    memcpy(data_and_key + len, KEY, key_len);
+    memcpy(data_key_randnum, buffer, len);
+    memcpy(data_key_randnum + len, KEY, key_len);
+    memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     // Hash data+key
     uint8_t hash_out[HASH_SIZE];
-    hash(data_and_key, data_and_key_len, hash_out);
-    free(data_and_key);
+    hash(data_key_randnum, data_key_randnum_len, hash_out);
+    free(data_key_randnum);
     
     print_debug("Hash:");
     print_hex_debug(hash_out, HASH_SIZE);
@@ -174,12 +176,12 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     // Append hash, data length, and random number to the buffer at their specified positions
     memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
     temp_buffer[data_len_position] = len; // Ensure len is suitable for a uint8_t
-    uint32_t random_number = 12345; // Example random number
+     // Example random number
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t));
 
     // Debug output
-    print_debug("Final buffer:");
-    print_hex_debug(temp_buffer, MAX_PACKET_SIZE);
+    // print_debug("Final buffer:");
+    // print_hex_debug(temp_buffer, MAX_PACKET_SIZE);
 
     // Send the packet
     return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
@@ -298,18 +300,18 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-uint16_t GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
-    //uint8_t randomID[4]; // Assuming we want a 4-byte ID
+// uint16_t GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
+//     //uint8_t randomID[4]; // Assuming we want a 4-byte ID
 
-    TRNG_Init();
-    //TRNG_GenerateRandomID(randomID, sizeof(randomID));
-    TRNG_GenerateRandomID(buffer, size);
-    TRNG_Shutdown();
+//     TRNG_Init();
+//     //TRNG_GenerateRandomID(randomID, sizeof(randomID));
+//     TRNG_GenerateRandomID(buffer, size);
+//     TRNG_Shutdown();
 
 
-    // print_debug("This is the RNG");
-    // print_hex_debug(buffer,size);
-}
+//     // print_debug("This is the RNG");
+//     // print_hex_debug(buffer,size);
+// }
 
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1)/sizeof(uint8_t);

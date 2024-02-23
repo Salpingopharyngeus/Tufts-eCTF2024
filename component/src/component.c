@@ -146,21 +146,20 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
  * This function must be implemented by your team to align with the security requirements.
 */
-void secure_receive(uint8_t* buffer) {
+int secure_receive(uint8_t* buffer) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     // Assuming wait_and_receive_packet is defined elsewhere and fills buffer while returning the length of the received data
     uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
-    print_debug("Received buffer: \n");
+    //print_debug("Received buffer: \n");
     print_hex_debug(buffer, len); // Print the actual length of received data, not MAX_PACKET_SIZE
 
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-    print_debug("Random number: %u\n", random_number);
+    //print_debug("Random number: %u\n", random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
-    print_debug("Data length: %u\n", data_len);
 
     // Extract the hash
     uint8_t received_hash[HASH_SIZE];
@@ -169,26 +168,31 @@ void secure_receive(uint8_t* buffer) {
     print_hex_debug(received_hash, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
-    // Assuming KEY is defined and has a known size for the hash operation
     size_t key_len = strlen(KEY);
 
-    // Prepare data for hashing (data + key)
-    size_t data_and_key_len = data_len + key_len;
-    uint8_t* data_and_key = malloc(data_and_key_len);
-    if (!data_and_key) {
-        print_error("Memory allocation failed for data_and_key");
+    size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
     }
-    memcpy(data_and_key, buffer, data_len);
-    memcpy(data_and_key + data_len, KEY, key_len);
+    memcpy(data_key_randnum, buffer, data_len);
+    memcpy(data_key_randnum + data_len, KEY, key_len);
+    memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     // Hash data+key
     uint8_t check_hash[HASH_SIZE];
-    hash(data_and_key, data_and_key_len, check_hash);
-    print_debug("Check Hash: \n");
+    hash(data_key_randnum, data_key_randnum_len, check_hash);
+    free(data_key_randnum);
+    
+    print_debug("Check Hash:");
     print_hex_debug(check_hash, HASH_SIZE);
-
-    free(data_and_key);
+    
+    // Check hash for integrity and authenticity of the message
+    if(!hash_equal(received_hash, check_hash)){
+        print_error("Could not validate component\n");
+        return ERROR_RETURN;
+    }
 
     // Extract the original message
     uint8_t original_message[data_len + 1]; // Add one for the null terminator
@@ -197,7 +201,8 @@ void secure_receive(uint8_t* buffer) {
 
     print_debug("Original message: ");
     print_debug("%s\n", original_message);
-    // Here, you could also verify the hash against the original message + key, if necessary
+
+    return len;
 }
 
 /******************************* FUNCTION DEFINITIONS *********************************/
