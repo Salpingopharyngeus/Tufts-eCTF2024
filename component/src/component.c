@@ -24,6 +24,7 @@
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#include "dictionary.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -108,6 +109,7 @@ int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
+Dictionary dict;
 
 // Check equality of two uint8_t* values holding hash value
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
@@ -147,6 +149,8 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(uint8_t* buffer) {
+    initDictionary(&dict);
+    
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     // Assuming wait_and_receive_packet is defined elsewhere and fills buffer while returning the length of the received data
     uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
