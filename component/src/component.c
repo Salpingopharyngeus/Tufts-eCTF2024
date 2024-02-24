@@ -160,7 +160,7 @@ int secure_receive(uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-    //print_debug("Random number: %u\n", random_number);
+    print_debug("Random number received: %u\n", random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];

@@ -119,7 +119,7 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 
 // Function prototype declaration
-void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
+//void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -133,6 +133,21 @@ void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
  * This function must be implemented by your team to align with the security requirements.
 
 */
+
+uint32_t GenerateAndUseRandomID(void) {
+    uint32_t randomID;
+
+    TRNG_Init();
+    randomID = TRNG_GenerateRandomID();
+    TRNG_Shutdown();
+
+
+    // print_debug("This is the RNG");
+    // print_hex_debug(buffer,size);
+
+    return randomID;
+}
+
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     initDictionary(&dict);
 
@@ -144,7 +159,9 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     }
 
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
-    uint32_t random_number = 12345;
+    uint32_t random_number = GenerateAndUseRandomID();
+
+    printf("Random Number Sent: %u\n", random_number); 
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
 
     // Correct the position calculations based on your requirements
@@ -307,19 +324,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     }
     return len;
 }
-
-// uint16_t GenerateAndUseRandomID(uint8_t *buffer, size_t size) {
-//     //uint8_t randomID[4]; // Assuming we want a 4-byte ID
-
-//     TRNG_Init();
-//     //TRNG_GenerateRandomID(randomID, sizeof(randomID));
-//     TRNG_GenerateRandomID(buffer, size);
-//     TRNG_Shutdown();
-
-
-//     // print_debug("This is the RNG");
-//     // print_hex_debug(buffer,size);
-// }
 
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1)/sizeof(uint8_t);
