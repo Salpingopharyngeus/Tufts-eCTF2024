@@ -300,7 +300,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-uint16_t GenerateAndUseRandomID(void) {
+uint32_t GenerateAndUseRandomID(void) {
     uint32_t randomID;
 
     TRNG_Init();
