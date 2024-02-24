@@ -295,7 +295,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     // memcpy(original_message, buffer, data_len);
     // original_message[data_len] = '\0'; // Null-terminate the string
 
-    // Return length of original data
+    // Return number of bytes of original data
     return data_len;
 }
 

@@ -192,6 +192,7 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     temp_buffer[data_len_position] = len; // add data length
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
     
+    // Send packet
     send_packet_and_ack(MAX_PACKET_SIZE, temp_buffer); 
 }
 
@@ -208,8 +209,8 @@ void secure_send(uint8_t* buffer, uint8_t len) {
 int secure_receive(uint8_t* buffer) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
-    uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
-
+    uint8_t len = wait_and_receive_packet(buffer);
+    
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
@@ -253,7 +254,7 @@ int secure_receive(uint8_t* buffer) {
     // memcpy(original_message, buffer, data_len);
     // original_message[data_len] = '\0'; // Null-terminate the string
 
-    // Return length of original data
+    // Return number of bytes of original data
     return data_len;
 }
 
