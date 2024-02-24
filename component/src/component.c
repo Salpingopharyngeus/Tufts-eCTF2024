@@ -90,7 +90,6 @@ typedef struct {
 } scan_message;
 
 
-
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
 void component_process_cmd(void);
@@ -112,7 +111,16 @@ uint32_t assigned_random_number = 0;
 
 
 /********************************* UTILITY FUNCTIONS  **********************************/
-// Check equality of two uint8_t* values holding hash value
+
+/**
+ * @brief hash_equal
+ * 
+ * @param hash1: uint8_t*, uint8_t array representation of hash1
+ * @param hash2: uint8_t*, uint8_t array representation of hash2
+ * 
+ * @return bool: true if hash1 == hash2; false otherwise.
+ * Check equality of two uint8*t buffers containing hash value
+*/
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
     for (int i = 0; i < array_size; i++) {
@@ -136,37 +144,34 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
  * This function must be implemented by your team to align with the security requirements.
 */
 void secure_send(uint8_t* buffer, uint8_t len) {
-    print_debug("COMPONENT SECURE SEND CALLED!\n");
+    // Ensure component is not initializing communication with AP.
     if (assigned_random_number == 0){
         print_error("Component attempting to initiate communication with AP first!\n");
         return ERROR_RETURN;
     }
 
-    // Set maximum secure send packet size
+    // Set Maximum Packet Size for Secure Send
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     
+    // Ensure length of data to send does not exceed limits
     if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
         print_error("Message too long");
         return ERROR_RETURN;
     }
 
+    // Create secure packet
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
     uint32_t random_number = assigned_random_number;
-
-    print_debug("Random Number to Send: %u\n", random_number); 
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
 
-    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; // Hash is 16 bytes before the last 5 bytes
-    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); // Data length is 1 byte before the last 4 bytes
-    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t); // Random number is the last 4 bytes
-
-    // Copy the original data into temp_buffer, ensuring not to overwrite the hash, data length, and random number positions
+    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE;
+    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t);
+    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
     memcpy(temp_buffer, buffer, len);
-
-    // Assuming KEY is defined and has a known size for the hash operation
+    
     size_t key_len = strlen(KEY);
 
-    // Prepare data for hashing (data + key)
+     // Build Authenication Hash
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
     memset(data_key_randnum, 0, data_key_randnum_len);
@@ -177,24 +182,16 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     memcpy(data_key_randnum, buffer, len);
     memcpy(data_key_randnum + len, KEY, key_len);
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
-    
-    print_debug("BEFORE HASH: \n");
-    print_hex_debug(data_key_randnum, data_key_randnum_len);
-    print_debug("\n");
-    // Hash data+key
+
     uint8_t hash_out[HASH_SIZE];
     hash(data_key_randnum, data_key_randnum_len, hash_out);
     free(data_key_randnum);
-    
-    print_debug("Component Authentication Hash:\n");
-    print_hex_debug(hash_out, HASH_SIZE);
-    print_debug("----------------------------------------\n");
 
-    // Append hash, data length, and random number to the buffer at their specified positions
-    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
-    temp_buffer[data_len_position] = len; // Ensure len is suitable for a uint8_t
-     // Example random number
-    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t));
+    // Add security attributes to packet
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authentication hash
+    temp_buffer[data_len_position] = len; // add data length
+    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
+    
     send_packet_and_ack(MAX_PACKET_SIZE, temp_buffer); 
 }
 
@@ -209,8 +206,6 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(uint8_t* buffer) {
-    print_debug("COMPONENT SECURE RECEIVE CALLED!\n");
-
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
     uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
@@ -218,7 +213,6 @@ int secure_receive(uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-    print_debug("Random number received: %u\n", random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -226,8 +220,6 @@ int secure_receive(uint8_t* buffer) {
     // Extract the hash
     uint8_t received_hash[HASH_SIZE];
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
-    print_debug("Received Hash: \n");
-    print_hex_debug(received_hash, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
     size_t key_len = strlen(KEY);
@@ -243,33 +235,25 @@ int secure_receive(uint8_t* buffer) {
     memcpy(data_key_randnum + data_len, KEY, key_len);
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
-    print_debug("BEFORE HASH: \n");
-    print_hex_debug(data_key_randnum, data_key_randnum_len);
-    print_debug("\n");
-    // Hash data+key
     uint8_t check_hash[HASH_SIZE];
     hash(data_key_randnum, data_key_randnum_len, check_hash);
     free(data_key_randnum);
-    
-    print_debug("Check Hash: \n");
-    print_hex_debug(check_hash, HASH_SIZE);
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
         print_error("Could not validate AP\n");
         return ERROR_RETURN;
     }
+
+    // Save assigned random_number from AP
     assigned_random_number = random_number;
+    
     // Extract the original message
-    uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    memcpy(original_message, buffer, data_len);
-    original_message[data_len] = '\0'; // Null-terminate the string
+    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    // memcpy(original_message, buffer, data_len);
+    // original_message[data_len] = '\0'; // Null-terminate the string
 
-    print_debug("Original message: \n");
-    print_debug("%s\n", original_message);
-    print_debug("----------------------------------------\n");
-
-    secure_send(original_message, data_len);
+    // Return length of original data
     return data_len;
 }
 
@@ -289,21 +273,21 @@ void boot() {
     LED_Off(LED1);
     LED_Off(LED2);
     LED_Off(LED3);
-    // LED loop to show that boot occurred
-    // while (1) {
-    //     LED_On(LED1);
-    //     MXC_Delay(500000);
-    //     LED_On(LED2);
-    //     MXC_Delay(500000);
-    //     LED_On(LED3);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED1);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED2);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED3);
-    //     MXC_Delay(500000);
-    // }
+    //LED loop to show that boot occurred
+    while (1) {
+        LED_On(LED1);
+        MXC_Delay(500000);
+        LED_On(LED2);
+        MXC_Delay(500000);
+        LED_On(LED3);
+        MXC_Delay(500000);
+        LED_Off(LED1);
+        MXC_Delay(500000);
+        LED_Off(LED2);
+        MXC_Delay(500000);
+        LED_Off(LED3);
+        MXC_Delay(500000);
+    }
     #endif
 }
 
@@ -319,7 +303,6 @@ void component_process_cmd() {
 
     // Check validity of authkey hash
     if (hash_equal(command->authkey, hash_out)){
-        print_debug("AP validated\n");
         switch (command->opcode) {
             case COMPONENT_CMD_BOOT:
                 process_boot();
@@ -334,7 +317,7 @@ void component_process_cmd() {
                 process_attest();
                 break;
             default:
-                //print("Error: Unrecognized command received");
+                print_error("Error: Unrecognized command received");
                 break;
         }
     }else{
@@ -347,7 +330,7 @@ void process_boot() {
     // respond with the boot message
     uint8_t len = strlen(COMPONENT_BOOT_MSG) + 1;
 
-    // Send authkey hash
+    // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     hash(key, HASH_SIZE, hash_out);
@@ -370,7 +353,7 @@ void process_scan() {
     scan_message* packet = (scan_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
 
-    // Send authkey hash
+    // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     hash(key, BLOCK_SIZE, hash_out);
@@ -383,7 +366,7 @@ void process_validate() {
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
     
-    // Send authkey hash
+    // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     hash(key, BLOCK_SIZE, hash_out);
@@ -401,7 +384,7 @@ void process_attest() {
     // AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
     // send_packet_and_ack(len, transmit_buffer);
     
-    // send authkey hash
+    // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     hash(key, HASH_SIZE, hash_out);
@@ -457,8 +440,7 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
-        //wait_and_receive_packet(receive_buffer);
-        secure_receive(receive_buffer);
-        //component_process_cmd();
+        wait_and_receive_packet(receive_buffer);
+        component_process_cmd();
     }
 }
