@@ -8,8 +8,10 @@ void TRNG_Init(void) {
     MXC_TRNG_Init();
 }
 
-void TRNG_GenerateRandomID(uint8_t* id, int idSize) {
-    MXC_TRNG_Random(id, idSize);
+uint32_t TRNG_GenerateRandomID(void) {
+    uint32_t id;
+    MXC_TRNG_Random((uint8_t*)&id, sizeof(id));
+    return id;
 }
 
 void TRNG_Shutdown(void) {
