@@ -24,7 +24,6 @@
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
-#include "dictionary.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -109,8 +108,10 @@ int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
-Dictionary dict;
+uint32_t assigned_random_number = 0;
 
+
+/********************************* UTILITY FUNCTIONS  **********************************/
 // Check equality of two uint8_t* values holding hash value
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
@@ -135,7 +136,66 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
  * This function must be implemented by your team to align with the security requirements.
 */
 void secure_send(uint8_t* buffer, uint8_t len) {
-    send_packet_and_ack(len, buffer); 
+    print_debug("COMPONENT SECURE SEND CALLED!\n");
+    if (assigned_random_number == 0){
+        print_error("Component attempting to initiate communication with AP first!\n");
+        return ERROR_RETURN;
+    }
+
+    // Set maximum secure send packet size
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+    
+    if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
+        print_error("Message too long");
+        return ERROR_RETURN;
+    }
+
+    uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
+    uint32_t random_number = assigned_random_number;
+
+    print_debug("Random Number to Send: %u\n", random_number); 
+    memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
+
+    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; // Hash is 16 bytes before the last 5 bytes
+    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); // Data length is 1 byte before the last 4 bytes
+    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t); // Random number is the last 4 bytes
+
+    // Copy the original data into temp_buffer, ensuring not to overwrite the hash, data length, and random number positions
+    memcpy(temp_buffer, buffer, len);
+
+    // Assuming KEY is defined and has a known size for the hash operation
+    size_t key_len = strlen(KEY);
+
+    // Prepare data for hashing (data + key)
+    size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, len);
+    memcpy(data_key_randnum + len, KEY, key_len);
+    memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+    
+    print_debug("BEFORE HASH: \n");
+    print_hex_debug(data_key_randnum, data_key_randnum_len);
+    print_debug("\n");
+    // Hash data+key
+    uint8_t hash_out[HASH_SIZE];
+    hash(data_key_randnum, data_key_randnum_len, hash_out);
+    free(data_key_randnum);
+    
+    print_debug("Component Authentication Hash:\n");
+    print_hex_debug(hash_out, HASH_SIZE);
+    print_debug("----------------------------------------\n");
+
+    // Append hash, data length, and random number to the buffer at their specified positions
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
+    temp_buffer[data_len_position] = len; // Ensure len is suitable for a uint8_t
+     // Example random number
+    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t));
+    send_packet_and_ack(MAX_PACKET_SIZE, temp_buffer); 
 }
 
 /**
@@ -149,13 +209,11 @@ void secure_send(uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(uint8_t* buffer) {
-    initDictionary(&dict);
-    
+    print_debug("COMPONENT SECURE RECEIVE CALLED!\n");
+
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
-    // Assuming wait_and_receive_packet is defined elsewhere and fills buffer while returning the length of the received data
+
     uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
-    //print_debug("Received buffer: \n");
-    print_hex_debug(buffer, len); // Print the actual length of received data, not MAX_PACKET_SIZE
 
     // Extract the random number
     uint32_t random_number;
@@ -168,7 +226,7 @@ int secure_receive(uint8_t* buffer) {
     // Extract the hash
     uint8_t received_hash[HASH_SIZE];
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
-    print_debug("Recevied Hash: \n");
+    print_debug("Received Hash: \n");
     print_hex_debug(received_hash, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
@@ -176,6 +234,7 @@ int secure_receive(uint8_t* buffer) {
 
     size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
     if (!data_key_randnum) {
         print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
@@ -184,29 +243,34 @@ int secure_receive(uint8_t* buffer) {
     memcpy(data_key_randnum + data_len, KEY, key_len);
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
+    print_debug("BEFORE HASH: \n");
+    print_hex_debug(data_key_randnum, data_key_randnum_len);
+    print_debug("\n");
     // Hash data+key
     uint8_t check_hash[HASH_SIZE];
     hash(data_key_randnum, data_key_randnum_len, check_hash);
     free(data_key_randnum);
     
-    print_debug("Check Hash:");
+    print_debug("Check Hash: \n");
     print_hex_debug(check_hash, HASH_SIZE);
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
-        print_error("Could not validate component\n");
+        print_error("Could not validate AP\n");
         return ERROR_RETURN;
     }
-
+    assigned_random_number = random_number;
     // Extract the original message
     uint8_t original_message[data_len + 1]; // Add one for the null terminator
     memcpy(original_message, buffer, data_len);
     original_message[data_len] = '\0'; // Null-terminate the string
 
-    print_debug("Original message: ");
+    print_debug("Original message: \n");
     print_debug("%s\n", original_message);
+    print_debug("----------------------------------------\n");
 
-    return len;
+    secure_send(original_message, data_len);
+    return data_len;
 }
 
 /******************************* FUNCTION DEFINITIONS *********************************/

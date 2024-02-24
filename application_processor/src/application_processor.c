@@ -118,6 +118,40 @@ Dictionary dict;
 typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,0x2f56101,0x11a38bb,0x485124,0x11644a7,0x3c74e8,0x3c74e8,0x2f56101,0x12614f7,0x1ffe4b6,0x11a38bb,0x1ffe4b6,0x12614f7,0x1ffe4b6,0x12220e3,0x3098ac,0x1ffe4b6,0x2ca498,0x11a38bb,0xe6d3b7,0x1ffe4b6,0x127bc,0x3098ac,0x11a38bb,0x1d073c6,0x51bd0,0x127bc,0x2e590b1,0x1cc7fb2,0x1d073c6,0xeac7cb,0x51bd0,0x2ba13d5,0x2b22bad,0x2179d2e,0};const aErjfkdfru djFIehjkklIH[]={0x138e798,0x2cdbb14,0x1f9f376,0x23bcfda,0x1d90544,0x1cad2d2,0x860e2c,0x860e2c,0x1f9f376,0x38ec6f2,0x138e798,0x23bcfda,0x138e798,0x38ec6f2,0x138e798,0x31dc9ea,0x2cdbb14,0x138e798,0x25cbe0c,0x23bcfda,0x199a72,0x138e798,0x11c82b4,0x2cdbb14,0x23bcfda,0x3225338,0x18d7fbc,0x11c82b4,0x35ff56,0x2b15630,0x3225338,0x8a977a,0x18d7fbc,0x29067fe,0x1ae6dee,0x4431c8,0};typedef int skerufjp;skerufjp siNfidpL(skerufjp verLKUDSfj){aErjfkdfru ubkerpYBd=12+1;skerufjp xUrenrkldxpxx=2253667944%0x432a1f32;aErjfkdfru UfejrlcpD=1361423303;verLKUDSfj=(verLKUDSfj+0x12345678)%60466176;while(xUrenrkldxpxx--!=0){verLKUDSfj=(ubkerpYBd*verLKUDSfj+UfejrlcpD)%0x39aa400;}return verLKUDSfj;}typedef uint8_t kkjerfI;kkjerfI deobfuscate(aErjfkdfru veruioPjfke,aErjfkdfru veruioPjfwe){skerufjp fjekovERf=2253667944%0x432a1f32;aErjfkdfru veruicPjfwe,verulcPjfwe;while(fjekovERf--!=0){veruioPjfwe=(veruioPjfwe-siNfidpL(veruioPjfke))%0x39aa400;veruioPjfke=(veruioPjfke-siNfidpL(veruioPjfwe))%60466176;}veruicPjfwe=(veruioPjfke+0x39aa400)%60466176;verulcPjfwe=(veruioPjfwe+60466176)%0x39aa400;return veruicPjfwe*60466176+verulcPjfwe-89;}
 
 
+/********************************* UTILITY FUNCTIONS  **********************************/
+
+// Check equality of two uint8*t buffers containing hash value
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1)/sizeof(uint8_t);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
+
+// Generate and return a random uint32_t number.
+uint32_t GenerateAndUseRandomID(void) {
+    uint32_t randomID;
+    TRNG_Init();
+    randomID = TRNG_GenerateRandomID();
+    TRNG_Shutdown();
+
+    return randomID;
+}
+
+// Attach hashed authentication key to command struct object 
+void attach_key(command_message* command){
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+    memcpy(command->authkey, hash_out, HASH_SIZE);
+    
+}
+
 // Function prototype declaration
 //void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
 
@@ -134,25 +168,12 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
 
 */
 
-uint32_t GenerateAndUseRandomID(void) {
-    uint32_t randomID;
-
-    TRNG_Init();
-    randomID = TRNG_GenerateRandomID();
-    TRNG_Shutdown();
-
-
-    // print_debug("This is the RNG");
-    // print_hex_debug(buffer,size);
-
-    return randomID;
-}
-
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     initDictionary(&dict);
-
+    // Set Maximum Packet Size for Secure Send
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
-    print_debug("SECURE SEND CALLED!");
+
+    print_debug("AP SECURE SEND CALLED!");
     if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
         print_error("Message too long");
         return -1;
@@ -161,10 +182,9 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
     uint32_t random_number = GenerateAndUseRandomID();
 
-    printf("Random Number Sent: %u\n", random_number); 
+    print_debug("Random Number To Send: %u\n", random_number); 
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
 
-    // Correct the position calculations based on your requirements
     size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; // Hash is 16 bytes before the last 5 bytes
     size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); // Data length is 1 byte before the last 4 bytes
     size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t); // Random number is the last 4 bytes
@@ -178,6 +198,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     // Prepare data for hashing (data + key)
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
     if (!data_key_randnum) {
         print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
@@ -186,14 +207,16 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     memcpy(data_key_randnum + len, KEY, key_len);
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
+    print_debug("BEFORE HASH: ");
+    print_hex_debug(data_key_randnum, data_key_randnum_len);
     // Hash data+key
     uint8_t hash_out[HASH_SIZE];
     hash(data_key_randnum, data_key_randnum_len, hash_out);
     free(data_key_randnum);
     
-    print_debug("Hash:");
+    print_debug("AP Auth Hash:");
     print_hex_debug(hash_out, HASH_SIZE);
-
+    print_debug("----------------------------------------\n");
 
     // Append hash, data length, and random number to the buffer at their specified positions
     memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE);
@@ -212,29 +235,6 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
 }
 
-int test_secure_send() {
-    // Buffers for board link communication
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN-1];
-    // Send validate command to each component
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-
-        char* test_message = "Hello, this is a test message";
-        size_t len = strlen(test_message);
-        memcpy(transmit_buffer, test_message, len);
-
-        // run secure_send
-        int code = secure_send(addr, transmit_buffer, (uint8_t)len);
-
-        if (code == ERROR_RETURN) {
-            print_error("Failed secure send\n");
-            return ERROR_RETURN;
-        }
-    }
-    return SUCCESS_RETURN;
-}
-
 /**
  * @brief Secure Receive
  * 
@@ -247,7 +247,109 @@ int test_secure_send() {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(i2c_addr_t address, uint8_t* buffer) {
-    return poll_and_receive_packet(address, buffer);
+    print_debug("AP SECURE RECEIVE CALLED!");
+
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+
+    uint8_t len = poll_and_receive_packet(address, buffer); 
+
+    // Extract the random number
+    uint32_t random_number;
+    memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+    print_debug("Random number received: %u", random_number);
+
+    // Extract the data length
+    uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
+
+    // Extract the hash
+    uint8_t received_hash[HASH_SIZE];
+    memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
+    print_debug("Received Hash: ");
+    print_hex_debug(received_hash, HASH_SIZE);
+
+    // Recreate authkey hash to check authenticity of receive_buffer
+    size_t key_len = strlen(KEY);
+
+    size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, data_len);
+    memcpy(data_key_randnum + data_len, KEY, key_len);
+    memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+
+    print_debug("BEFORE HASH: ");
+    print_hex_debug(data_key_randnum, data_key_randnum_len);
+    // Hash data+key
+    uint8_t check_hash[HASH_SIZE];
+    hash(data_key_randnum, data_key_randnum_len, check_hash);
+    free(data_key_randnum);
+    
+    print_debug("Check Hash: ");
+    print_hex_debug(check_hash, HASH_SIZE);
+    
+    // Check hash for integrity and authenticity of the message
+    if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
+        print_error("Could not validate Component\n");
+        return ERROR_RETURN;
+    }
+
+    // Extract the original message
+    uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    memcpy(original_message, buffer, data_len);
+    original_message[data_len] = '\0'; // Null-terminate the string
+
+    print_debug("Original message: ");
+    print_debug("%s", original_message);
+    print_debug("----------------------------------------\n");
+
+    return data_len;
+}
+
+int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
+
+    // Send message
+    int result = secure_send(addr, transmit, len);
+    if (result == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
+    
+    // Receive message
+    int received_bytes = secure_receive(addr, receive);
+    if (received_bytes == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
+    return received_bytes;
+    //return result;
+}
+
+int test_secure_send() {
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    
+    // Send validate command to each component
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        // Set the I2C address of the component
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+
+        char* test_message = "Hello, this is a test message";
+        size_t len = strlen(test_message);
+        memcpy(transmit_buffer, test_message, len);
+
+        // run secure_send
+        int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
+
+        if (code == ERROR_RETURN) {
+            print_error("Failed secure send\n");
+            return ERROR_RETURN;
+        }
+    }
+    freeDictionary(&dict);
+    return SUCCESS_RETURN;
 }
 
 /**
@@ -297,15 +399,6 @@ void init() {
     board_link_init();
 }
 
-// Attach hashed authentication key to command struct object 
-void attach_key(command_message* command){
-    char* key = KEY;
-    uint8_t hash_out[HASH_SIZE];
-    hash(key, HASH_SIZE, hash_out);
-    memcpy(command->authkey, hash_out, HASH_SIZE);
-    
-}
-
 // Send a command to a component and receive the result
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 
@@ -323,18 +416,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
         return ERROR_RETURN;
     }
     return len;
-}
-
-bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
-    size_t array_size = sizeof(hash1)/sizeof(uint8_t);
-    for (int i = 0; i < array_size; i++) {
-        if (hash1[i] != hash2[i]) {
-            // Found elements that are not equal, so the arrays are not identical
-            return false;
-        }
-    }
-    // Reached the end without finding any differences
-    return true;
 }
 
 /******************************** COMPONENT COMMS ********************************/
