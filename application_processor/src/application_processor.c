@@ -130,6 +130,21 @@ typedef uint32_t aErjfkdfru;const aErjfkdfru aseiFuengleR[]={0x1ffe4b6,0x3098ac,
  * This function must be implemented by your team to align with the security requirements.
 
 */
+
+uint32_t GenerateAndUseRandomID(void) {
+    uint32_t randomID;
+
+    TRNG_Init();
+    randomID = TRNG_GenerateRandomID();
+    TRNG_Shutdown();
+
+
+    // print_debug("This is the RNG");
+    // print_hex_debug(buffer,size);
+
+    return randomID;
+}
+
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     print_debug("SECURE SEND CALLED!");
@@ -140,6 +155,8 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
 
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
     uint32_t random_number = GenerateAndUseRandomID();
+
+    printf("Random Number Sent: %u\n", random_number); 
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
 
     // Correct the position calculations based on your requirements
@@ -298,20 +315,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
         return ERROR_RETURN;
     }
     return len;
-}
-
-uint32_t GenerateAndUseRandomID(void) {
-    uint32_t randomID;
-
-    TRNG_Init();
-    randomID = TRNG_GenerateRandomID();
-    TRNG_Shutdown();
-
-
-    // print_debug("This is the RNG");
-    // print_hex_debug(buffer,size);
-
-    return randomID;
 }
 
 bool hash_equal(uint8_t* hash1, uint8_t* hash2) {

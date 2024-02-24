@@ -10,7 +10,7 @@ void TRNG_Init(void) {
 
 uint32_t TRNG_GenerateRandomID(void) {
     uint32_t id;
-    MXC_TRNG_Random((uint8_t*)&id, sizeof(id));
+    MXC_TRNG_Random((uint32_t*)&id, sizeof(id));
     return id;
 }
 
