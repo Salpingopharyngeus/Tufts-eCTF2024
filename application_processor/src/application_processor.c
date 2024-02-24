@@ -304,7 +304,7 @@ uint32_t GenerateAndUseRandomID(void) {
     uint32_t randomID;
 
     TRNG_Init();
-    TRNG_GenerateRandomID();
+    randomID = TRNG_GenerateRandomID();
     TRNG_Shutdown();
 
 
