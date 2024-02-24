@@ -25,6 +25,7 @@
 #include "board_link.h"
 #include "simple_flash.h"
 #include "host_messaging.h"
+#include "dictionary.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -103,9 +104,11 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
+
 /********************************* GLOBAL VARIABLES **********************************/
 // Variable for information stored in flash memory
 flash_entry flash_status;
+Dictionary dict;
 
 /********************************* REFERENCE FLAG **********************************/
 // trust me, it's easier to get the boot reference flag by
@@ -131,6 +134,8 @@ void GenerateAndUseRandomID(uint8_t *buffer, size_t size);
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
+    initDictionary(&dict);
+
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
     print_debug("SECURE SEND CALLED!");
     if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
@@ -182,6 +187,9 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     // Debug output
     // print_debug("Final buffer:");
     // print_hex_debug(temp_buffer, MAX_PACKET_SIZE);
+
+    // Update random number assignment for component
+    addOrUpdate(&dict, address, random_number);
 
     // Send the packet
     return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
@@ -622,7 +630,7 @@ void attempt_boot() {
     print_info("AP>%s\n", AP_BOOT_MSG);
     print_success("Boot\n");
     // Boot
-    //boot();
+    boot();
 }
 
 // Replace a component if the PIN is correct
