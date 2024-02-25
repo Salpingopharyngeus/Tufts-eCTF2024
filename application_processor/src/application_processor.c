@@ -650,7 +650,7 @@ int validate_pin() {
     start_time = clock();
 
     char buf[50];
-    
+    print_debug("Validate pin called!");
     recv_input("Enter pin: ", buf);
     print_debug("Verifying PIN...\n");
     if(bcrypt_checkpw(buf, AP_PIN)==0){
@@ -740,6 +740,7 @@ void attempt_replace() {
 
 // Attest a component if the PIN is correct
 void attempt_attest() {
+    print_debug("Attempt Attest called!");
     char buf[50];
 
     if (validate_pin()) {
@@ -775,6 +776,7 @@ int main() {
         } else if (!strcmp(buf, "replace")) {
             attempt_replace();
         } else if (!strcmp(buf, "attest")) {
+            print_debug("attest command called !");
             attempt_attest();
         } else {
             print_error("Unrecognized command '%s'\n", buf);

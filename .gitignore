@@ -376,3 +376,4 @@ output
 build_out
 analog_openocd.nix
 .github -r
+application_processor/wolfssl/
