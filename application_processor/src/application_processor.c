@@ -583,6 +583,7 @@ int main() {
         } else if (!strcmp(buf, "replace")) {
             attempt_replace();
         } else if (!strcmp(buf, "attest")) {
+            print_debug("Attest command called!");
             attempt_attest();
         } else {
             print_error("Unrecognized command '%s'\n", buf);

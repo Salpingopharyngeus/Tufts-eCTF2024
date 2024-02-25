@@ -28,6 +28,7 @@
 #include "mxc_device.h"
 
 #include "board_link.h"
+#include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 
 // Includes from containerized build
@@ -117,8 +118,6 @@ uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
 // AES request
 mxc_aes_req_t req;
-
-volatile int dma_flag = 0;
 
 const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
 
@@ -242,7 +241,7 @@ void process_attest() {
     uint32_t input32bit;
     memcpy(&input32bit, input_buffer, sizeof(uint32_t));
 
-    int aes_success = AES_encrypt(0, MXC_AES_256BITS, &input32bit, &transmit_buffer);
+    int aes_success = AES_encrypt(0, MXC_AES_256BITS, (uint32_t *)input_buffer, (uint32_t *)transmit_buffer);
 
     if (aes_success == 0) {
         send_packet_and_ack(strlen(input_buffer), transmit_buffer);
