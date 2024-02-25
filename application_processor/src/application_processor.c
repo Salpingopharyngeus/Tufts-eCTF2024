@@ -3,7 +3,7 @@
  * @author Jacob Doll
  * @brief eCTF AP Example Design Implementation
  * @date 2024
- *
+ * 
  * This source file is part of an example system for MITRE's 2024 Embedded
  * System CTF (eCTF). This code is being provided only for educational purposes
  * for the 2024 MITRE eCTF competition, and may not meet MITRE standards for
@@ -30,6 +30,7 @@
 #include "simple_flash.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
+#include "aes_functions.h"
 #endif
 
 #ifdef POST_BOOT
@@ -228,7 +229,7 @@ int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint3
  *
  * Securely send data over I2C. This function is utilized in POST_BOOT
  * functionality. This function must be implemented by your team to align with
- * the security requirements.
+ * the security requirements. brother whattttt
  */
 int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
     // Each segment is 32 bytes (256 bits)
@@ -255,8 +256,6 @@ int secure_send(uint8_t address, uint8_t *buffer, uint8_t len) {
         // Assuming AES_encrypt has been adjusted to accept uint8_t* and segment size
         // 2. Pass in this struct, pointer to the one you just created
         AES_encrypt(0, MXC_AES_256BITS, (uint8_t*)segment, encryptedBuffer);
-
-        memcpy(encryptedBuffer + (i * segmentSize), segment, segmentSize);
     }
     return send_packet(address, sizeof(encryptedBuffer), encryptedBuffer);
 }
@@ -293,15 +292,6 @@ int AES_decrypt(int asynchronous, mxc_aes_keys_t key, mxc_aes_enc_type_t key_met
     }
 
     MXC_AES_Shutdown();
-
-    
-    if (memcmp(inputData, decryptedData, MXC_AES_DATA_LENGTH) == 0) {
-        printf("\nData Verified");
-        return E_NO_ERROR;
-    }
-
-    printf("\nData Mismatch");
-
     return err;
 }
 
