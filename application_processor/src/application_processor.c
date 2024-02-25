@@ -72,7 +72,7 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    //uint8_t random_number[4]; //4 bytes for the RNG
+    uint32_t random_number; //4 bytes for the RNG
 } command_message;
 
 // Data type for receiving a validate message
@@ -173,6 +173,10 @@ void attach_key(command_message* command){
     hash(key, HASH_SIZE, hash_out);
     memcpy(command->authkey, hash_out, HASH_SIZE);
     
+}
+
+void attach_random_num(command_message* command){
+    command->random_number = GenerateAndUseRandomID();
 }
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
@@ -422,6 +426,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 /******************************** COMPONENT COMMS ********************************/
 
 int validate_components() {
+    print_debug("In Validate Components");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -442,6 +447,9 @@ int validate_components() {
 
        // Attach authentication hash
         attach_key(command);
+        attach_random_num(command);
+
+        print_debug("Random number for command: %u", command->random_number);
 
         //memcpy(command->random_number, rngValue, sizeof(rngValue));
 
@@ -470,6 +478,7 @@ int validate_components() {
 }
 
 int scan_components() {
+    print_debug("Scan Components");
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -497,6 +506,9 @@ int scan_components() {
 
         // Attach authentication hash
         attach_key(command);
+        attach_random_num(command);
+
+        print_debug("Random number for command: %u", command->random_number);
         
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
