@@ -384,6 +384,7 @@ int attest_component(uint32_t component_id) {
 
     // Send out command and receive result
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+ 
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;

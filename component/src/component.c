@@ -236,14 +236,18 @@ void process_validate() {
 
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
+    char input_buffer[256]; // Assuming a sufficiently large buffer size
+    sprintf(input_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
-    uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
-                ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
+    uint32_t input32bit;
+    memcpy(&input32bit, input_buffer, sizeof(uint32_t));
 
-    uint32_t encryptedData;
+    int aes_success = AES_encrypt(0, MXC_AES_256BITS, &input32bit, &transmit_buffer);
 
-    if (!AES_encrypt(0, MXC_AES_256BITS, &input32bit, &encryptedData)) {
-        send_packet_and_ack(len, transmit_buffer);
+    if (aes_success == 0) {
+        send_packet_and_ack(strlen(input_buffer), transmit_buffer);
+    } else {
+        print_error("Could not successfully encrypt");
     }
 }
 /*********************************** MAIN *************************************/
