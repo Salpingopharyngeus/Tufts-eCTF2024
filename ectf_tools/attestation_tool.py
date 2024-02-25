@@ -30,6 +30,7 @@ logger.add(sys.stdout, format=fmt)
 
 # Attest function
 def attest(args):
+    
     ser = serial.Serial(
         port=args.application_processor,
         baudrate=115200,

@@ -8,6 +8,16 @@
 #include "aes.h"
 #include "aes_regs.h"
 
+
+#define MXC_AES_DATA_LENGTH 8
+volatile int dma_flag = 0;
+
+void DMA0_IRQHandler() {
+    MXC_DMA_Handler();
+    dma_flag++;
+}
+
+
 /**
  * FUNCTION CONTRACT TO DO
  *
