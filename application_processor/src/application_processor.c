@@ -73,7 +73,7 @@
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
 
-#define MXC_AES_DATA_LENGTH 8
+#define MXC_AES_DATA_LENGTH 32
 // Define the maximum length of encrypted data
 #define MXC_AES_ENC_DATA_LENGTH 256
 
@@ -390,10 +390,16 @@ int attest_component(uint32_t component_id) {
         return ERROR_RETURN;
     }
 
-    // Print out attestation data
-    print_info("C>0x%08x\n", component_id);
-    print_info("%s", receive_buffer);
-    return SUCCESS_RETURN;
+    uint32_t decrypted[MXC_AES_DATA_LENGTH / sizeof(uint32_t)]; // Decrypted data buffer
+
+    int decrypt_success = AES_Decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, receive_buffer, decrypted);
+
+    if (decrypt_success == 0) {
+        // Print out attestation data
+        print_info("C>0x%08x\n", component_id);
+        print_info("%s", receive_buffer);
+        return SUCCESS_RETURN;
+    }
 }
 
 /********************************* AP LOGIC ***********************************/
