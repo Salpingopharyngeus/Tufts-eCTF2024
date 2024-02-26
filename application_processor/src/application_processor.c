@@ -407,7 +407,7 @@ void init() {
 */
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 
-    size_t PACKET_SIZE = HASH_SIZE + 1;
+    size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
 
     // Send message
     int result = send_packet(addr, PACKET_SIZE, transmit);
@@ -447,9 +447,13 @@ int validate_components() {
 
        // Attach authentication hash
         attach_key(command);
-        attach_random_num(command);
+        //attach_random_num(command);
 
-        print_debug("Random number for command: %u", command->random_number);
+        uint32_t test_random_num = 12345;
+        command->random_number = test_random_num;
+        print_debug("Random number sent: %u", command->random_number);
+
+        //print_hex_debug(command->random_number, sizeof(command->random_number));
 
         //memcpy(command->random_number, rngValue, sizeof(rngValue));
 
@@ -506,16 +510,18 @@ int scan_components() {
 
         // Attach authentication hash
         attach_key(command);
-        attach_random_num(command);
-
-        print_debug("Random number for command: %u", command->random_number);
+        //attach_random_num(command);
+        uint32_t test_random_num = 12345;
+        command->random_number = test_random_num;
         
+
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
-
+            print_debug("Random number sent: %u", command->random_number);
+           //print_hex_debug(command->random_number, sizeof(command->random_number));
             // Validate received authentication hash
             if(!hash_equal(command->authkey, scan->authkey)){
                 return ERROR_RETURN;

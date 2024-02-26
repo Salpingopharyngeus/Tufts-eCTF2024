@@ -77,7 +77,6 @@ typedef struct {
     uint8_t opcode;
     uint8_t authkey[HASH_SIZE];
     uint32_t random_number;
-
 } command_message;
 
 typedef struct {
@@ -298,7 +297,9 @@ void component_process_cmd() {
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
-    print_debug("Received random number: %u\n", command->random_number);
+    print_debug("Received random number: %u\n", (uint32_t) command->random_number);
+    //print_hex_debug(command->random_number, sizeof(command->random_number));
+    
     // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
