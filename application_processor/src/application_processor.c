@@ -69,6 +69,7 @@
 // Library call return types
 #define SUCCESS_RETURN 0
 #define ERROR_RETURN -1
+#define ATTESTATION_SIZE 212
 
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
@@ -170,6 +171,43 @@ kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
 
 const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
 const mxc_aes_enc_type_t decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
+
+
+void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
+    // Check if the buffer sizes are compatible
+    if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
+        // Handle mismatched buffer sizes
+        fprintf(stderr, "Buffer sizes are not compatible\n");
+        return;
+    }
+    
+    // Copy bytes from the uint8_t buffer to the uint32_t buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Reinterpret the memory layout of the next set of bytes as a uint32_t value
+        uint32_t value = *((const uint32_t*)(uint8_buffer + i * sizeof(uint32_t)));
+        // Store the uint32_t value in the uint32_t buffer
+        uint32_buffer[i] = value;
+    }
+}
+
+void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
+    // Ensure the provided uint8_buffer has enough space
+    size_t required_size = num_elements * sizeof(uint32_t);
+    if (uint8_buffer_size < required_size) {
+        printf("Error: Insufficient space in uint8_buffer\n");
+        return;
+    }
+
+    // Iterate over each uint32_t value in the buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Extract the bytes from the uint32_t value
+        uint32_t value = uint32_buffer[i];
+        for (size_t j = 0; j < sizeof(uint32_t); j++) {
+            // Store each byte of the uint32_t value in the uint8_t buffer
+            uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
+        }
+    }
+}
 
 /**
  * @brief Secure Send 
@@ -390,14 +428,32 @@ int attest_component(uint32_t component_id) {
         return ERROR_RETURN;
     }
 
-    uint32_t decrypted[MXC_AES_DATA_LENGTH / sizeof(uint32_t)]; // Decrypted data buffer
+    print_debug("Encrypted: ");
+    print_debug("Len: %d", len);
+    print_hex_debug(receive_buffer, len);
 
-    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, receive_buffer, decrypted);
+    size_t decrypt_buffer_size = len / sizeof(uint32_t);
+    uint32_t decrypted[decrypt_buffer_size]; // Decrypted data buffer
+    
+    // Convert uint8_t receive buffer to uint32_t transmit buffer
+    uint32_t uint32_receive_buffer[sizeof(receive_buffer) / sizeof(uint32_t)];
+    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer) / sizeof(uint32_t));
+
+    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, uint32_receive_buffer, decrypted);
+
+    // convert uint32_t decrypted to uint8_t decrypted.
+    size_t num_elements = sizeof(decrypted) / sizeof(uint32_t);
+    size_t uint8_decrypted_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    uint8_t uint8_decrypted[uint8_decrypted_size];
+    uint32_to_uint8(decrypted, num_elements, uint8_decrypted, uint8_decrypted_size);
+
+    print_debug("Decrypted: ");
+    print_hex_debug(decrypted, uint8_decrypted_size);
 
     if (decrypt_success == 0) {
         // Print out attestation data
         print_info("C>0x%08x\n", component_id);
-        print_info("%s", receive_buffer);
+        print_info("%s", decrypted);
         return SUCCESS_RETURN;
     }
 }

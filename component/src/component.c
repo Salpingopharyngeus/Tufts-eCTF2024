@@ -67,6 +67,7 @@
 #define MXC_AES_DATA_LENGTH 8 // 4 words
 
 #define MXC_AES_ENC_DATA_LENGTH 8 // Always multiple of 4
+#define ATTESTATION_SIZE 212
 //(equal to or greater than MXC_AES_DATA_LENGTH)
 
 /******************************** TYPE DEFINITIONS
@@ -121,8 +122,7 @@ mxc_aes_req_t req;
 
 const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
 
-/******************************* POST BOOT FUNCTIONALITY
- * *********************************/
+/******************************* POST BOOT FUNCTIONALITY **********************************/
 /**
  * @brief Secure Send
  *
@@ -150,8 +150,7 @@ void secure_send(uint8_t *buffer, uint8_t len) {
  */
 int secure_receive(uint8_t *buffer) { return wait_and_receive_packet(buffer); }
 
-/******************************* FUNCTION DEFINITIONS
- * *********************************/
+/******************************* FUNCTION DEFINITIONS **********************************/
 
 // Example boot sequence
 // Your design does not need to change this
@@ -183,6 +182,42 @@ void boot() {
         MXC_Delay(500000);
     }
 #endif
+}
+
+void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
+    // Check if the buffer sizes are compatible
+    if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
+        // Handle mismatched buffer sizes
+        fprintf(stderr, "Buffer sizes are not compatible\n");
+        return;
+    }
+    
+    // Copy bytes from the uint8_t buffer to the uint32_t buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Reinterpret the memory layout of the next set of bytes as a uint32_t value
+        uint32_t value = *((const uint32_t*)(uint8_buffer + i * sizeof(uint32_t)));
+        // Store the uint32_t value in the uint32_t buffer
+        uint32_buffer[i] = value;
+    }
+}
+
+void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
+    // Ensure the provided uint8_buffer has enough space
+    size_t required_size = num_elements * sizeof(uint32_t);
+    if (uint8_buffer_size < required_size) {
+        printf("Error: Insufficient space in uint8_buffer\n");
+        return;
+    }
+
+    // Iterate over each uint32_t value in the buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Extract the bytes from the uint32_t value
+        uint32_t value = uint32_buffer[i];
+        for (size_t j = 0; j < sizeof(uint32_t); j++) {
+            // Store each byte of the uint32_t value in the uint8_t buffer
+            uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
+        }
+    }
 }
 
 // Handle a transaction from the AP
@@ -235,16 +270,46 @@ void process_validate() {
 
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
-    char input_buffer[256]; // Assuming a sufficiently large buffer size
-    sprintf(input_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
-    uint32_t input32bit;
-    memcpy(&input32bit, input_buffer, sizeof(uint32_t));
+    // Construct Attestation String Data
+    char attestation_data[ATTESTATION_SIZE]; // Assuming a sufficiently large buffer size
+    sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
-    int aes_success = AES_encrypt(0, MXC_AES_256BITS, (uint32_t *)input_buffer, (uint32_t *)transmit_buffer);
+    print_debug("Attestation data: \n");
+    print_debug("%s\n", attestation_data);
+
+    // Store Attestation Data in uint8_t* buffer
+    size_t len = strlen(attestation_data);
+    uint8_t temp_buffer[len];
+    memset(temp_buffer, 0, len);
+    memcpy(temp_buffer, attestation_data, len);
+
+    print_debug("Attestation data in uint32_t: \n");
+    print_hex_debug(temp_buffer, len);
+
+    // Store Attestation Data in uint32_t* buffer --> from uint8_t* buffer
+    uint32_t uint32_temp[sizeof(temp_buffer) / sizeof(uint32_t)];
+    uint8_to_uint32(temp_buffer, sizeof(temp_buffer), uint32_temp, sizeof(uint32_temp) / sizeof(uint32_t));
+
+    // Initialize uint32_t transmit buffer
+    uint32_t uint32_transmit_buffer[MAX_I2C_MESSAGE_LEN/sizeof(uint32_t)];
+    memset(uint32_transmit_buffer, 0, MAX_I2C_MESSAGE_LEN/sizeof(uint32_t));
+
+    // Encrypt contents of uint32_t representation of attestation data and store result in uint32_t transmit buffer
+    int aes_success = AES_encrypt(0, MXC_AES_256BITS, uint32_temp, uint32_transmit_buffer);
+
+    // Debug uint32_t transmit buffer content using uint8_t representation
+    size_t num_elements = sizeof(uint32_transmit_buffer) / sizeof(uint32_t);
+    size_t uint8_buffer_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    uint8_t uint8_debug_buffer[uint8_buffer_size];
+    uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_debug_buffer, uint8_buffer_size);
+
+    print_debug("Encrypted: ");
+    print_hex_debug(uint8_debug_buffer, uint8_buffer_size);
 
     if (aes_success == 0) {
-        send_packet_and_ack(strlen(input_buffer), transmit_buffer);
+        print_debug("uint8_buffer_size: %d\n", uint8_buffer_size);
+        send_packet_and_ack(uint8_buffer_size-1, uint8_debug_buffer);
     } else {
         print_error("Could not successfully encrypt");
     }
