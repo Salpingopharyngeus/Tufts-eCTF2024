@@ -30,7 +30,6 @@
 #include "simple_flash.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
-#include "aes_functions.h"
 #endif
 
 #ifdef POST_BOOT
@@ -46,6 +45,7 @@
 #include "aes_regs.h"
 #include "dma.h"
 #include "mxc_device.h"
+#include "aes_functions.h"
 
 #include "../../deployment/global_secrets.h"
 
@@ -392,7 +392,7 @@ int attest_component(uint32_t component_id) {
 
     uint32_t decrypted[MXC_AES_DATA_LENGTH / sizeof(uint32_t)]; // Decrypted data buffer
 
-    int decrypt_success = AES_Decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, receive_buffer, decrypted);
+    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, receive_buffer, decrypted);
 
     if (decrypt_success == 0) {
         // Print out attestation data
