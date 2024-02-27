@@ -28,7 +28,7 @@ void DMA0_IRQHandler() {
 int AES_encrypt(int asynchronous, mxc_aes_keys_t key, uint32_t* inputData, uint32_t* encryptedData) {
     int err = E_NO_ERROR;
     err = MXC_AES_Init();
-    if (err) return err; // TODO: check if this is secure against some kind of attack?
+    if (err) return err;
 
     // Declare data for an AES request
     mxc_aes_req_t req;

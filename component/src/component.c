@@ -120,7 +120,7 @@ uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
 // AES request
 mxc_aes_req_t req;
 
-const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
+const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
 
 /******************************* POST BOOT FUNCTIONALITY **********************************/
 /**
@@ -294,6 +294,9 @@ void process_attest() {
     // Initialize uint32_t transmit buffer
     uint32_t uint32_transmit_buffer[MAX_I2C_MESSAGE_LEN/sizeof(uint32_t)];
     memset(uint32_transmit_buffer, 0, MAX_I2C_MESSAGE_LEN/sizeof(uint32_t));
+
+    // Set the external encryption key
+    MXC_AES_SetExtKey(external_aes_key, MXC_AES_256BITS);
 
     // Encrypt contents of uint32_t representation of attestation data and store result in uint32_t transmit buffer
     int aes_success = AES_encrypt(0, MXC_AES_256BITS, uint32_temp, uint32_transmit_buffer);
