@@ -169,10 +169,6 @@ kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
 /******************************* POST BOOT FUNCTIONALITY
  * *********************************/
 
-const mxc_aes_enc_type_t external_aes_key[] = EXTERNAL_AES_KEY;
-const mxc_aes_enc_type_t decrypt_aes_key[] = GLOBAL_AES_DECRYPTION_KEY;
-
-
 void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
     // Check if the buffer sizes are compatible
     if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
@@ -428,27 +424,39 @@ int attest_component(uint32_t component_id) {
         return ERROR_RETURN;
     }
 
-    print_debug("Encrypted: ");
-    print_debug("Len: %d", len);
     print_hex_debug(receive_buffer, len);
 
     size_t decrypt_buffer_size = len / sizeof(uint32_t);
     uint32_t decrypted[decrypt_buffer_size]; // Decrypted data buffer
+    memset(decrypted, 0, decrypt_buffer_size);
     
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[sizeof(receive_buffer) / sizeof(uint32_t)];
+    memset(uint32_receive_buffer, 0, sizeof(receive_buffer) / sizeof(uint32_t));
     uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer) / sizeof(uint32_t));
 
-    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_EXT_KEY, uint32_receive_buffer, decrypted);
+    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
 
     // convert uint32_t decrypted to uint8_t decrypted.
     size_t num_elements = sizeof(decrypted) / sizeof(uint32_t);
     size_t uint8_decrypted_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    print_debug("uint8_decrypted_size: %u", uint8_decrypted_size);
     uint8_t uint8_decrypted[uint8_decrypted_size];
+    memset(uint8_decrypted, 0, uint8_decrypted_size);
     uint32_to_uint8(decrypted, num_elements, uint8_decrypted, uint8_decrypted_size);
 
     print_debug("Decrypted: ");
-    print_hex_debug(decrypted, uint8_decrypted_size);
+    print_hex_debug(uint8_decrypted, uint8_decrypted_size);
+
+    // Extract the original message
+    // uint8_t original_message[uint8_decrypted_size+1]; // Add one for the null terminator
+    // memset(original_message, 0, uint8_decrypted_size);
+    // memcpy(original_message, uint8_decrypted, uint8_decrypted_size);
+    // original_message[uint8_decrypted_size] = '\0'; // Null-terminate the string
+
+    // print_debug("Original message: ");
+    // print_debug("%s", original_message);
+    // print_debug("----------------------------------------\n");
 
     if (decrypt_success == 0) {
         // Print out attestation data

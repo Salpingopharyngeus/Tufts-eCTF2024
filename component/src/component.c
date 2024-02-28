@@ -272,7 +272,7 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
 
     // Construct Attestation String Data
-    char attestation_data[ATTESTATION_SIZE]; // Assuming a sufficiently large buffer size
+    char attestation_data[MAX_I2C_MESSAGE_LEN]; // Assuming a sufficiently large buffer size
     sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
     print_debug("Attestation data: \n");
@@ -284,11 +284,15 @@ void process_attest() {
     memset(temp_buffer, 0, len);
     memcpy(temp_buffer, attestation_data, len);
 
-    print_debug("Attestation data in uint32_t: \n");
+    print_debug("uint8_t buffer before Encrypt: \n");
     print_hex_debug(temp_buffer, len);
+
+    // print_debug("Attestation data in uint32_t: \n");
+    // print_hex_debug(temp_buffer, len);
 
     // Store Attestation Data in uint32_t* buffer --> from uint8_t* buffer
     uint32_t uint32_temp[sizeof(temp_buffer) / sizeof(uint32_t)];
+    memset(uint32_temp, 0, sizeof(temp_buffer) / sizeof(uint32_t));
     uint8_to_uint32(temp_buffer, sizeof(temp_buffer), uint32_temp, sizeof(uint32_temp) / sizeof(uint32_t));
 
     // Initialize uint32_t transmit buffer
@@ -305,17 +309,31 @@ void process_attest() {
     size_t num_elements = sizeof(uint32_transmit_buffer) / sizeof(uint32_t);
     size_t uint8_buffer_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
     uint8_t uint8_debug_buffer[uint8_buffer_size];
+    memset(uint8_debug_buffer, 0, uint8_buffer_size);
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_debug_buffer, uint8_buffer_size);
 
-    print_debug("Encrypted: ");
-    print_hex_debug(uint8_debug_buffer, uint8_buffer_size);
+    // Try Decrypting
+    uint32_t uint32_decrypt_buffer[len/sizeof(uint32_t)];
+    memset(uint32_decrypt_buffer, 0, len/sizeof(uint32_t));
 
-    if (aes_success == 0) {
-        print_debug("uint8_buffer_size: %d\n", uint8_buffer_size);
-        send_packet_and_ack(uint8_buffer_size-1, uint8_debug_buffer);
-    } else {
-        print_error("Could not successfully encrypt");
-    }
+    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_transmit_buffer, uint32_decrypt_buffer);
+
+    // Debug uint32_t transmit buffer content using uint8_t representation
+    size_t num_elements2 = sizeof(uint32_decrypt_buffer) / sizeof(uint32_t);
+    size_t uint8_buffer_size2 = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    uint8_t uint8_debug_buffer2[uint8_buffer_size];
+    memset(uint8_debug_buffer2, 0, uint8_buffer_size2);
+    uint32_to_uint8(uint32_decrypt_buffer, num_elements2, uint8_debug_buffer2, uint8_buffer_size2);
+
+    print_debug("uint8_t buffer after decrypt: ");
+    print_hex_debug(uint8_debug_buffer2, uint8_buffer_size2);
+
+    // if (aes_success == 0) {
+    //     print_debug("uint8_buffer_size: %d\n", uint8_buffer_size);
+    //     send_packet_and_ack(uint8_buffer_size-1, uint8_debug_buffer);
+    // } else {
+    //     print_error("Could not successfully encrypt");
+    // }
 }
 /*********************************** MAIN *************************************/
 
