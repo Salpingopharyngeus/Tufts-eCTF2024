@@ -333,31 +333,32 @@ void process_attest() {
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
 
 
-    /////// TEST DECRYPTION ///////
+    ///// TEST DECRYPTION ///////
 
-    // uint32_t uint32_test_buffer[ATTEST_SIZE/sizeof(uint32_t)];
-    // memset(uint32_test_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
-    // uint8_to_uint32(uint8_transmit_buffer, sizeof(uint8_transmit_buffer), uint32_test_buffer, sizeof(uint32_test_buffer) / sizeof(uint32_t));
+    uint32_t uint32_test_buffer[ATTEST_SIZE/sizeof(uint32_t)];
+    memset(uint32_test_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
+    uint8_to_uint32(uint8_transmit_buffer, sizeof(uint8_transmit_buffer), uint32_test_buffer, sizeof(uint32_test_buffer) / sizeof(uint32_t));
     
-    // uint32_t uint32_decrypt_buffer[ATTEST_SIZE/sizeof(uint32_t)];
-    // memset(uint32_decrypt_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
+    uint32_t uint32_decrypt_buffer[ATTEST_SIZE/sizeof(uint32_t)];
+    memset(uint32_decrypt_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
 
-    // int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_test_buffer, uint32_decrypt_buffer);
+    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_test_buffer, uint32_decrypt_buffer);
 
-    // //CHECK CONTENT OF UINT32_T DECRYPTED BUFFER
+    //CHECK CONTENT OF UINT32_T DECRYPTED BUFFER
     // print_debug("CONTENT OF UINT32_T BUFFER AFTER DECRYPTION: \n");
     // print_uint32_buffer(uint32_decrypt_buffer, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
     
 
-    // //Debug uint32_t transmit buffer content using uint8_t representation
-    // size_t num_elements2 = sizeof(uint32_decrypt_buffer) / sizeof(uint32_t);
-    // size_t uint8_buffer_size2 = num_elements2 * sizeof(uint32_t); // Size of the resulting uint8_t buffer
-    // uint8_t uint8_debug_buffer2[uint8_buffer_size2];
-    // memset(uint8_debug_buffer2, 0, uint8_buffer_size2);
-    // uint32_to_uint8(uint32_decrypt_buffer, num_elements2, uint8_debug_buffer2, uint8_buffer_size2);
+    //Debug uint32_t transmit buffer content using uint8_t representation
+    size_t num_elements2 = sizeof(uint32_decrypt_buffer) / sizeof(uint32_t);
+    size_t uint8_buffer_size2 = num_elements2 * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    uint8_t uint8_debug_buffer2[uint8_buffer_size2];
+    memset(uint8_debug_buffer2, 0, uint8_buffer_size2);
+    uint32_to_uint8(uint32_decrypt_buffer, num_elements2, uint8_debug_buffer2, uint8_buffer_size2);
 
-    // print_debug("DECRYPTED MESSAGE: \n");
-    // print_uint8_buffer_as_string(uint8_debug_buffer2, ATTEST_SIZE);
+    print_debug("DECRYPTED MESSAGE: \n");
+    print_hex_debug(uint8_debug_buffer2, ATTEST_SIZE);
+    //print_uint8_buffer_as_string(uint8_debug_buffer2, ATTEST_SIZE);
 
     print_debug("TRANSMIT BUFFER: \n");
     print_hex_debug(uint8_transmit_buffer, ATTEST_SIZE);
