@@ -422,6 +422,8 @@ endif
 
 all:
 # 	Extend the functionality of the "all" recipe here
+	@echo "Injecting bcrypt pins"
+	@poetry run python src/bcrypt_pin.py inc/ectf_params.h
 	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
 
 libclean: 

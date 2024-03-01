@@ -384,10 +384,6 @@ void process_attest() {
     uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
                 ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
-    // Encrypt the len variable
-    // AES_encrypt(&len, sizeof(len), MXC_AES_128BITS);
-    // send_packet_and_ack(len, transmit_buffer);
-    
     // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
@@ -399,35 +395,6 @@ void process_attest() {
 
     send_packet_and_ack(total_len, transmit_buffer);
 }
-
-// AES encryption function implementation
-// int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key)
-// {
-//     mxc_aes_req_t req;
-
-//     // Set the length of the input data
-//     req.length = (data_length + 3) / 4; // Round up to the nearest word
-
-//     // Set the input data and result data pointers
-//     req.inputData = (uint32_t *)data;
-//     req.resultData = encryptedData;
-
-//     // Set the key size and encryption mode
-//     req.keySize = key;
-//     req.encryption = MXC_AES_ENCRYPT_EXT_KEY;
-
-//     // Initialize AES
-//     MXC_AES_Init();
-
-//     // Perform AES encryption
-//     MXC_AES_Encrypt(&req);
-
-//     // Shutdown AES after encryption
-//     MXC_AES_Shutdown();
-
-//     return E_NO_ERROR;
-// }
-
 
 /*********************************** MAIN *************************************/
 

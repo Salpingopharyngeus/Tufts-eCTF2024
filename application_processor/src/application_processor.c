@@ -663,22 +663,12 @@ void boot() {
 
 // Compare the entered PIN to the correct PIN
 int validate_pin() {
-    clock_t start_time, end_time;
-    //Starts the clock
-    start_time = clock();
-
     char buf[50];
-    print_debug("Validate pin called!");
+    
     recv_input("Enter pin: ", buf);
     print_debug("Verifying PIN...\n");
     if(bcrypt_checkpw(buf, AP_PIN)==0){
-        print_debug("Pin Accepted!\n");
-        // Ends the clock
-        end_time = clock();
-        
-        //Calculates the time it took to verify the pin
-        double time_taken = ((double)end_time - start_time)/CLOCKS_PER_SEC;
-        print_debug("Time taken to verify pin: %f\n", time_taken);
+        print_debug("Pin Accepted!\n");     
         
         return SUCCESS_RETURN;
     }
@@ -691,8 +681,9 @@ int validate_token() {
     char buf[50];
     recv_input("Enter token: ", buf);
     print_debug("Verifying Token...\n");
-
+    
     if(bcrypt_checkpw(buf, AP_TOKEN)==0){
+
         print_debug("Token Accepted!\n");
         return SUCCESS_RETURN;
     }
