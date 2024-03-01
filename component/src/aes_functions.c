@@ -9,7 +9,7 @@
 #include "aes_regs.h"
 
 
-#define MXC_AES_DATA_LENGTH 8
+#define MXC_AES_DATA_LENGTH 54
 volatile int dma_flag = 0;
 
 void DMA0_IRQHandler() {

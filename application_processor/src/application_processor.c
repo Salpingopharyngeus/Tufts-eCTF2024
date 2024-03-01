@@ -120,6 +120,8 @@ typedef enum {
 // Variable for information stored in flash memory
 flash_entry flash_status;
 uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
+const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
+
 
 /********************************* REFERENCE FLAG
  * **********************************/
@@ -202,6 +204,25 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
             // Store each byte of the uint32_t value in the uint8_t buffer
             uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
         }
+    }
+}
+
+void print_uint32_buffer(uint32_t *buffer, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        print_debug("%u ", buffer[i]);
+    }
+}
+void print_uint8_buffer_as_string(uint8_t *buffer, size_t size) {
+    print_debug("REACHED HERE");
+    for (size_t i = 0; i < size; i++) {
+        print_debug("%c", buffer[i]);
+    }
+}
+void convertBuffers(uint8_t* uint8Buffer, char* charBuffer, size_t size) {
+    // Assuming size is the size of the buffer in bytes
+    for (size_t i = 0; i < size; ++i) {
+        // Copy each byte from uint8_t buffer to char buffer
+        charBuffer[i] = (char)uint8Buffer[i];
     }
 }
 
@@ -406,64 +427,83 @@ int boot_components() {
 
 int attest_component(uint32_t component_id) {
     // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    size_t RECEIVE_SIZE = 216;
+    uint8_t receive_buffer[RECEIVE_SIZE];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
     // Set the I2C address of the component
     i2c_addr_t addr = component_id_to_i2c_addr(component_id);
 
     // Create command message
+    
     command_message *command = (command_message *)transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
 
     // Send out command and receive result
+    memset(receive_buffer, 0, RECEIVE_SIZE);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
  
+    print_debug("RECEIVE BUFFER: ");
+    print_hex_debug(receive_buffer, len);
+
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
 
-    print_hex_debug(receive_buffer, len);
-
-    size_t decrypt_buffer_size = len / sizeof(uint32_t);
-    uint32_t decrypted[decrypt_buffer_size]; // Decrypted data buffer
-    memset(decrypted, 0, decrypt_buffer_size);
-    
     // Convert uint8_t receive buffer to uint32_t transmit buffer
-    uint32_t uint32_receive_buffer[sizeof(receive_buffer) / sizeof(uint32_t)];
-    memset(uint32_receive_buffer, 0, sizeof(receive_buffer) / sizeof(uint32_t));
-    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer) / sizeof(uint32_t));
+    uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
+    memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
+    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+
+    uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
+    memset(decrypted, 0, len/sizeof(uint32_t));
+
+
+    MXC_AES_SetExtKey(external_aes_key, MXC_AES_256BITS);
 
     int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
+
+    // print_debug("CONTENT OF UINT32_T BUFFER AFTER DECRYPTION: \n");
+    // print_uint32_buffer(decrypted, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
 
     // convert uint32_t decrypted to uint8_t decrypted.
     size_t num_elements = sizeof(decrypted) / sizeof(uint32_t);
     size_t uint8_decrypted_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
-    print_debug("uint8_decrypted_size: %u", uint8_decrypted_size);
     uint8_t uint8_decrypted[uint8_decrypted_size];
     memset(uint8_decrypted, 0, uint8_decrypted_size);
-    uint32_to_uint8(decrypted, num_elements, uint8_decrypted, uint8_decrypted_size);
+    uint32_to_uint8(decrypted, num_elements, uint8_decrypted, sizeof(uint8_decrypted));
 
-    print_debug("Decrypted: ");
+    print_debug("uint8_t representation of decrypted: ");
     print_hex_debug(uint8_decrypted, uint8_decrypted_size);
 
-    // Extract the original message
-    // uint8_t original_message[uint8_decrypted_size+1]; // Add one for the null terminator
-    // memset(original_message, 0, uint8_decrypted_size);
-    // memcpy(original_message, uint8_decrypted, uint8_decrypted_size);
-    // original_message[uint8_decrypted_size] = '\0'; // Null-terminate the string
+    // // Extract the original message
+    // // uint8_t original_message[uint8_decrypted_size+1]; // Add one for the null terminator
+    // // memset(original_message, 0, uint8_decrypted_size);
+    // // memcpy(original_message, uint8_decrypted, uint8_decrypted_size);
+    // // original_message[uint8_decrypted_size] = '\0'; // Null-terminate the string
 
-    // print_debug("Original message: ");
-    // print_debug("%s", original_message);
-    // print_debug("----------------------------------------\n");
+    // // print_debug("Original message: ");
+    // // print_debug("%s", original_message);
+    // // print_debug("----------------------------------------\n");
 
-    if (decrypt_success == 0) {
-        // Print out attestation data
-        print_info("C>0x%08x\n", component_id);
-        print_info("%s", decrypted);
-        return SUCCESS_RETURN;
-    }
+    // // size_t size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]); // Calculate size of the buffer
+
+    // // // Allocate memory for the char buffer (plus one for null terminator)
+    // // char charBuffer[size + 1];
+
+    // // // Call the function to convert buffers
+    // // convertBuffers(uint8_decrypted, charBuffer, size);
+
+    // // // Null-terminate the char buffer
+    // // charBuffer[size] = '\0';
+    // if (decrypt_success == 0) {
+    //     // Print out attestation data
+    //     print_info("C>0x%08x\n", component_id);
+    //     //print_uint8_buffer_as_string(uint8_decrypted, len);
+    //     //print_info("%s", charBuffer);
+    //     return SUCCESS_RETURN;
+    // }
 }
 
 /********************************* AP LOGIC ***********************************/
