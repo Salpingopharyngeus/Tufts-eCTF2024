@@ -459,8 +459,8 @@ int attest_component(uint32_t component_id) {
     uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
     memset(decrypted, 0, len/sizeof(uint32_t));
 
-
-    MXC_AES_SetExtKey(external_aes_key, MXC_AES_256BITS);
+    // in global secrets, 16 elements of 1 byte elements, 16*8bits = 128 bits
+    MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
 
     int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
 
