@@ -213,10 +213,12 @@ void print_uint8_buffer_as_string(uint8_t *buffer, size_t size) {
     }
 }
 void convertBuffers(uint8_t* uint8Buffer, char* charBuffer, size_t size) {
+    print_debug("Convert Buffer called!");
     // Assuming size is the size of the buffer in bytes
     for (size_t i = 0; i < size; ++i) {
         // Copy each byte from uint8_t buffer to char buffer
         charBuffer[i] = (char)uint8Buffer[i];
+        print_debug("%c", (char)uint8Buffer[i]); 
     }
 }
 
@@ -429,16 +431,12 @@ int attest_component(uint32_t component_id) {
     i2c_addr_t addr = component_id_to_i2c_addr(component_id);
 
     // Create command message
-    
     command_message *command = (command_message *)transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
 
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
- 
-    // print_debug("RECEIVE BUFFER: ");
-    // print_hex_debug(receive_buffer, len);
 
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
@@ -446,13 +444,9 @@ int attest_component(uint32_t component_id) {
     }
     // Extract the exact size of the attestation data specified in the packet
     uint8_t attestation_size = receive_buffer[0];
-
-    print_debug("ATTESTATION EXACT SIZE: %u", attestation_size);
     
     // Calculate the size of the remaining content
     size_t remaining_size = len - 1;
-    print_debug("REMAINING SIZE: %d", remaining_size);
-
     uint8_t remaining_buffer[RECEIVE_SIZE];
     memset(remaining_buffer, 0, RECEIVE_SIZE);
     memcpy(remaining_buffer, receive_buffer + 1, remaining_size);
@@ -477,9 +471,6 @@ int attest_component(uint32_t component_id) {
 
     int decrypt_success = AES_decrypt(0, MXC_AES_128BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
 
-    // print_debug("CONTENT OF UINT32_T BUFFER AFTER DECRYPTION: \n");
-    // print_uint32_buffer(decrypted, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
-
     // convert uint32_t decrypted to uint8_t decrypted.
     size_t num_elements = sizeof(decrypted) / sizeof(uint32_t);
     size_t uint8_decrypted_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
@@ -487,37 +478,16 @@ int attest_component(uint32_t component_id) {
     memset(uint8_decrypted, 0, uint8_decrypted_size);
     uint32_to_uint8(decrypted, num_elements, uint8_decrypted, sizeof(uint8_decrypted));
 
+    size_t buffer_size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]);
+    uint8_decrypted[buffer_size - 1] = '\0';
 
-    // print_debug("UINT8_T DECRYPTED MESSAGE: ");
-    // print_uint8_buffer_as_string(uint8_decrypted, attestation_size);
-
-    //Extract the original message
-    char original_message[attestation_size+1]; // Add one for the null terminator
-    memset(original_message, 0, attestation_size+1);
-    memcpy(original_message, uint8_decrypted, attestation_size);
-    original_message[attestation_size+1] = '\0'; // Null-terminate the string
-    convertBuffers(uint8_decrypted, original_message, attestation_size);
-
-    print_debug("Original message: ");
-    print_debug("%s", original_message);
-
-    // // size_t size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]); // Calculate size of the buffer
-
-    // // // Allocate memory for the char buffer (plus one for null terminator)
-    // // char charBuffer[size + 1];
-
-    // // // Call the function to convert buffers
-    // // convertBuffers(uint8_decrypted, charBuffer, size);
-
-    // // // Null-terminate the char buffer
-    // // charBuffer[size] = '\0';
-    // if (decrypt_success == 0) {
-    //     // Print out attestation data
-    //     print_info("C>0x%08x\n", component_id);
-    //     //print_uint8_buffer_as_string(uint8_decrypted, len);
-    //     //print_info("%s", charBuffer);
-    //     return SUCCESS_RETURN;
-    // }
+    if (decrypt_success == 0) {
+        // Print out attestation data
+        print_info("C>0x%08x\n", component_id);
+        print_info("%s", uint8_decrypted);
+        return SUCCESS_RETURN;
+    }
+    return ERROR_RETURN;
 }
 
 /********************************* AP LOGIC ***********************************/

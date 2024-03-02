@@ -286,42 +286,26 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
 
     // Construct Attestation String Data
-    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC);
-    uint8_t attest_date_size = sizeof(ATTESTATION_DATE);
-    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER);
- 
-    print_debug("ATTEST LOC SIZE: %u\n", attest_loc_size);
-    print_debug("ATTEST DATE SIZE: %u\n", attest_date_size);
-    print_debug("ATTEST CUST SIZE: %u\n", attest_cust_size);
-    
+    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC) - 1;
+    uint8_t attest_date_size = sizeof(ATTESTATION_DATE) - 1;
+    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER) -1;
+
     size_t ATTEST_SIZE = 224;
     uint8_t fixed_size = 17;
-    uint8_t EXACT_SIZE = 39; //attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
-
-    print_debug("ACTUAL ATTESTATION SIZE: %u\n", EXACT_SIZE);
-
+    uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
+    
     char attestation_data[ATTEST_SIZE]; // Assuming a sufficiently large buffer size
     sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
-
-    print_debug("Attestation data: \n");
-    print_debug("%s\n", attestation_data);
 
     // Store Attestation Data in uint8_t* buffer
     uint8_t temp_buffer[ATTEST_SIZE];
     memset(temp_buffer, 0, ATTEST_SIZE);
     memcpy(temp_buffer, attestation_data, ATTEST_SIZE);
 
-    // print_debug("uint8_t representation before encryption: \n");
-    // print_hex_debug(temp_buffer, ATTEST_SIZE);
-
     // Store Attestation Data in uint32_t* buffer --> from uint8_t* buffer
     uint32_t uint32_temp[ATTEST_SIZE / sizeof(uint32_t)];
     memset(uint32_temp, 0, ATTEST_SIZE / sizeof(uint32_t));
     uint8_to_uint32(temp_buffer, sizeof(temp_buffer), uint32_temp, sizeof(uint32_temp) / sizeof(uint32_t));
-
-    // CHECK CONTENT OF UINT32_T BUFFER BEFORE ENCRYPTION
-    // print_debug("CONTENT OF UINT32_T BUFFER BEFORE ENCRYPTION: \n");
-    // print_uint32_buffer(uint32_temp, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
 
     // Initialize uint32_t transmit buffer
     uint32_t uint32_transmit_buffer[ATTEST_SIZE/sizeof(uint32_t)];
@@ -339,37 +323,6 @@ void process_attest() {
     uint8_t uint8_transmit_buffer[uint8_buffer_size];
     memset(uint8_transmit_buffer, 0, uint8_buffer_size);
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
-
-
-    ///// TEST DECRYPTION ///////
-
-    // uint32_t uint32_test_buffer[ATTEST_SIZE/sizeof(uint32_t)];
-    // memset(uint32_test_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
-    // uint8_to_uint32(uint8_transmit_buffer, sizeof(uint8_transmit_buffer), uint32_test_buffer, sizeof(uint32_test_buffer) / sizeof(uint32_t));
-    
-    // uint32_t uint32_decrypt_buffer[ATTEST_SIZE/sizeof(uint32_t)];
-    // memset(uint32_decrypt_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
-
-    // int decrypt_success = AES_decrypt(0, MXC_AES_128BITS, MXC_AES_DECRYPT_INT_KEY, uint32_test_buffer, uint32_decrypt_buffer);
-
-    // //CHECK CONTENT OF UINT32_T DECRYPTED BUFFER
-    // // print_debug("CONTENT OF UINT32_T BUFFER AFTER DECRYPTION: \n");
-    // // print_uint32_buffer(uint32_decrypt_buffer, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
-    
-
-    // //Debug uint32_t transmit buffer content using uint8_t representation
-    // size_t num_elements2 = sizeof(uint32_decrypt_buffer) / sizeof(uint32_t);
-    // size_t uint8_buffer_size2 = num_elements2 * sizeof(uint32_t); // Size of the resulting uint8_t buffer
-    // uint8_t uint8_debug_buffer2[uint8_buffer_size2];
-    // memset(uint8_debug_buffer2, 0, uint8_buffer_size2);
-    // uint32_to_uint8(uint32_decrypt_buffer, num_elements2, uint8_debug_buffer2, uint8_buffer_size2);
-
-    // print_debug("COMPONENT DECRYPTED MESSAGE: \n");
-    // //print_hex_debug(uint8_debug_buffer2, ATTEST_SIZE);
-    // print_uint8_buffer_as_string(uint8_debug_buffer2, EXACT_SIZE);
-
-    // print_debug("TRANSMIT BUFFER: \n");
-    // print_hex_debug(uint8_transmit_buffer, ATTEST_SIZE);
 
     // Include exact attestation data size in the transmit buffer
     size_t total_size = uint8_buffer_size + 1; //where 4 bytes represents the exact attestation data size
