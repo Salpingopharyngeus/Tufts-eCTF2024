@@ -207,13 +207,7 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
-void print_uint32_buffer(uint32_t *buffer, size_t size) {
-    for (size_t i = 0; i < size; i++) {
-        print_debug("%u ", buffer[i]);
-    }
-}
 void print_uint8_buffer_as_string(uint8_t *buffer, size_t size) {
-    print_debug("REACHED HERE");
     for (size_t i = 0; i < size; i++) {
         print_debug("%c", buffer[i]);
     }
@@ -427,7 +421,7 @@ int boot_components() {
 
 int attest_component(uint32_t component_id) {
     // Buffers for board link communication
-    size_t RECEIVE_SIZE = 216;
+    size_t RECEIVE_SIZE = 224;
     uint8_t receive_buffer[RECEIVE_SIZE];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
@@ -443,18 +437,30 @@ int attest_component(uint32_t component_id) {
     memset(receive_buffer, 0, RECEIVE_SIZE);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
  
-    print_debug("RECEIVE BUFFER: ");
-    print_hex_debug(receive_buffer, len);
+    // print_debug("RECEIVE BUFFER: ");
+    // print_hex_debug(receive_buffer, len);
 
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
+    // Extract the exact size of the attestation data specified in the packet
+    uint8_t attestation_size = receive_buffer[0];
+
+    print_debug("ATTESTATION EXACT SIZE: %u", attestation_size);
+    
+    // Calculate the size of the remaining content
+    size_t remaining_size = len - 1;
+    print_debug("REMAINING SIZE: %d", remaining_size);
+
+    uint8_t remaining_buffer[RECEIVE_SIZE];
+    memset(remaining_buffer, 0, RECEIVE_SIZE);
+    memcpy(remaining_buffer, receive_buffer + 1, remaining_size);
 
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
     memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
-    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
     uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
     memset(decrypted, 0, len/sizeof(uint32_t));
@@ -462,7 +468,14 @@ int attest_component(uint32_t component_id) {
     // in global secrets, 16 elements of 1 byte elements, 16*8bits = 128 bits
     MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
 
-    int decrypt_success = AES_decrypt(0, MXC_AES_256BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
+    // see pg.359 of MAX78000 User Guide for dummy encryption reason
+    size_t ATTEST_SIZE = 224;
+    uint32_t dummydata[ATTEST_SIZE / sizeof(uint32_t)];
+    memset(dummydata, 0, ATTEST_SIZE / sizeof(uint32_t));
+    uint32_t dummyreceive[len / sizeof(uint32_t)];
+    int dummy_encrypt = AES_encrypt(0, MXC_AES_128BITS, dummydata, dummyreceive);
+
+    int decrypt_success = AES_decrypt(0, MXC_AES_128BITS, MXC_AES_DECRYPT_INT_KEY, uint32_receive_buffer, decrypted);
 
     // print_debug("CONTENT OF UINT32_T BUFFER AFTER DECRYPTION: \n");
     // print_uint32_buffer(decrypted, MAX_I2C_MESSAGE_LEN / sizeof(uint32_t));
@@ -474,18 +487,19 @@ int attest_component(uint32_t component_id) {
     memset(uint8_decrypted, 0, uint8_decrypted_size);
     uint32_to_uint8(decrypted, num_elements, uint8_decrypted, sizeof(uint8_decrypted));
 
-    print_debug("uint8_t representation of decrypted: ");
-    print_hex_debug(uint8_decrypted, uint8_decrypted_size);
 
-    // // Extract the original message
-    // // uint8_t original_message[uint8_decrypted_size+1]; // Add one for the null terminator
-    // // memset(original_message, 0, uint8_decrypted_size);
-    // // memcpy(original_message, uint8_decrypted, uint8_decrypted_size);
-    // // original_message[uint8_decrypted_size] = '\0'; // Null-terminate the string
+    // print_debug("UINT8_T DECRYPTED MESSAGE: ");
+    // print_uint8_buffer_as_string(uint8_decrypted, attestation_size);
 
-    // // print_debug("Original message: ");
-    // // print_debug("%s", original_message);
-    // // print_debug("----------------------------------------\n");
+    //Extract the original message
+    char original_message[attestation_size+1]; // Add one for the null terminator
+    memset(original_message, 0, attestation_size+1);
+    memcpy(original_message, uint8_decrypted, attestation_size);
+    original_message[attestation_size+1] = '\0'; // Null-terminate the string
+    convertBuffers(uint8_decrypted, original_message, attestation_size);
+
+    print_debug("Original message: ");
+    print_debug("%s", original_message);
 
     // // size_t size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]); // Calculate size of the buffer
 
