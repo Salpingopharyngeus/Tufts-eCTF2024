@@ -370,3 +370,5 @@ msdk/
 run.sh
 shell.nix
 component/build/
+component/wolfssl
+application_processor/wolfssl
