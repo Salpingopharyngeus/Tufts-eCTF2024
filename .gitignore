@@ -366,14 +366,6 @@ cython_debug/
 ## Project Post-.gitignore ##
 
 !device/lib
-
-shell.nix
-
-run.sh
-output.txt
-output
-build_out
-analog_openocd.nix
 .github -r
 application_processor/build*
 component/build*
