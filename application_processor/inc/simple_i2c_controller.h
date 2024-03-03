@@ -124,7 +124,7 @@ int i2c_simple_write_receive_done(i2c_addr_t addr, bool done);
  * Write the RECEIVE_LEN reg for an I2C peripheral to the 
  * specified value
 */
-int     i2c_simple_write_receive_len(i2c_addr_t addr, uint8_t len);
+int i2c_simple_write_receive_len(i2c_addr_t addr, uint8_t len);
 /**
  * @brief Write TRANSMIT_DONE reg
  * 

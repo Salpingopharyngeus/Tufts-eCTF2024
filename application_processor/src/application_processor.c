@@ -19,27 +19,27 @@
 #include "mxc_delay.h"
 #include "mxc_device.h"
 #include "nvic_table.h"
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 #include "board_link.h"
 #include "host_messaging.h"
 #include "simple_flash.h"
+#include "dictionary.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
-
 #ifdef POST_BOOT
 #include <stdint.h>
 #include <stdio.h>
+#include "bcrypt.h"
 #endif
-
 // Includes from containerized build
 #include "ectf_params.h"
 #include "global_secrets.h"
+#include <time.h>
+#include "trng_util.h"
 
 #include "aes.h"
 #include "aes_regs.h"
@@ -74,36 +74,40 @@
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
 
-#define MXC_AES_DATA_LENGTH 32
-// Define the maximum length of encrypted data
-#define MXC_AES_ENC_DATA_LENGTH 256
 
-/******************************** TYPE DEFINITIONS
- * ********************************/
+// Hash Digest
+#define SHA256_DIGEST_LENGTH 32
+#define MAX_KEY_LENGTH 256
+
+/******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
 // Params allows for up to MAX_I2C_MESSAGE_LEN - 1 bytes to be send
 // along with the opcode through board_link. This is not utilized by the example
 // design but can be utilized by your design.
 typedef struct {
-    uint8_t opcode;
-    uint8_t params[MAX_I2C_MESSAGE_LEN - 1];
+    uint8_t opcode; // 1 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
+    uint32_t random_number; //4 bytes for the RNG
 } command_message;
 
 // Data type for receiving a validate message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
+    //uint8_t random_number[4]; //4 bytes for the RNG
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
-    uint32_t component_id;
+    uint32_t component_id; // 4 byte
+    uint8_t authkey[HASH_SIZE]; // 16 bytes
 } scan_message;
 
 // Datatype for information stored in flash
 typedef struct {
-    uint32_t flash_magic;
-    uint32_t component_cnt;
-    uint32_t component_ids[32];
+    uint32_t flash_magic; // 4 bytes
+    uint32_t component_cnt; // 4 bytes
+    uint32_t component_ids[32]; // 4 bytes
 } flash_entry;
 
 // Datatype for commands sent to components
@@ -115,13 +119,11 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
-/********************************* GLOBAL VARIABLES
- * **********************************/
+/********************************* GLOBAL VARIABLES **********************************/
 // Variable for information stored in flash memory
 flash_entry flash_status;
-uint32_t decryptedData[MXC_AES_DATA_LENGTH] = {0};
+Dictionary dict;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
-
 
 /********************************* REFERENCE FLAG
  * **********************************/
@@ -222,6 +224,69 @@ void convertBuffers(uint8_t* uint8Buffer, char* charBuffer, size_t size) {
     }
 }
 
+
+/********************************* UTILITY FUNCTIONS  **********************************/
+
+
+/**
+ * @brief hash_equal
+ * 
+ * @param hash1: uint8_t*, uint8_t array representation of hash1
+ * @param hash2: uint8_t*, uint8_t array representation of hash2
+ * 
+ * @return bool: true if hash1 == hash2; false otherwise.
+ * Check equality of two uint8*t buffers containing hash value
+*/
+bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+    size_t array_size = sizeof(hash1)/sizeof(uint8_t);
+    for (int i = 0; i < array_size; i++) {
+        if (hash1[i] != hash2[i]) {
+            // Found elements that are not equal, so the arrays are not identical
+            return false;
+        }
+    }
+    // Reached the end without finding any differences
+    return true;
+}
+
+/**
+ * @brief GenerateAndUseRandomID
+ * 
+ * @param hash1: uint8_t*, uint8_t array representation of hash1
+ * @param hash2: uint8_t*, uint8_t array representation of hash2
+ * @return uint32_t: a uint32_t type random number.
+ * 
+ * Generate and return a random number of type uint32_t.
+*/
+uint32_t GenerateAndUseRandomID(void) {
+    uint32_t randomID;
+    TRNG_Init();
+    randomID = TRNG_GenerateRandomID();
+    TRNG_Shutdown();
+
+    return randomID;
+}
+
+/**
+ * @brief GenerateAndUseRandomID
+ * 
+ * @param command: command_message*, pointer to a command_message struct
+ * 
+ * Attach hashed authentication key to given command struct object. Assign command->authkey value of hash.  
+*/
+void attach_key(command_message* command){
+    char* key = KEY;
+    uint8_t hash_out[HASH_SIZE];
+    hash(key, HASH_SIZE, hash_out);
+    memcpy(command->authkey, hash_out, HASH_SIZE);
+    
+}
+
+void attach_random_num(command_message* command){
+    command->random_number = GenerateAndUseRandomID();
+}
+
+/******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
  * @brief Secure Send 
  * 
@@ -234,7 +299,55 @@ void convertBuffers(uint8_t* uint8Buffer, char* charBuffer, size_t size) {
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    return send_packet(address, len, buffer);
+    initDictionary(&dict);
+    
+    // Set Maximum Packet Size for Secure Send
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+
+    // Ensure length of data to send does not exceed limits
+    if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
+        print_error("Message too long");
+        return ERROR_RETURN;
+    }
+
+    // Create secure packet
+    uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
+    uint32_t random_number = GenerateAndUseRandomID();
+    memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
+
+    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; 
+    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); 
+    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
+    memcpy(temp_buffer, buffer, len);
+
+    size_t key_len = strlen(KEY);
+
+    // Build Authenication Hash
+    size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, len);
+    memcpy(data_key_randnum + len, KEY, key_len);
+    memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+
+    uint8_t hash_out[HASH_SIZE];
+    hash(data_key_randnum, data_key_randnum_len, hash_out);
+    free(data_key_randnum);
+
+    // Add security attributes to packet
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authenication hash
+    temp_buffer[data_len_position] = len; // add data length
+    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
+
+    // Update random number assignment for component
+    addOrUpdate(&dict, address, random_number);
+
+    // Send the packet
+    return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
 }
 
 /**
@@ -249,8 +362,97 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
  * This function must be implemented by your team to align with the security requirements.
 */
 int secure_receive(i2c_addr_t address, uint8_t* buffer) {
-    return poll_and_receive_packet(address, buffer);
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+
+    uint8_t len = poll_and_receive_packet(address, buffer); 
+
+    // Extract the random number
+    uint32_t random_number;
+    memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+
+    // Extract the data length
+    uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
+
+    // Extract the hash
+    uint8_t received_hash[HASH_SIZE];
+    memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
+
+    // Recreate authkey hash to check authenticity of receive_buffer
+    size_t key_len = strlen(KEY);
+
+    size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, data_len);
+    memcpy(data_key_randnum + data_len, KEY, key_len);
+    memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+
+    uint8_t check_hash[HASH_SIZE];
+    hash(data_key_randnum, data_key_randnum_len, check_hash);
+    free(data_key_randnum);
+
+    // Check hash for integrity and authenticity of the message
+    if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
+        print_error("Could not validate Component\n");
+        return ERROR_RETURN;
+    }
+
+    // Extract the original message
+    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    // memcpy(original_message, buffer, data_len);
+    // original_message[data_len] = '\0'; // Null-terminate the string
+
+    // Return number of bytes of original data
+    return data_len;
 }
+
+// TEST FUNCTIONS
+// int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
+
+//     // Send message
+//     int result = secure_send(addr, transmit, len);
+//     if (result == ERROR_RETURN) {
+//         return ERROR_RETURN;
+//     }
+    
+//     // Receive message
+//     int received_bytes = secure_receive(addr, receive);
+//     if (received_bytes == ERROR_RETURN) {
+//         return ERROR_RETURN;
+//     }
+//     return received_bytes;
+//     //return result;
+// }
+
+// int test_secure_send() {
+//     // Buffers for board link communication
+//     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+//     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    
+//     // Send validate command to each component
+//     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+//         // Set the I2C address of the component
+//         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+
+//         char* test_message = "Hello, this is a test message";
+//         size_t len = strlen(test_message);
+//         memcpy(transmit_buffer, test_message, len);
+
+//         // run secure_send
+//         int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
+
+//         if (code == ERROR_RETURN) {
+//             print_error("Failed secure send\n");
+//             return ERROR_RETURN;
+//         }
+//     }
+//     freeDictionary(&dict);
+//     return SUCCESS_RETURN;
+// }
 
 /**
  * @brief Get Provisioned IDs
@@ -298,18 +500,26 @@ void init() {
         flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
                            sizeof(flash_entry));
     }
-
     // Initialize board link interface
     board_link_init();
 }
 
+/**
+ * @brief issue_cmd
+ * 
+ * @param addr: i2c_addr_t, I2C address of receiver
+ * @param transmit: uint8_t*, pointer to buffer to transmit data
+ * @param receive: uint8_t*, pointer to buffer to receive data to
+ * 
+ * @return int: number of bytes received, negative if error
+ * 
+ * Send a command to a component and receive the result
+*/
+int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 
-// TODO: if merging this branch (jake_being_silly) directly with another branch
-//       THIS FUNCTION MUST BE LOOKED AT!
-// Send a command to a component and receive the result
-int issue_cmd(i2c_addr_t addr, uint8_t *transmit, uint8_t *receive) {
+    size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
     // Send message
-    int result = send_packet(addr, sizeof(uint8_t), transmit);
+    int result = send_packet(addr, PACKET_SIZE, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
@@ -325,7 +535,68 @@ int issue_cmd(i2c_addr_t addr, uint8_t *transmit, uint8_t *receive) {
 /******************************** COMPONENT COMMS
  * ********************************/
 
+int validate_components() {
+    print_debug("In Validate Components");
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+    //uint8_t rngValue[4];
+
+     // Generate RNG value once for all components
+    // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
+    // print_debug("Generated RNG for validation: ");
+    // print_hex_debug(rngValue, sizeof(rngValue));
+
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        // Set the I2C address of the component
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+
+        // Create command message
+        command_message* command = (command_message*) transmit_buffer;
+        command->opcode = COMPONENT_CMD_VALIDATE;
+
+       // Attach authentication hash
+        attach_key(command);
+        //attach_random_num(command);
+
+        uint32_t test_random_num = 12345;
+        command->random_number = test_random_num;
+        print_debug("Random number sent: %u", command->random_number);
+
+        //print_hex_debug(command->random_number, sizeof(command->random_number));
+
+        //memcpy(command->random_number, rngValue, sizeof(rngValue));
+
+        // Send out command and receive result
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+
+        if (len == ERROR_RETURN) {
+            print_error("Could not validate component\n");
+            return ERROR_RETURN;
+        }
+        validate_message* validate = (validate_message*) receive_buffer;
+
+        // Validate received authentication hash
+        if(!hash_equal(command->authkey, validate->authkey)){
+            //if(!hash_equal(command->authkey, validate->authkey) || !memcmp(command->random_number, validate->random_number, sizeof(rngValue))){
+            print_error("Could not validate component\n");
+            return ERROR_RETURN;
+        }
+
+        if (validate->component_id != flash_status.component_ids[i]) {
+            print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
+            return ERROR_RETURN;
+        }
+    }
+    return SUCCESS_RETURN;
+}
+
 int scan_components() {
+    print_debug("Scan Components");
+    if (validate_components()) {
+        print_error("Components could not be validated\n");
+        return;
+    }
     // Print out provisioned component IDs
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -347,49 +618,27 @@ int scan_components() {
         command_message *command = (command_message *)transmit_buffer;
         command->opcode = COMPONENT_CMD_SCAN;
 
-        // Send out command and receive result
+        // Attach authentication hash
+        attach_key(command);
+        //attach_random_num(command);
+        uint32_t test_random_num = 12345;
+        command->random_number = test_random_num;
+        
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
-            scan_message *scan = (scan_message *)receive_buffer;
+            scan_message* scan = (scan_message*) receive_buffer;
+            print_debug("Random number sent: %u", command->random_number);
+           //print_hex_debug(command->random_number, sizeof(command->random_number));
+            // Validate received authentication hash
+            if(!hash_equal(command->authkey, scan->authkey)){
+                return ERROR_RETURN;
+            }
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
     print_success("List\n");
-    return SUCCESS_RETURN;
-}
-
-int validate_components() {
-    // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
-    // Send validate command to each component
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        // Set the I2C address of the component
-        i2c_addr_t addr =
-            component_id_to_i2c_addr(flash_status.component_ids[i]);
-
-        // Create command message
-        command_message *command = (command_message *)transmit_buffer;
-        command->opcode = COMPONENT_CMD_VALIDATE;
-
-        // Send out command and receive result
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
-        if (len == ERROR_RETURN) {
-            print_error("Could not validate component\n");
-            return ERROR_RETURN;
-        }
-
-        validate_message *validate = (validate_message *)receive_buffer;
-        // Check that the result is correct
-        if (validate->component_id != flash_status.component_ids[i]) {
-            print_error("Component ID: 0x%08x invalid\n",
-                        flash_status.component_ids[i]);
-            return ERROR_RETURN;
-        }
-    }
     return SUCCESS_RETURN;
 }
 
@@ -408,15 +657,24 @@ int boot_components() {
         command_message *command = (command_message *)transmit_buffer;
         command->opcode = COMPONENT_CMD_BOOT;
 
-        // Send out command and receive result
+
+        // Attach authentication hash
+        attach_key(command);
+
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
             print_error("Could not boot component\n");
             return ERROR_RETURN;
         }
 
+        // Validate received authentication hash
+        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
+            print_error("Could not boot component\n");
+            return ERROR_RETURN;
+        }
+
         // Print boot message from component
-        print_info("0x%x>%s\n", flash_status.component_ids[i], receive_buffer);
+        print_info("0x%08x>%s\n", flash_status.component_ids[i], receive_buffer);
     }
     return SUCCESS_RETURN;
 }
@@ -436,6 +694,7 @@ int attest_component(uint32_t component_id) {
 
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
+
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
     if (len == ERROR_RETURN) {
@@ -533,29 +792,32 @@ void boot() {
 #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    while (1) {
-        LED_On(LED1);
-        MXC_Delay(500000);
-        LED_On(LED2);
-        MXC_Delay(500000);
-        // LED_On(LED3);
-        // MXC_Delay(500000);
-        LED_Off(LED1);
-        MXC_Delay(500000);
-        LED_Off(LED2);
-        MXC_Delay(500000);
-        // LED_Off(LED3);
-        // MXC_Delay(500000);
-    }
-#endif
+    // while (1) {
+    //     LED_On(LED1);
+    //     MXC_Delay(500000);
+    //     LED_On(LED2);
+    //     MXC_Delay(500000);
+    //     LED_On(LED3);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED1);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED2);
+    //     MXC_Delay(500000);
+    //     LED_Off(LED3);
+    //     MXC_Delay(500000);
+    // }
+    #endif
 }
 
 // Compare the entered PIN to the correct PIN
 int validate_pin() {
     char buf[50];
+    
     recv_input("Enter pin: ", buf);
-    if (!strcmp(buf, AP_PIN)) {
-        print_debug("Pin Accepted!\n");
+    print_debug("Verifying PIN...\n");
+    if(bcrypt_checkpw(buf, AP_PIN)==0){
+        print_debug("Pin Accepted!\n");     
+        
         return SUCCESS_RETURN;
     }
     print_error("Invalid PIN!\n");
@@ -566,10 +828,14 @@ int validate_pin() {
 int validate_token() {
     char buf[50];
     recv_input("Enter token: ", buf);
-    if (!strcmp(buf, AP_TOKEN)) {
+    print_debug("Verifying Token...\n");
+    
+    if(bcrypt_checkpw(buf, AP_TOKEN)==0){
+
         print_debug("Token Accepted!\n");
         return SUCCESS_RETURN;
     }
+    
     print_error("Invalid Token!\n");
     return ERROR_RETURN;
 }
@@ -580,19 +846,11 @@ void attempt_boot() {
         print_error("Components could not be validated\n");
         return;
     }
-    print_debug("All Components validated\n");
     if (boot_components()) {
         print_error("Failed to boot all components\n");
         return;
     }
-    // Reference design flag
-    // Remove this in your design
-    char flag[37];
-    for (int i = 0; aseiFuengleR[i]; i++) {
-        flag[i] = deobfuscate(aseiFuengleR[i], djFIehjkklIH[i]);
-        flag[i + 1] = 0;
-    }
-    print_debug("%s\n", flag);
+
     // Print boot message
     // This always needs to be printed when booting
     print_info("AP>%s\n", AP_BOOT_MSG);
@@ -641,6 +899,7 @@ void attempt_replace() {
 
 // Attest a component if the PIN is correct
 void attempt_attest() {
+    print_debug("Attempt Attest called!");
     char buf[50];
 
     if (validate_pin()) {
@@ -668,7 +927,6 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-
         // Execute requested command
         if (!strcmp(buf, "list")) {
             scan_components();
@@ -677,20 +935,12 @@ int main() {
         } else if (!strcmp(buf, "replace")) {
             attempt_replace();
         } else if (!strcmp(buf, "attest")) {
-            print_debug("Attest command called!");
             attempt_attest();
         } else {
             print_error("Unrecognized command '%s'\n", buf);
         }
 
-
-
-
-
     }
-
-
-
     // Code never reaches here
     return 0;
 }

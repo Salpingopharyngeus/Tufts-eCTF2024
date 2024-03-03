@@ -22,7 +22,6 @@
 #define print_error(...) printf("%%error: "); printf(__VA_ARGS__); printf("%%"); fflush(stdout)
 #define print_hex_error(...) printf("%%error: "); print_hex(__VA_ARGS__); printf("%%"); fflush(stdout)
 
-
 // Macro definitions to print the specified format for success messages
 #define print_success(...) printf("%%success: "); printf(__VA_ARGS__); printf("%%"); fflush(stdout)
 #define print_hex_success(...) printf("%%success: "); print_hex(__VA_ARGS__); printf("%%"); fflush(stdout)

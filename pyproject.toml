@@ -26,9 +26,10 @@ packages = [{include = "ectf_tools"}]
 python = "^3.8"
 pyserial = "^3.5"
 argparse = "^1.4.0"
-loguru = "^0.7.2"
 gdbgui = "^0.15.2.0"
 tqdm = "^4.66.1"
+bcrypt = "^4.1.2"
+loguru = "^0.7.2"
 
 [build-system]
 requires = ["poetry-core"]

@@ -7,6 +7,7 @@
 
 /******************************************************************************
  * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
+
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -41,6 +42,7 @@
 #ifndef LIBRARIES_CMSIS_DEVICE_MAXIM_MAX78000_INCLUDE_AES_REGS_H_
 #define LIBRARIES_CMSIS_DEVICE_MAXIM_MAX78000_INCLUDE_AES_REGS_H_
 
+
 /* **** Includes **** */
 #include <stdint.h>
 
@@ -51,6 +53,7 @@ extern "C" {
 #if defined (__ICCARM__)
   #pragma system_include
 #endif
+
 
 #if defined (__CC_ARM)
   #pragma anon_unions
@@ -80,6 +83,7 @@ extern "C" {
  * @defgroup    aes_registers AES_Registers
  * @brief       Registers, Bit Masks and Bit Positions for the AES Peripheral Module.
  * @details     AES Keys.
+
  */
 
 /**
@@ -106,6 +110,7 @@ typedef struct {
 #define MXC_R_AES_INTFL                    ((uint32_t)0x00000008UL) /**< Offset from AES Base Address: <tt> 0x0008</tt> */
 #define MXC_R_AES_INTEN                    ((uint32_t)0x0000000CUL) /**< Offset from AES Base Address: <tt> 0x000C</tt> */
 #define MXC_R_AES_FIFO                     ((uint32_t)0x00000010UL) /**< Offset from AES Base Address: <tt> 0x0010</tt> */
+
 /**@} end of group aes_registers */
 
 /**
@@ -144,6 +149,7 @@ typedef struct {
 #define MXC_F_AES_CTRL_TYPE_POS                        8 /**< CTRL_TYPE Position */
 #define MXC_F_AES_CTRL_TYPE                            ((uint32_t)(0x3UL << MXC_F_AES_CTRL_TYPE_POS)) /**< CTRL_TYPE Mask */
 
+
 /**@} end of group AES_CTRL_Register */
 
 /**
@@ -166,6 +172,7 @@ typedef struct {
 
 #define MXC_F_AES_STATUS_OUTPUT_FULL_POS               4 /**< STATUS_OUTPUT_FULL Position */
 #define MXC_F_AES_STATUS_OUTPUT_FULL                   ((uint32_t)(0x1UL << MXC_F_AES_STATUS_OUTPUT_FULL_POS)) /**< STATUS_OUTPUT_FULL Mask */
+
 
 /**@} end of group AES_STATUS_Register */
 
@@ -190,6 +197,7 @@ typedef struct {
 #define MXC_F_AES_INTFL_KEY_ONE_POS                    4 /**< INTFL_KEY_ONE Position */
 #define MXC_F_AES_INTFL_KEY_ONE                        ((uint32_t)(0x1UL << MXC_F_AES_INTFL_KEY_ONE_POS)) /**< INTFL_KEY_ONE Mask */
 
+
 /**@} end of group AES_INTFL_Register */
 
 /**
@@ -213,6 +221,7 @@ typedef struct {
 #define MXC_F_AES_INTEN_KEY_ONE_POS                    4 /**< INTEN_KEY_ONE Position */
 #define MXC_F_AES_INTEN_KEY_ONE                        ((uint32_t)(0x1UL << MXC_F_AES_INTEN_KEY_ONE_POS)) /**< INTEN_KEY_ONE Mask */
 
+
 /**@} end of group AES_INTEN_Register */
 
 /**
@@ -224,6 +233,7 @@ typedef struct {
 #define MXC_F_AES_FIFO_DATA_POS                        0 /**< FIFO_DATA Position */
 #define MXC_F_AES_FIFO_DATA                            ((uint32_t)(0x1UL << MXC_F_AES_FIFO_DATA_POS)) /**< FIFO_DATA Mask */
 
+
 /**@} end of group AES_FIFO_Register */
 
 #ifdef __cplusplus
@@ -231,3 +241,4 @@ typedef struct {
 #endif
 
 #endif // LIBRARIES_CMSIS_DEVICE_MAXIM_MAX78000_INCLUDE_AES_REGS_H_
+

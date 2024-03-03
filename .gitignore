@@ -367,9 +367,13 @@ cython_debug/
 
 !device/lib
 msdk/
-run.sh
+
 shell.nix
 component/build/
 application_processor/build/
-application/wolfssl
-component/wolfssl
+run.sh
+output.txt
+output
+build_out
+analog_openocd.nix
+.github -r

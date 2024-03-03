@@ -257,6 +257,10 @@ PROJ_CFLAGS += -DMXC_ASSERT_ENABLE
 PROJ_CFLAGS += -DNO_WOLFSSL_DIR
 PROJ_CFLAGS += -DWOLFSSL_AES_DIRECT
 PROJ_CFLAGS += -DCRYPTO_EXAMPLE=1
+# From https://www.wolfssl.com/documentation/manuals/wolfssl/chapter02.html#building-with-gcc-arm
+PROJ_CFLAGS += -DHAVE_PK_CALLBACKS                                                               
+PROJ_CFLAGS += -DWOLFSSL_USER_IO                                                                 
+PROJ_CFLAGS += -DNO_WRITEV -DTIME_T_NOT_64BIT                                                    
 endif
 
 ifeq ($(POST_BOOT_ENABLED), 1)
@@ -418,6 +422,8 @@ endif
 
 all:
 # 	Extend the functionality of the "all" recipe here
+	@echo "Injecting bcrypt pins"
+	@poetry run python src/bcrypt_pin.py inc/ectf_params.h
 	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
 
 libclean: 

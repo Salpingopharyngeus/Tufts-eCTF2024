@@ -5,6 +5,7 @@
 
 /******************************************************************************
  * Copyright (C) 2023 Maxim Integrated Products, Inc., All Rights Reserved.
+
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -43,6 +44,7 @@
 #include "aes_regs.h"
 #include "aeskeys_regs.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,6 +59,7 @@ extern "C" {
 /***** Definitions *****/
 
 typedef void (*mxc_aes_complete_t)(void *req, int result);
+
 
 /* ************************************************************************* */
 /* Cipher Definitions                                                                          */
@@ -80,6 +83,7 @@ typedef enum {
     MXC_AES_ENCRYPT_EXT_KEY = 0, ///< Encryption using External key
     MXC_AES_DECRYPT_EXT_KEY = 1, ///< Encryption using internal key
     MXC_AES_DECRYPT_INT_KEY = 2 ///< Decryption using internal key
+
 } mxc_aes_enc_type_t;
 
 /**
@@ -93,6 +97,7 @@ typedef struct _mxc_aes_cipher_req_t {
     mxc_aes_keys_t keySize; ///< Size of AES key
     mxc_aes_enc_type_t encryption; ///< Encrytion type or \ref mxc_aes_enc_type_t
     mxc_aes_complete_t callback; ///< Callback function
+
 } mxc_aes_req_t;
 
 /***** Function Prototypes *****/
@@ -108,12 +113,14 @@ typedef struct _mxc_aes_cipher_req_t {
  */
 int MXC_AES_Init(void);
 
+
 /**
  * @brief   Enable AES Interrupts
  * 
  * @param   interrupt interrupt to enable
  */
 void MXC_AES_EnableInt(uint32_t interrupt);
+
 
 /**
  * @brief   Disable AES Interrupts
@@ -122,12 +129,14 @@ void MXC_AES_EnableInt(uint32_t interrupt);
  */
 void MXC_AES_DisableInt(uint32_t interrupt);
 
+
 /**
  * @brief   Checks the global AES Busy Status
  *
  * @return  E_BUSY if busy and E_NO_ERROR otherwise, see \ref MXC_Error_Codes for a list of return codes.
  */
 int MXC_AES_IsBusy(void);
+
 
 /**
  * @brief   Disable and reset portions of the AES
@@ -136,16 +145,19 @@ int MXC_AES_IsBusy(void);
  */
 int MXC_AES_Shutdown(void);
 
+
 /**
  * @brief   This function should be called from the DMA Handler
  *          when using Async functions
  */
 void MXC_AES_DMACallback(int ch, int error);
 
+
 /**
  * @brief   This function should be called before encryption to genrate external key
  */
 void MXC_AES_GenerateKey(void);
+
 
 /**
  * @brief   Set Key size for encryption or decryption
@@ -154,6 +166,7 @@ void MXC_AES_GenerateKey(void);
  */
 void MXC_AES_SetKeySize(mxc_aes_keys_t key);
 
+
 /**
  * @brief   Get the currently set key size
  * 
@@ -161,11 +174,13 @@ void MXC_AES_SetKeySize(mxc_aes_keys_t key);
  */
 mxc_aes_keys_t MXC_AES_GetKeySize(void);
 
+
 /**
  * @brief   Flush Input Data FIFO
  * 
  */
 void MXC_AES_FlushInputFIFO(void);
+
 
 /**
  * @brief   Flush Output Data FIFO
@@ -173,11 +188,13 @@ void MXC_AES_FlushInputFIFO(void);
  */
 void MXC_AES_FlushOutputFIFO(void);
 
+
 /**
  * @brief   Start AES Calculations
  * 
  */
 void MXC_AES_Start(void);
+
 
 /**
  * @brief   Get Interrupt flags set
@@ -186,12 +203,14 @@ void MXC_AES_Start(void);
  */
 uint32_t MXC_AES_GetFlags(void);
 
+
 /**
  * @brief   Clear the interrupts
  * 
  * @param   flags flags to be cleared
  */
 void MXC_AES_ClearFlags(uint32_t flags);
+
 
 /**
  * @brief 
@@ -203,6 +222,7 @@ void MXC_AES_ClearFlags(uint32_t flags);
  */
 int MXC_AES_Generic(mxc_aes_req_t *req);
 
+
 /**
  * @brief   Perform an encryption
  * @note    The result will be stored in the req structure
@@ -212,6 +232,7 @@ int MXC_AES_Generic(mxc_aes_req_t *req);
  * @return  Success/Fail, see \ref MXC_Error_Codes for a list of return codes.
  */
 int MXC_AES_Encrypt(mxc_aes_req_t *req);
+
 
 /**
  * @brief   Perform a decryption
@@ -223,6 +244,7 @@ int MXC_AES_Encrypt(mxc_aes_req_t *req);
  */
 int MXC_AES_Decrypt(mxc_aes_req_t *req);
 
+
 /**
  * @brief   Perform AES TX using DMA. Configures DMA request and starts the transmission.
  * 
@@ -232,6 +254,7 @@ int MXC_AES_Decrypt(mxc_aes_req_t *req);
  */
 int MXC_AES_TXDMAConfig(void *src_addr, int len);
 
+
 /**
  * @brief   Perform AES RX using DMA. Configures DMA request and receives data from AES FIFO.
  * 
@@ -240,6 +263,7 @@ int MXC_AES_TXDMAConfig(void *src_addr, int len);
  * @return  Success/Fail, see \ref MXC_Error_Codes for a list of return codes. 
  */
 int MXC_AES_RXDMAConfig(void *dest_addr, int len);
+
 
 /**
  * @brief   Perform encryption or decryption using DMA 
@@ -251,6 +275,7 @@ int MXC_AES_RXDMAConfig(void *dest_addr, int len);
  */
 int MXC_AES_GenericAsync(mxc_aes_req_t *req, uint8_t enc);
 
+
 /**
  * @brief   Perform an encryption using Interrupt
  * @note    The result will be stored in the req structure. The user needs
@@ -260,6 +285,7 @@ int MXC_AES_GenericAsync(mxc_aes_req_t *req, uint8_t enc);
  * @return  Success/Fail, see \ref MXC_Error_Codes for a list of return codes.
  */
 int MXC_AES_EncryptAsync(mxc_aes_req_t *req);
+
 
 /**
  * @brief   Perform a decryption using Interrupt
@@ -271,6 +297,7 @@ int MXC_AES_EncryptAsync(mxc_aes_req_t *req);
  */
 int MXC_AES_DecryptAsync(mxc_aes_req_t *req);
 
+
 /**
  * @brief   Set the external key
  * @param   key  Buffer for the key.
@@ -278,9 +305,11 @@ int MXC_AES_DecryptAsync(mxc_aes_req_t *req);
  */
 void MXC_AES_SetExtKey(const void *key, mxc_aes_keys_t len);
 
+
 #ifdef __cplusplus
 }
 #endif
 /**@} end of group aes */
 
 #endif // LIBRARIES_PERIPHDRIVERS_INCLUDE_MAX78000_AES_H_
+

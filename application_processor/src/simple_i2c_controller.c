@@ -13,6 +13,7 @@
 
 
 #include "simple_i2c_controller.h"
+#include "host_messaging.h"
 
 /******************************** FUNCTION PROTOTYPES ********************************/
 /**
@@ -209,7 +210,7 @@ int i2c_simple_read_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t len
 int i2c_simple_write_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t len, uint8_t* buf) {
     uint8_t packet[257];
     packet[0] = reg;
-    memcpy(&packet[1], buf, len);
+    memcpy(&packet[1], buf, len); 
     
     mxc_i2c_req_t request;
     request.i2c = I2C_INTERFACE;
@@ -220,7 +221,6 @@ int i2c_simple_write_data_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t le
     request.rx_buf = 0;
     request.restart = 0;
     request.callback = NULL;
-
     return MXC_I2C_MasterTransaction(&request);
 }
 
@@ -269,7 +269,6 @@ int i2c_simple_write_status_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t 
     uint8_t packet[2];
     packet[0] = (uint8_t) reg;
     packet[1] = value;
-    
     mxc_i2c_req_t request;
     request.i2c = I2C_INTERFACE;
     request.addr = addr;
@@ -279,6 +278,5 @@ int i2c_simple_write_status_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t 
     request.rx_buf = 0;
     request.restart = 0;
     request.callback = NULL;
-
     return MXC_I2C_MasterTransaction(&request);
 }
