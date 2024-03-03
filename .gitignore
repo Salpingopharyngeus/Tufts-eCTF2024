@@ -371,3 +371,5 @@ run.sh
 shell.nix
 component/build/
 application_processor/build/
+application_processor/wolfssl
+component/wolfssl
