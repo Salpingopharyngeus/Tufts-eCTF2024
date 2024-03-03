@@ -370,3 +370,4 @@ msdk/
 run.sh
 shell.nix
 component/build/
+application_processor/build/
