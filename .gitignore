@@ -366,6 +366,5 @@ cython_debug/
 ## Project Post-.gitignore ##
 
 !device/lib
-msdk/
 component/build/
 application_processor/build/
