@@ -4,7 +4,7 @@
  */
 
 #include "md5.h"
-
+#include "host_messaging.h"
 /*
  * Constants defined by the MD5 algorithm
  */
@@ -195,7 +195,7 @@ void md5Step(uint32_t *buffer, uint32_t *input){
  * Functions that run the algorithm on the provided input and put the digest into result.
  * result should be able to store 16 bytes.
  */
-void md5hash(void *input, size_t len, uint8_t *result){
+void md5hash(uint8_t *input, size_t len, uint8_t *result){
     MD5Context ctx;
     md5Init(&ctx);
     md5Update(&ctx, (uint8_t *)input, len);

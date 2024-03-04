@@ -36,7 +36,7 @@
 #include "mxc_device.h"
 
 // Includes from containerized build
-//#include "../../deployment/global_secrets.h"
+#include "../../deployment/global_secrets.h"
 #include "ectf_params.h"
 
 #ifdef POST_BOOT
@@ -111,15 +111,12 @@ void process_validate(void);
 void process_attest(void);
 void print(const char *message);
 
-// AES encryption function
-int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
 
 /********************************* GLOBAL VARIABLES
  * **********************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-uint32_t encryptedData[MXC_AES_ENC_DATA_LENGTH] = {0};
 uint32_t assigned_random_number = 0;
 
 
@@ -357,6 +354,7 @@ void component_process_cmd() {
     // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
+    memset(hash_out, 0, HASH_SIZE);
     md5hash(key, HASH_SIZE, hash_out);
 
     // Check validity of authkey hash

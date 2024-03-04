@@ -48,7 +48,7 @@
 #include "mxc_device.h"
 #include "aes_functions.h"
 
-//#include "../../deployment/global_secrets.h"
+#include "../../deployment/global_secrets.h"
 
 /********************************* CONSTANTS **********************************/
 
@@ -258,11 +258,29 @@ uint32_t GenerateAndUseRandomID(void) {
  * Attach hashed authentication key to given command struct object. Assign command->authkey value of hash.  
 */
 void attach_key(command_message* command){
+    // char* key = KEY;
+    // uint8_t hash_out[HASH_SIZE];
+    // memset(hash_out, 0, HASH_SIZE);
+    // md5hash(key, HASH_SIZE, hash_out);
+    // memcpy(command->authkey, hash_out, HASH_SIZE);
     char* key = KEY;
-    uint8_t hash_out[HASH_SIZE];
-    md5hash(key, HASH_SIZE, hash_out);
-    memcpy(command->authkey, hash_out, HASH_SIZE);
+    size_t key_len = strlen(key);  // Get the length of the key string
+
+    // Include space for null terminator in the buffer
+    uint8_t key_buffer[key_len + 1];
     
+    // Copy the key string along with the null terminator to the buffer
+    memcpy(key_buffer, key, key_len);
+    key_buffer[key_len] = '\0';  // Add null terminator
+    
+    uint8_t hash_out[HASH_SIZE];
+    memset(hash_out, 0, HASH_SIZE);
+    
+    // Hash the key buffer
+    md5hash(key_buffer, key_len + 1, hash_out); // Pass the length including the null terminator
+    
+    // Copy the hash to the command structure
+    memcpy(command->authkey, hash_out, HASH_SIZE);
 }
 
 void attach_random_num(command_message* command){

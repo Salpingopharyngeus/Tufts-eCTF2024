@@ -4,7 +4,7 @@
  */
 
 #include "md5.h"
-
+#include "host_messaging.h"
 /*
  * Constants defined by the MD5 algorithm
  */
@@ -191,14 +191,33 @@ void md5Step(uint32_t *buffer, uint32_t *input){
     buffer[3] += DD;
 }
 
+void pad_with_zeros(uint8_t *buffer, size_t current_length) {
+    // Calculate the number of zero bytes needed to reach 16 bytes
+    size_t padding_length = 16 - current_length;
+    
+    // Check if padding is needed
+    if (padding_length > 0) {
+        // Set the bytes after the current content to zero
+        memset(buffer + current_length, 0, padding_length);
+    }
+}
 /*
  * Functions that run the algorithm on the provided input and put the digest into result.
  * result should be able to store 16 bytes.
  */
-void md5hash(void *input, size_t len, uint8_t *result){
+void md5hash(uint8_t *input, size_t len, uint8_t *result){
+    uint8_t resized[16];
+    memset(resized, 0, 16);
+
+    // Copy the input into the resized buffer
+    memcpy(resized, input, len);
+
+    // Pad the remaining bytes of the resized buffer with zeros
+    memset(resized + len, 0, 16 - len);
+    
     MD5Context ctx;
     md5Init(&ctx);
-    md5Update(&ctx, (uint8_t *)input, len);
+    md5Update(&ctx, (uint8_t *)resized, 16); // Always pass 16 bytes to the hashing function
     md5Finalize(&ctx);
 
     memcpy(result, ctx.digest, 16);
