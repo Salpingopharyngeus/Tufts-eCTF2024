@@ -36,7 +36,7 @@ ENTRY=firmware_startup
 # but this will set up compilation and linking for WolfSSL
 
 # Disable Crypto Example
-CRYPTO_EXAMPLE=1
+CRYPTO_EXAMPLE=0
 
 # Enable Crypto Example
 #CRYPTO_EXAMPLE=1

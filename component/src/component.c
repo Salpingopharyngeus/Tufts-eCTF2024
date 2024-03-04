@@ -24,6 +24,7 @@
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#include "md5.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -48,6 +49,7 @@
 
 // Define the maximum length of encrypted data
 #define MXC_AES_ENC_DATA_LENGTH 256
+#define HASH_SIZE 16
 
 /********************************* CONSTANTS **********************************/
 
@@ -184,7 +186,7 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t hash_out[HASH_SIZE];
-    hash(data_key_randnum, data_key_randnum_len, hash_out);
+    md5hash(data_key_randnum, data_key_randnum_len, hash_out);
     free(data_key_randnum);
 
     // Add security attributes to packet
@@ -237,7 +239,7 @@ int secure_receive(uint8_t* buffer) {
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t check_hash[HASH_SIZE];
-    hash(data_key_randnum, data_key_randnum_len, check_hash);
+    md5hash(data_key_randnum, data_key_randnum_len, check_hash);
     free(data_key_randnum);
     
     // Check hash for integrity and authenticity of the message
@@ -303,7 +305,7 @@ void component_process_cmd() {
     // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, HASH_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
 
     // Check validity of authkey hash
     if (hash_equal(command->authkey, hash_out)){
@@ -337,7 +339,7 @@ void process_boot() {
     // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, HASH_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
     memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
 
@@ -360,7 +362,7 @@ void process_scan() {
     // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, BLOCK_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
     memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(scan_message), transmit_buffer);
 }
@@ -373,7 +375,7 @@ void process_validate() {
     // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, BLOCK_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
     memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
@@ -387,7 +389,7 @@ void process_attest() {
     // Attach authentication hash
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, HASH_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
 
     memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
     // Calculate the total length of data to be sent

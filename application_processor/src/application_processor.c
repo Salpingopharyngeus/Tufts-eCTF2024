@@ -26,6 +26,7 @@
 #include "simple_flash.h"
 #include "host_messaging.h"
 #include "dictionary.h"
+#include "md5.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -63,6 +64,7 @@
 // Hash Digest
 #define SHA256_DIGEST_LENGTH 32
 #define MAX_KEY_LENGTH 256
+#define HASH_SIZE 16
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -170,7 +172,7 @@ uint32_t GenerateAndUseRandomID(void) {
 void attach_key(command_message* command){
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    hash(key, HASH_SIZE, hash_out);
+    md5hash(key, HASH_SIZE, hash_out);
     memcpy(command->authkey, hash_out, HASH_SIZE);
     
 }
@@ -228,7 +230,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t hash_out[HASH_SIZE];
-    hash(data_key_randnum, data_key_randnum_len, hash_out);
+    md5hash(data_key_randnum, data_key_randnum_len, hash_out);
     free(data_key_randnum);
 
     // Add security attributes to packet
@@ -285,7 +287,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t check_hash[HASH_SIZE];
-    hash(data_key_randnum, data_key_randnum_len, check_hash);
+    md5hash(data_key_randnum, data_key_randnum_len, check_hash);
     free(data_key_randnum);
 
     // Check hash for integrity and authenticity of the message
@@ -625,7 +627,7 @@ void boot() {
 
     // Hash example encryption results 
     uint8_t hash_out[HASH_SIZE];
-    hash(ciphertext, BLOCK_SIZE, hash_out);
+    md5hash(ciphertext, BLOCK_SIZE, hash_out);
 
     // Output hash result
     print_debug("Hash result: ");
