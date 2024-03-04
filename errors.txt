@@ -1,0 +1,29 @@
+In file included from src/application_processor.c:43:
+../deployment/global_secrets.h:4:26: warning: backslash and newline separated by space
+    4 | #define EXTERNAL_AES_KEY \
+      |                           
+In file included from src/application_processor.c:50:
+src/../../deployment/global_secrets.h:4:26: warning: backslash and newline separated by space
+    4 | #define EXTERNAL_AES_KEY \
+      |                           
+src/application_processor.c: In function 'secure_send':
+src/application_processor.c:186:12: warning: implicit declaration of function 'send_packet' [-Wimplicit-function-declaration]
+  186 |     return send_packet(address, len, buffer);
+      |            ^~~~~~~~~~~
+src/application_processor.c: In function 'secure_receive':
+src/application_processor.c:201:12: warning: implicit declaration of function 'poll_and_receive_packet'; did you mean 'wait_and_receive_packet'? [-Wimplicit-function-declaration]
+  201 |     return poll_and_receive_packet(address, buffer);
+      |            ^~~~~~~~~~~~~~~~~~~~~~~
+      |            wait_and_receive_packet
+src/application_processor.c: In function 'init':
+src/application_processor.c:252:5: error: too few arguments to function 'board_link_init'
+  252 |     board_link_init();
+      |     ^~~~~~~~~~~~~~~
+In file included from src/application_processor.c:28:
+inc/board_link.h:36:5: note: declared here
+   36 | int board_link_init(i2c_addr_t addr);
+      |     ^~~~~~~~~~~~~~~
+make: *** [/Users/samchung/Desktop/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /Users/samchung/Desktop/eCTF/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
+
+2024-02-25 16:52:38.483 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly
+ERROR: Failed to build Application processor.

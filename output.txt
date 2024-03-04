@@ -1,0 +1,59 @@
+2024-02-18 12:49:39.380 | INFO     | ectf_tools.build_ap:build_ap:52 - Creating parameters for build
+2024-02-18 12:49:39.380 | INFO     | ectf_tools.build_ap:build_ap:69 - Checking output paths
+2024-02-18 12:49:39.380 | INFO     | ectf_tools.build_ap:build_ap:80 - Running build
+2024-02-18 12:49:39.381 | DEBUG    | ectf_tools.utils:run_shell:32 - Running command 'cd . && pwd && nix-shell --command "cd application_processor &&  make clean &&  make && make release &&  cp build/max78000.elf /home/kali/Desktop/Tufts-eCTF2024/build/ap.elf &&  cp build/max78000.bin /home/kali/Desktop/Tufts-eCTF2024/build/ap.bin"'
+2024-02-18 12:50:03.982 | INFO     | ectf_tools.utils:run_shell:50 - STDOUT:
+/home/kali/Desktop/Tufts-eCTF2024
+Loaded project.mk
+Loaded project.mk
+  CC    src/aes.c
+  CC    src/aes_ai87.c
+  CC    src/aes_me12.c
+  CC    src/aes_me15.c
+  CC    src/aes_me17.c
+  CC    src/aes_me18.c
+  CC    src/aes_me21.c
+  CC    src/aes_revb.c
+  CC    src/aestest.c
+  CC    src/application_processor.c
+
+2024-02-18 12:50:03.982 | INFO     | ectf_tools.utils:run_shell:51 - STDERR:
+/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/home/kali/Desktop/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/home/kali/Desktop/Tufts-eCTF2024/application_processor/project.mk:95: warning: ignoring old recipe for target 'clean.periph'
+src/application_processor.c: In function 'AES_encrypt':
+src/application_processor.c:191:22: error: incompatible types when assigning to type 'mxc_aes_enc_type_t' from type 'const mxc_aes_enc_type_t *'
+  191 |     req.encryption = external_aes_key;
+      |                      ^~~~~~~~~~~~~~~~
+src/application_processor.c: In function 'secure_send':
+src/application_processor.c:226:21: warning: passing argument 1 of 'AES_encrypt' makes integer from pointer without a cast [-Wint-conversion]
+  226 |         AES_encrypt(&buffer[i * 16], MXC_AES_128BITS);
+      |                     ^~~~~~~~~~~~~~~
+      |                     |
+      |                     uint8_t * {aka unsigned char *}
+src/application_processor.c:186:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  186 | int AES_encrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                 ~~~~^~~~~~~~~~~~
+src/application_processor.c: In function 'AES_decrypt':
+src/application_processor.c:238:22: error: incompatible types when assigning to type 'mxc_aes_enc_type_t' from type 'const mxc_aes_enc_type_t *'
+  238 |     req.encryption = decrypt_aes_key;
+      |                      ^~~~~~~~~~~~~~~
+src/application_processor.c: In function 'secure_receive':
+src/application_processor.c:294:21: warning: passing argument 1 of 'AES_decrypt' makes integer from pointer without a cast [-Wint-conversion]
+  294 |         AES_decrypt(&buffer[i * 16], MXC_AES_128BITS);
+      |                     ^~~~~~~~~~~~~~~
+      |                     |
+      |                     uint8_t * {aka unsigned char *}
+src/application_processor.c:233:21: note: expected 'int' but argument is of type 'uint8_t *' {aka 'unsigned char *'}
+  233 | int AES_decrypt(int asynchronous, mxc_aes_keys_t key) {
+      |                 ~~~~^~~~~~~~~~~~
+src/application_processor.c: In function 'boot':
+src/application_processor.c:539:16: error: 'LED3' undeclared (first use in this function); did you mean 'LED1'?
+  539 |         LED_On(LED3);
+      |                ^~~~
+      |                LED1
+src/application_processor.c:539:16: note: each undeclared identifier is reported only once for each function it appears in
+make: *** [/home/kali/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/kali/Desktop/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1
+
+2024-02-18 12:50:03.984 | ERROR    | ectf_tools.build_ap:build_ap:93 - Error: tool did not build properly

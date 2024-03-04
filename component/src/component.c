@@ -1,12 +1,13 @@
 /**
  * @file component.c
- * @author Jacob Doll 
+ * @author Jacob Doll
  * @brief eCTF Component Example Design Implementation
  * @date 2024
  *
- * This source file is part of an example system for MITRE's 2024 Embedded System CTF (eCTF).
- * This code is being provided only for educational purposes for the 2024 MITRE eCTF competition,
- * and may not meet MITRE standards for quality. Use this code at your own risk!
+ * This source file is part of an example system for MITRE's 2024 Embedded
+ * System CTF (eCTF). This code is being provided only for educational purposes
+ * for the 2024 MITRE eCTF competition, and may not meet MITRE standards for
+ * quality. Use this code at your own risk!
  *
  * @copyright Copyright (c) 2024 The MITRE Corporation
  */
@@ -29,12 +30,20 @@
 #include "simple_crypto.h"
 #endif
 
+#include "aes.h"
+#include "aes_regs.h"
+#include "dma.h"
+#include "mxc_device.h"
+
 // Includes from containerized build
+//#include "../../deployment/global_secrets.h"
 #include "ectf_params.h"
-#include "global_secrets.h"
 
 #ifdef POST_BOOT
+#include "board.h"
+#include "dma.h"
 #include "led.h"
+#include "mxc_device.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -43,13 +52,11 @@
 #include "dma.h"
 #endif
 
-// AES encryption related includes
-#include "aes.h"
-#include "aes_regs.h"
+
 
 // Define the maximum length of encrypted data
-#define MXC_AES_ENC_DATA_LENGTH 256
 #define HASH_SIZE 16
+#include "aes_functions.h"
 
 /********************************* CONSTANTS **********************************/
 
@@ -63,7 +70,9 @@
 #define ATTESTATION_CUSTOMER "Fritz"
 */
 
-/******************************** TYPE DEFINITIONS ********************************/
+
+/******************************** TYPE DEFINITIONS
+ * ********************************/
 // Commands received by Component using 32 bit integer
 typedef enum {
     COMPONENT_CMD_NONE,
@@ -73,7 +82,8 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
-/******************************** TYPE DEFINITIONS ********************************/
+/******************************** TYPE DEFINITIONS
+ * ********************************/
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
@@ -104,7 +114,8 @@ void print(const char *message);
 // AES encryption function
 int AES_encrypt(uint8_t *data, uint32_t data_length, mxc_aes_keys_t key);
 
-/********************************* GLOBAL VARIABLES **********************************/
+/********************************* GLOBAL VARIABLES
+ * **********************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -135,10 +146,15 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
     return true;
 }
 
-/******************************* POST BOOT FUNCTIONALITY *********************************/
+// AES request
+mxc_aes_req_t req;
+
+const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
+
+/******************************* POST BOOT FUNCTIONALITY **********************************/
 /**
- * @brief Secure Send 
- * 
+ * @brief Secure Send
+ *
  * @param buffer: uint8_t*, pointer to data to be send
  * @param len: uint8_t, size of data to be sent 
  * 
@@ -200,9 +216,9 @@ void secure_send(uint8_t* buffer, uint8_t len) {
 
 /**
  * @brief Secure Receive
- * 
+ *
  * @param buffer: uint8_t*, pointer to buffer to receive data to
- * 
+ *
  * @return int: number of bytes received, negative if error
  * 
  * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
@@ -260,17 +276,17 @@ int secure_receive(uint8_t* buffer) {
     return data_len;
 }
 
-/******************************* FUNCTION DEFINITIONS *********************************/
+/******************************* FUNCTION DEFINITIONS **********************************/
 
 // Example boot sequence
 // Your design does not need to change this
 void boot() {
 
-    // POST BOOT FUNCTIONALITY
-    // DO NOT REMOVE IN YOUR DESIGN
-    #ifdef POST_BOOT
-        POST_BOOT
-    #else
+// POST BOOT FUNCTIONALITY
+// DO NOT REMOVE IN YOUR DESIGN
+#ifdef POST_BOOT
+    POST_BOOT
+#else
     // Anything after this macro can be changed by your design
     // but will not be run on provisioned systems
     LED_Off(LED1);
@@ -291,7 +307,43 @@ void boot() {
         LED_Off(LED3);
         MXC_Delay(500000);
     }
-    #endif
+#endif
+}
+
+void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
+    // Check if the buffer sizes are compatible
+    if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
+        // Handle mismatched buffer sizes
+        fprintf(stderr, "Buffer sizes are not compatible\n");
+        return;
+    }
+    
+    // Copy bytes from the uint8_t buffer to the uint32_t buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Reinterpret the memory layout of the next set of bytes as a uint32_t value
+        uint32_t value = *((const uint32_t*)(uint8_buffer + i * sizeof(uint32_t)));
+        // Store the uint32_t value in the uint32_t buffer
+        uint32_buffer[i] = value;
+    }
+}
+
+void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
+    // Ensure the provided uint8_buffer has enough space
+    size_t required_size = num_elements * sizeof(uint32_t);
+    if (uint8_buffer_size < required_size) {
+        printf("Error: Insufficient space in uint8_buffer\n");
+        return;
+    }
+
+    // Iterate over each uint32_t value in the buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Extract the bytes from the uint32_t value
+        uint32_t value = uint32_buffer[i];
+        for (size_t j = 0; j < sizeof(uint32_t); j++) {
+            // Store each byte of the uint32_t value in the uint8_t buffer
+            uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
+        }
+    }
 }
 
 // Handle a transaction from the AP
@@ -356,7 +408,7 @@ void process_boot() {
 void process_scan() {
     
     // The AP requested a scan. Respond with the Component ID
-    scan_message* packet = (scan_message*) transmit_buffer;
+    scan_message *packet = (scan_message *)transmit_buffer;
     packet->component_id = COMPONENT_ID;
 
     // Attach authentication hash
@@ -383,21 +435,54 @@ void process_validate() {
 // Modify the process_attest function to encrypt the len variable
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
-    uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
-                ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
-    // Attach authentication hash
-    char* key = KEY;
-    uint8_t hash_out[HASH_SIZE];
-    md5hash(key, HASH_SIZE, hash_out);
+    // Construct Attestation String Data
+    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC) - 1;
+    uint8_t attest_date_size = sizeof(ATTESTATION_DATE) - 1;
+    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER) -1;
 
-    memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
-    // Calculate the total length of data to be sent
-    uint8_t total_len = len + HASH_SIZE;
+    size_t ATTEST_SIZE = 224;
+    uint8_t fixed_size = 17;
+    uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
+    
+    char attestation_data[ATTEST_SIZE]; // Assuming a sufficiently large buffer size
+    sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
-    send_packet_and_ack(total_len, transmit_buffer);
+    // Store Attestation Data in uint8_t* buffer
+    uint8_t temp_buffer[ATTEST_SIZE];
+    memset(temp_buffer, 0, ATTEST_SIZE);
+    memcpy(temp_buffer, attestation_data, ATTEST_SIZE);
+
+    // Store Attestation Data in uint32_t* buffer --> from uint8_t* buffer
+    uint32_t uint32_temp[ATTEST_SIZE / sizeof(uint32_t)];
+    memset(uint32_temp, 0, ATTEST_SIZE / sizeof(uint32_t));
+    uint8_to_uint32(temp_buffer, sizeof(temp_buffer), uint32_temp, sizeof(uint32_temp) / sizeof(uint32_t));
+
+    // Initialize uint32_t transmit buffer
+    uint32_t uint32_transmit_buffer[ATTEST_SIZE/sizeof(uint32_t)];
+    memset(uint32_transmit_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
+
+    // Set the external encryption key
+    MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
+
+    // Encrypt contents of uint32_t representation of attestation data and store result in uint32_t transmit buffer
+    int aes_success = AES_encrypt(0, MXC_AES_128BITS, uint32_temp, uint32_transmit_buffer);
+
+    // Convert uint32_t transmit buffer content to uint8_t representation
+    size_t num_elements = sizeof(uint32_transmit_buffer) / sizeof(uint32_t);
+    size_t uint8_buffer_size = num_elements * sizeof(uint32_t); // Size of the resulting uint8_t buffer
+    uint8_t uint8_transmit_buffer[uint8_buffer_size];
+    memset(uint8_transmit_buffer, 0, uint8_buffer_size);
+    uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
+
+    // Include exact attestation data size in the transmit buffer
+    size_t total_size = uint8_buffer_size + 1; //where 4 bytes represents the exact attestation data size
+    uint8_t mod_uint8_transmit_buffer[total_size];
+    memset(mod_uint8_transmit_buffer, 0, total_size);
+    memset(mod_uint8_transmit_buffer, EXACT_SIZE, 1);
+    memcpy(mod_uint8_transmit_buffer + 1, uint8_transmit_buffer, uint8_buffer_size);
+    send_packet_and_ack(ATTEST_SIZE, mod_uint8_transmit_buffer);
 }
-
 /*********************************** MAIN *************************************/
 
 int main(void) {
@@ -405,11 +490,11 @@ int main(void) {
     
     // Enable Global Interrupts
     __enable_irq();
-    
+
     // Initialize Component
     i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
     board_link_init(addr);
-    
+
     LED_On(LED2);
 
     while (1) {
