@@ -694,6 +694,9 @@ int attest_component(uint32_t component_id) {
     command_message *command = (command_message *)transmit_buffer;
     command->opcode = COMPONENT_CMD_ATTEST;
 
+    // Attach authentication hash
+    attach_key(command);
+
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
