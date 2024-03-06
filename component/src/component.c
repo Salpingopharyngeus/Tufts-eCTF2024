@@ -435,9 +435,9 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
 
     // Construct Attestation String Data
-    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC) - 1;
-    uint8_t attest_date_size = sizeof(ATTESTATION_DATE) - 1;
-    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER) -1;
+    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC);
+    uint8_t attest_date_size = sizeof(ATTESTATION_DATE);
+    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER);
 
     size_t ATTEST_SIZE = 224;
     uint8_t fixed_size = 17;
@@ -473,13 +473,7 @@ void process_attest() {
     memset(uint8_transmit_buffer, 0, uint8_buffer_size);
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
 
-    // Include exact attestation data size in the transmit buffer
-    size_t total_size = uint8_buffer_size + 1; //where 4 bytes represents the exact attestation data size
-    uint8_t mod_uint8_transmit_buffer[total_size];
-    memset(mod_uint8_transmit_buffer, 0, total_size);
-    memset(mod_uint8_transmit_buffer, EXACT_SIZE, 1);
-    memcpy(mod_uint8_transmit_buffer + 1, uint8_transmit_buffer, uint8_buffer_size);
-    send_packet_and_ack(ATTEST_SIZE, mod_uint8_transmit_buffer);
+    send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
 }
 /*********************************** MAIN *************************************/
 

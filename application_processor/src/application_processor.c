@@ -561,7 +561,7 @@ int validate_components() {
         attach_key(command);
         //attach_random_num(command);
 
-        uint32_t test_random_num = 12345;
+        uint32_t test_random_num = 123;
         command->random_number = test_random_num;
         print_debug("Random number sent: %u", command->random_number);
 
@@ -623,7 +623,7 @@ int scan_components() {
         // Attach authentication hash
         attach_key(command);
         //attach_random_num(command);
-        uint32_t test_random_num = 12345;
+        uint32_t test_random_num = 123;
         command->random_number = test_random_num;
         
 
@@ -653,8 +653,7 @@ int boot_components() {
     // Send boot command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
-        i2c_addr_t addr =
-            component_id_to_i2c_addr(flash_status.component_ids[i]);
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
         command_message *command = (command_message *)transmit_buffer;
@@ -705,19 +704,12 @@ int attest_component(uint32_t component_id) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
-    // Extract the exact size of the attestation data specified in the packet
-    uint8_t attestation_size = receive_buffer[0];
-    
-    // Calculate the size of the remaining content
-    size_t remaining_size = len - 1;
-    uint8_t remaining_buffer[RECEIVE_SIZE];
-    memset(remaining_buffer, 0, RECEIVE_SIZE);
-    memcpy(remaining_buffer, receive_buffer + 1, remaining_size);
 
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
     memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
-    uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    //uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
     uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
     memset(decrypted, 0, len/sizeof(uint32_t));

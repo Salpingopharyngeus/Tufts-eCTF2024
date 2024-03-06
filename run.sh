@@ -2,9 +2,9 @@
 
 # Get the absolute path of the current directory
 current_directory=$(pwd)
-ap_device="tty.usbmodem21302"
-compA_device="tty.usbmodem21202"
-compB_device="tty.usbmodem21402"
+ap_device="tty.usbmodem1302"
+compA_device="tty.usbmodem1202"
+compB_device="tty.usbmodem1402"
 bootloader_file="$current_directory/insecure.bin"
 DAPLINK_VOLUME="/Volumes/DAPLINK/"
 DAPLINK1_VOLUME="/Volumes/DAPLINK 1/"
@@ -33,7 +33,7 @@ sudo poetry run ectf_update --infile "$current_directory/build/ap.img" --port "/
 
 # Build Component A
 echo "Building Component A...."
-sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "McLean" -ad "08/08/08" -ac "Fritz" || { echo "ERROR: Failed to build Component A."; exit 1; }
+sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ad "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ac "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" || { echo "ERROR: Failed to build Component A."; exit 1; }
 
 # Flash updated Component A img file to AP device
 echo "Flashing updated comp.img file onto Component A $compA_device...."
