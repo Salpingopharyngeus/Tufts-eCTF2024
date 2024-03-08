@@ -50,6 +50,11 @@
 
 #include "../../deployment/global_secrets.h"
 
+// testing
+#include <string.h> // for strncat and strlen
+
+// end testing
+
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
@@ -74,6 +79,11 @@
 
 // Hash Digest
 #define HASH_SIZE 16
+
+// testing
+#define BUFFER_MAX_SIZE 1024 // Adjust size as needed
+#define CHUNK_SIZE 128 // Adjust based on what print_debug can handle
+// testing ends
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -474,12 +484,82 @@ int get_provisioned_ids(uint32_t *buffer) {
 
 /********************************* UTILITIES **********************************/
 
+// TEsTING FUNCTIONs
+
+// Buffer for storing messages
+char messageBuffer[BUFFER_MAX_SIZE] = {0};
+
+/**
+ * Safely appends a message to the global message buffer.
+ * Ensures that the buffer does not overflow.
+ * 
+ * @param message The message to append.
+ */
+void appendToBuffer(const char* message) {
+    // Calculate the buffer's remaining capacity, taking the null terminator into account
+    size_t bufferRemaining = BUFFER_MAX_SIZE - strlen(messageBuffer) - 1;
+
+    // Use strncat to safely append the message to the buffer
+    // It appends at most 'bufferRemaining' characters
+    // It always null-terminates the result (hence "- 1" above for space for null)
+    strncat(messageBuffer, message, bufferRemaining);
+}
+/**
+ * Helper function to print the contents of messageBuffer using print_debug.
+ */
+void printMessageBuffer() {
+    char tempBuffer[CHUNK_SIZE + 1]; // Temporary buffer to hold chunks of the message + null terminator
+    size_t bufferLen = strlen(messageBuffer);
+    size_t offset = 0;
+
+    while (offset < bufferLen) {
+        // Calculate the number of characters to copy to the temporary buffer
+        size_t chunkLength = (bufferLen - offset > CHUNK_SIZE) ? CHUNK_SIZE : bufferLen - offset;
+
+        // Copy a chunk of the message buffer to the temporary buffer
+        strncpy(tempBuffer, messageBuffer + offset, chunkLength);
+
+        // Null-terminate the temporary buffer
+        tempBuffer[chunkLength] = '\0';
+
+        // Print the chunk
+        print_debug(tempBuffer);
+
+        // Move the offset forward
+        offset += chunkLength;
+    }
+}
+
+// end testing
+
+
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
 
     // Enable global interrupts
     __enable_irq();
+
+    // hardware
+
+    uint8_t usn[MXC_SYS_USN_LEN];
+
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        // kill urself
+        //call to restart
+        // Instead of printing, append the message to the buffer
+        appendToBuffer("womp womp\n");
+        //print_debug("womp womp");
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+
+    } else {
+        appendToBuffer("yay!\n");
+        //print_debug("yay!");
+    }
+
+    // end hardware
 
     // Setup Flash
     flash_simple_init();
@@ -924,7 +1004,8 @@ int main() {
         recv_input("Enter Command: ", buf);
         // Execute requested command
         if (!strcmp(buf, "list")) {
-            scan_components();
+            //scan_components();
+            printMessageBuffer();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {
