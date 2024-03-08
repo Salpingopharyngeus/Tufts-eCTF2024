@@ -2,9 +2,9 @@
 
 # Get the absolute path of the current directory
 current_directory=$(pwd)
-ap_device="tty.usbmodem1302"
-compA_device="tty.usbmodem1202"
-compB_device="tty.usbmodem1402"
+ap_device="tty.usbmodem11302"
+compA_device="tty.usbmodem11202"
+compB_device="tty.usbmodem11402"
 bootloader_file="$current_directory/insecure.bin"
 DAPLINK_VOLUME="/Volumes/DAPLINK/"
 DAPLINK1_VOLUME="/Volumes/DAPLINK 1/"

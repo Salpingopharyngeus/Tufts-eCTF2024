@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
@@ -88,17 +89,19 @@ typedef enum {
 typedef struct {
     uint8_t opcode;
     uint8_t authkey[HASH_SIZE];
-    uint32_t random_number;
+    uint8_t random_number[4];
 } command_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
+    //uint32_t random_number;
 } validate_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
+    //uint32_t random_number;
 } scan_message;
 
 
@@ -343,13 +346,56 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
+
+//kam adding stuff:
+// uint32_t uint8_array_to_uint32(uint8_t* byte_array) {
+//     // Assuming byte_array has the 4 bytes for the uint32_t
+//     uint32_t value = 0;
+//     for(int i = 0; i < 4; i++) {
+//         value |= ((uint32_t)byte_array[i] << (i * 8));
+//     }
+//     return value;
+// }
+
 // Handle a transaction from the AP
 void component_process_cmd() {
     // Output to application processor dependent on command received
-    command_message* command = (command_message*) receive_buffer;
 
-    print_debug("Received random number: %u\n", (uint32_t) command->random_number);
-    //print_hex_debug(command->random_number, sizeof(command->random_number));
+    // uint32_t received_random_number_network_order;
+    // memcpy(&received_random_number_network_order, receive_buffer + offsetof(command_message, random_number), sizeof(received_random_number_network_order));
+    // uint32_t received_random_number = ntohl(received_random_number_network_order);
+    // print_debug("Random number received: %u\n", received_random_number);
+
+        command_message* command = (command_message*) receive_buffer;
+
+        // Now you can use received_random_number as a uint32_t value
+        print_debug("This is the received random number \n");
+        print_hex_debug(command->random_number, 4);
+
+
+    //Stupid Code below
+
+    // command_message command;
+    // memcpy(&command, receive_buffer, offsetof(command_message, random_number));
+
+    // uint8_t random_number_bytes[4];
+    // memcpy(random_number_bytes, receive_buffer + offsetof(command_message, random_number), sizeof(random_number_bytes));
+
+    // uint32_t random_number;
+    // uint8_to_uint32(random_number_bytes, sizeof(random_number_bytes), &random_number, 1);
+    
+    // print_debug("Random number received: %u\n", random_number);
+
+
+
+
+
+
+    //command_message* command = (command_message*) receive_buffer;
+    //uint8_to_uint32(receive_buffer + sizeof(command_message) - sizeof(uint32_t), 4, &random_number, 1);
+
+    //print_debug("Random number received: %u\n", command->random_number);
+    //print_hex_debug("Received random number: %u\n", command->random_number, sizeof(command->random_number));
     
     // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
@@ -435,9 +481,9 @@ void process_attest() {
     // The AP requested attestation. Respond with the attestation data
 
     // Construct Attestation String Data
-    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC);
-    uint8_t attest_date_size = sizeof(ATTESTATION_DATE);
-    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER);
+    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC) - 1;
+    uint8_t attest_date_size = sizeof(ATTESTATION_DATE) - 1;
+    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER) -1;
 
     size_t ATTEST_SIZE = 224;
     uint8_t fixed_size = 17;
@@ -473,7 +519,13 @@ void process_attest() {
     memset(uint8_transmit_buffer, 0, uint8_buffer_size);
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
 
-    send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
+    // Include exact attestation data size in the transmit buffer
+    size_t total_size = uint8_buffer_size + 1; //where 4 bytes represents the exact attestation data size
+    uint8_t mod_uint8_transmit_buffer[total_size];
+    memset(mod_uint8_transmit_buffer, 0, total_size);
+    memset(mod_uint8_transmit_buffer, EXACT_SIZE, 1);
+    memcpy(mod_uint8_transmit_buffer + 1, uint8_transmit_buffer, uint8_buffer_size);
+    send_packet_and_ack(ATTEST_SIZE, mod_uint8_transmit_buffer);
 }
 /*********************************** MAIN *************************************/
 

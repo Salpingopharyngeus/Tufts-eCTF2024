@@ -62,6 +62,9 @@
 #define AP_BOOT_MSG "Test boot message"
 */
 
+
+
+
 // Flash Macros
 #define FLASH_ADDR                                                             \
     ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
@@ -83,20 +86,21 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    uint32_t random_number; //4 bytes for the RNG
+    uint8_t random_number[4]; //4 bytes for the RNG
 } command_message;
 
 // Data type for receiving a validate message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    //uint8_t random_number[4]; //4 bytes for the RNG
+    //uint32_t random_number; //4 bytes for the RNG
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
+    //uint32_t random_number;
 } scan_message;
 
 // Datatype for information stored in flash
@@ -283,9 +287,9 @@ void attach_key(command_message* command){
     memcpy(command->authkey, hash_out, HASH_SIZE);
 }
 
-void attach_random_num(command_message* command){
-    command->random_number = GenerateAndUseRandomID();
-}
+// void attach_random_num(command_message* command){
+//     command->random_number = GenerateAndUseRandomID();
+// }
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -537,12 +541,23 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 /******************************** COMPONENT COMMS
  * ********************************/
 
+
+
+//buffer conversion function:
+void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
+    // Ensure the byte_array has space for 4 bytes.
+    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
+    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
+    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
+    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
+}
+
 int validate_components() {
     print_debug("In Validate Components");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    //uint8_t rngValue[4];
+    uint8_t rngValue[4]; //buffer for randomnumber
 
      // Generate RNG value once for all components
     // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
@@ -561,9 +576,39 @@ int validate_components() {
         attach_key(command);
         //attach_random_num(command);
 
-        uint32_t test_random_num = 123;
-        command->random_number = test_random_num;
-        print_debug("Random number sent: %u", command->random_number);
+        uint32_t random_number = 12345;
+        memset(command->random_number, 0, sizeof(command->random_number));
+        uint32_to_uint8_array(random_number, command->random_number);
+
+        print_debug("This is the sent random number \n");
+        print_hex_debug(command->random_number, 4);
+
+        //memcpy(command->random_number, rngValue, sizeof(rngValue));
+
+
+        // command_message cmd;
+        // uint32_to_uint8(&random_number, 1, cmd.random_number, sizeof(cmd.random_number));
+
+        // print_debug("Random number sent: %u\n", random_number);
+
+
+        //Trying to put directly in the buffer: 
+        // uint8_t random_number_bytes[4];
+        // uint32_to_uint8(&random_number, 1, random_number_bytes, sizeof(random_number_bytes));
+        // memcpy(transmit_buffer, &command, offsetof(command_message, random_number));
+        // memcpy(transmit_buffer + offsetof(command_message, random_number), random_number_bytes, sizeof(random_number_bytes));
+        // print_debug("Random number sent: %u\n", random_number);
+
+
+        //tryig out a bunch of things -- delete later 
+        //uint8_t random_number_bytes[4];
+        //uint32_to_bytes(random_number, random_number_bytes);
+        //memcpy(command->random_number, random_number_bytes, sizeof(random_number_bytes));
+
+
+        //uncomment this later
+        // command->random_number = test_random_num;
+        // print_debug("Random number sent: %u", command->random_number);
 
         //print_hex_debug(command->random_number, sizeof(command->random_number));
 
@@ -623,16 +668,33 @@ int scan_components() {
         // Attach authentication hash
         attach_key(command);
         //attach_random_num(command);
-        uint32_t test_random_num = 123;
-        command->random_number = test_random_num;
         
+        
+        //uint32_t test_random_num = 123456;
+        //command->random_number = test_random_num;
 
+        // uint32_t random_number = 12345;
+        // command_message cmd;
+        // uint32_to_uint8(&random_number, 1, cmd.random_number, sizeof(cmd.random_number));
+
+        // print_debug("Random number sent: %u\n", random_number);
+
+
+
+        uint32_t random_number = 12345;
+        memset(command->random_number, 0, sizeof(command->random_number));
+        uint32_to_uint8_array(random_number, command->random_number);
+
+        print_debug("This is the sent random number \n");
+        print_hex_debug(command->random_number, 4);
+
+    
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
-            print_debug("Random number sent: %u", command->random_number);
+            //print_debug("Random number sent: %u", command->random_number);
            //print_hex_debug(command->random_number, sizeof(command->random_number));
             // Validate received authentication hash
             if(!hash_equal(command->authkey, scan->authkey)){
@@ -653,7 +715,8 @@ int boot_components() {
     // Send boot command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+        i2c_addr_t addr =
+            component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
         command_message *command = (command_message *)transmit_buffer;
@@ -704,12 +767,19 @@ int attest_component(uint32_t component_id) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
+    // Extract the exact size of the attestation data specified in the packet
+    uint8_t attestation_size = receive_buffer[0];
+    
+    // Calculate the size of the remaining content
+    size_t remaining_size = len - 1;
+    uint8_t remaining_buffer[RECEIVE_SIZE];
+    memset(remaining_buffer, 0, RECEIVE_SIZE);
+    memcpy(remaining_buffer, receive_buffer + 1, remaining_size);
 
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
     memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
-    //uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
-    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
     uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
     memset(decrypted, 0, len/sizeof(uint32_t));
