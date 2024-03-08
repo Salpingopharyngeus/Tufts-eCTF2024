@@ -485,54 +485,6 @@ int get_provisioned_ids(uint32_t *buffer) {
 
 /********************************* UTILITIES **********************************/
 
-// TEsTING FUNCTIONs
-
-// Buffer for storing messages
-char messageBuffer[BUFFER_MAX_SIZE] = {0};
-
-/**
- * Safely appends a message to the global message buffer.
- * Ensures that the buffer does not overflow.
- * 
- * @param message The message to append.
- */
-void appendToBuffer(const char* message) {
-    // Calculate the buffer's remaining capacity, taking the null terminator into account
-    size_t bufferRemaining = BUFFER_MAX_SIZE - strlen(messageBuffer) - 1;
-
-    // Use strncat to safely append the message to the buffer
-    // It appends at most 'bufferRemaining' characters
-    // It always null-terminates the result (hence "- 1" above for space for null)
-    strncat(messageBuffer, message, bufferRemaining);
-}
-/**
- * Helper function to print the contents of messageBuffer using print_debug.
- */
-void printMessageBuffer() {
-    char tempBuffer[CHUNK_SIZE + 1]; // Temporary buffer to hold chunks of the message + null terminator
-    size_t bufferLen = strlen(messageBuffer);
-    size_t offset = 0;
-
-    while (offset < bufferLen) {
-        // Calculate the number of characters to copy to the temporary buffer
-        size_t chunkLength = (bufferLen - offset > CHUNK_SIZE) ? CHUNK_SIZE : bufferLen - offset;
-
-        // Copy a chunk of the message buffer to the temporary buffer
-        strncpy(tempBuffer, messageBuffer + offset, chunkLength);
-
-        // Null-terminate the temporary buffer
-        tempBuffer[chunkLength] = '\0';
-
-        // Print the chunk
-        print_debug(tempBuffer);
-
-        // Move the offset forward
-        offset += chunkLength;
-    }
-}
-
-// end testing
-
 
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces

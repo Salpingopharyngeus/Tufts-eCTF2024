@@ -345,7 +345,6 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 
 // Handle a transaction from the AP
 void component_process_cmd() {
-    print_debug("processign cmd from AP\n");
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
@@ -519,8 +518,6 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
-        // print_debug("Device is invalid: %d\n", valid_device);
-        // if(valid_device){
         wait_and_receive_packet(receive_buffer);
         if(valid_device){
             component_process_cmd();
