@@ -118,7 +118,7 @@ void print(const char *message);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
-
+bool valid_device = false;
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
@@ -345,6 +345,7 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 
 // Handle a transaction from the AP
 void component_process_cmd() {
+    print_debug("processign cmd from AP\n");
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
@@ -488,16 +489,13 @@ void init() {
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
-        // kill urself
-        //call to restart
-        // Instead of printing, append the message to the buffer
-        //appendToBuffer("womp womp\n");
-        print_debug("womp womp");
+        printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
         return ERROR_RETURN;
 
     } else {
-        //appendToBuffer("yay!\n");
+        valid_device = true;
         printf("Valid Component Hardware Device: MAX78000");        
         return;
     }
@@ -521,7 +519,15 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
+        // print_debug("Device is invalid: %d\n", valid_device);
+        // if(valid_device){
         wait_and_receive_packet(receive_buffer);
-        component_process_cmd();
+        if(valid_device){
+            component_process_cmd();
+        }
+        // }else{
+        //     print_debug("Device is invalid");
+        //     break;  
+        // }
     }
 }

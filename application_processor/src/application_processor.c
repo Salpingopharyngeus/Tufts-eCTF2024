@@ -131,6 +131,7 @@ typedef enum {
 flash_entry flash_status;
 Dictionary dict;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
+bool valid_device = false; 
 
 
 /********************************* REFERENCE FLAG
@@ -547,17 +548,14 @@ void init() {
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
-        // kill urself
-        //call to restart
-        // Instead of printing, append the message to the buffer
-        //appendToBuffer("womp womp\n");
         printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
         return ERROR_RETURN;
 
     } else {
+        valid_device = true;
         printf("Valid Component Hardware Device: MAX78000");        
-        return;
     }
 
     // end hardware
@@ -619,7 +617,6 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
  * ********************************/
 
 int validate_components() {
-    print_debug("In Validate Components");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -629,7 +626,6 @@ int validate_components() {
     // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
     // print_debug("Generated RNG for validation: ");
     // print_hex_debug(rngValue, sizeof(rngValue));
-
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
@@ -675,7 +671,6 @@ int validate_components() {
 }
 
 int scan_components() {
-    print_debug("Scan Components");
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -995,14 +990,14 @@ int main() {
     // Initialize board
     init();
 
-    // Print the component IDs to be helpful
-    // Your design does not need to do this
-    print_info("Application Processor Started\n");
-
     // Handle commands forever
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
+        if (!valid_device) {
+            print_error("Invalid Device!");
+            break;
+        }
         // Execute requested command
         if (!strcmp(buf, "list")) {
             scan_components();
