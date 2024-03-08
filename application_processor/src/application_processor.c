@@ -80,10 +80,6 @@
 // Hash Digest
 #define HASH_SIZE 16
 
-// testing
-#define BUFFER_MAX_SIZE 1024 // Adjust size as needed
-#define CHUNK_SIZE 128 // Adjust based on what print_debug can handle
-// testing ends
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
