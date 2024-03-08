@@ -485,14 +485,18 @@ int get_provisioned_ids(uint32_t *buffer) {
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
-
+    /*
+     Disabling the peripheral clock disables functionality while also saving power. 
+     Associated register states are retained but read and write access is blocked.
+    */ 
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+    //MXC_SYS_ClockEnable()
     // Enable global interrupts
     __enable_irq();
 
-    // hardware
-
+    // Validate device checksum
     uint8_t usn[MXC_SYS_USN_LEN];
-
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
@@ -505,8 +509,6 @@ void init() {
         valid_device = true;
         printf("Valid Component Hardware Device: MAX78000");        
     }
-
-    // end hardware
 
     // Setup Flash
     flash_simple_init();
@@ -917,7 +919,6 @@ void attempt_replace() {
 
 // Attest a component if the PIN is correct
 void attempt_attest() {
-    print_debug("Attempt Attest called!");
     char buf[50];
 
     if (validate_pin()) {

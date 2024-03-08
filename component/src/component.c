@@ -484,15 +484,15 @@ void process_attest() {
     send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
 }
 
-
-
-// hardware intit function
-
 void init() {
-// hardware
-
+    /*
+     Disabling the peripheral clock disables functionality while also saving power. 
+     Associated register states are retained but read and write access is blocked.
+    */ 
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+    // Validate device checksum
     uint8_t usn[MXC_SYS_USN_LEN];
-
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
