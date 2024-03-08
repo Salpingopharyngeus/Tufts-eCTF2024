@@ -71,8 +71,7 @@
 */
 
 
-/******************************** TYPE DEFINITIONS
- * ********************************/
+/******************************** TYPE DEFINITIONS **********************************/
 // Commands received by Component using 32 bit integer
 typedef enum {
     COMPONENT_CMD_NONE,
@@ -82,8 +81,7 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
-/******************************** TYPE DEFINITIONS
- * ********************************/
+/******************************** TYPE DEFINITIONS **********************************/
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
@@ -112,8 +110,7 @@ void process_attest(void);
 void print(const char *message);
 
 
-/********************************* GLOBAL VARIABLES
- * **********************************/
+/********************************* GLOBAL VARIABLES ************************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -122,6 +119,15 @@ uint32_t assigned_random_number = 0;
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
+/**
+ * @brief send_error
+ * 
+ * Send error packet back to AP.
+*/
+void send_error(){
+    MXC_Delay(5000000);
+    send_packet_and_ack(ERROR_RETURN, transmit_buffer);
+}
 /**
  * @brief hash_equal
  * 
@@ -257,8 +263,8 @@ int secure_receive(uint8_t* buffer) {
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
-        print_error("Could not validate AP\n");
-        return ERROR_RETURN;
+        print_error("Invalid packet received that cannot be authenticated.\n");
+        send_error();
     }
 
     // Save assigned random_number from AP
@@ -373,11 +379,13 @@ void component_process_cmd() {
                 process_attest();
                 break;
             default:
-                print_error("Error: Unrecognized command received");
+                print_debug("Error: Unrecognized command received %d\n", command->opcode);
+                send_error();
                 break;
         }
     }else{
         print_error("Conflicting Authentication Hashes!\n");
+        send_error();
     }
 }
 
