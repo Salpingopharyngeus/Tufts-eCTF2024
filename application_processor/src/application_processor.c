@@ -398,7 +398,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
 
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
-        print_error("Could not validate Component\n");
+        print_error("Invalid packet received that cannot be authenticated.\n");
         return ERROR_RETURN;
     }
 
@@ -534,8 +534,7 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-/******************************** COMPONENT COMMS
- * ********************************/
+/******************************** COMPONENT COMMS **********************************/
 
 int validate_components() {
     print_debug("In Validate Components");
