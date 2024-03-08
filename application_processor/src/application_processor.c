@@ -550,13 +550,13 @@ void init() {
         // kill urself
         //call to restart
         // Instead of printing, append the message to the buffer
-        appendToBuffer("womp womp\n");
-        //print_debug("womp womp");
+        //appendToBuffer("womp womp\n");
+        print_debug("womp womp");
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
 
     } else {
-        appendToBuffer("yay!\n");
-        //print_debug("yay!");
+        //appendToBuffer("yay!\n");
+        print_debug("yay!");
     }
 
     // end hardware
@@ -1005,7 +1005,8 @@ int main() {
         // Execute requested command
         if (!strcmp(buf, "list")) {
             //scan_components();
-            printMessageBuffer();
+            init();
+            //printMessageBuffer();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {
