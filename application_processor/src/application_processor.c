@@ -557,8 +557,7 @@ void init() {
 
     } else {
         //appendToBuffer("yay!\n");
-        print_debug("yay!");
-        return ERROR_RETURN;
+        print_debug("yay! from ap");
     }
 
     // end hardware

@@ -475,6 +475,32 @@ void process_attest() {
 
     send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
 }
+
+
+
+// hardware intit function
+
+void init() {
+// hardware
+
+    uint8_t usn[MXC_SYS_USN_LEN];
+
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        // kill urself
+        //call to restart
+        // Instead of printing, append the message to the buffer
+        //appendToBuffer("womp womp\n");
+        print_debug("womp womp");
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
+
+    } else {
+        //appendToBuffer("yay!\n");
+        print_debug("yay! from component");
+    }
+}
 /*********************************** MAIN *************************************/
 
 int main(void) {
@@ -484,8 +510,12 @@ int main(void) {
     __enable_irq();
 
     // Initialize Component
+
+    // hardware
+    init();
     i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
     board_link_init(addr);
+
 
     LED_On(LED2);
 
