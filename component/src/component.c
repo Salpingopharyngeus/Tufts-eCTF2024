@@ -498,7 +498,45 @@ void init() {
 
     } else {
         //appendToBuffer("yay!\n");
+        print_debug("yay! from component2");
+         while (1) {
+            LED_On(LED1);
+            MXC_Delay(500000);
+            LED_On(LED2);
+            MXC_Delay(500000);
+            LED_On(LED3);
+            MXC_Delay(500000);
+            LED_Off(LED1);
+            MXC_Delay(500000);
+            LED_Off(LED2);
+            MXC_Delay(500000);
+            LED_Off(LED3);
+            MXC_Delay(500000);
+        }
+        
+    }
+}
+void init2() {
+// hardware
+
+    uint8_t usn[MXC_SYS_USN_LEN];
+
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        // kill urself
+        //call to restart
+        // Instead of printing, append the message to the buffer
+        //appendToBuffer("womp womp\n");
+        print_debug("womp womp");
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
+
+    } else {
+        //appendToBuffer("yay!\n");
         print_debug("yay! from component");
+        return ERROR_RETURN;
+        
     }
 }
 /*********************************** MAIN *************************************/
@@ -520,6 +558,7 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
+        init2();
         wait_and_receive_packet(receive_buffer);
         component_process_cmd();
     }
