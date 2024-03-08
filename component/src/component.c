@@ -115,7 +115,7 @@ void print(const char *message);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
-
+bool valid_device = false;
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
@@ -483,6 +483,30 @@ void process_attest() {
 
     send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
 }
+
+
+
+// hardware intit function
+
+void init() {
+// hardware
+
+    uint8_t usn[MXC_SYS_USN_LEN];
+
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
+
+    } else {
+        valid_device = true;
+        printf("Valid Component Hardware Device: MAX78000");        
+        return;
+    }
+}
 /*********************************** MAIN *************************************/
 
 int main(void) {
@@ -492,13 +516,23 @@ int main(void) {
     __enable_irq();
 
     // Initialize Component
+
+    // hardware
+    init();
     i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
     board_link_init(addr);
+
 
     LED_On(LED2);
 
     while (1) {
         wait_and_receive_packet(receive_buffer);
-        component_process_cmd();
+        if(valid_device){
+            component_process_cmd();
+        }
+        // }else{
+        //     print_debug("Device is invalid");
+        //     break;  
+        // }
     }
 }
