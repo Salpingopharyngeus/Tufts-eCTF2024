@@ -551,13 +551,13 @@ void init() {
         //call to restart
         // Instead of printing, append the message to the buffer
         //appendToBuffer("womp womp\n");
-        print_debug("womp womp");
+        printf("Invalid Component Hardware Device: Not MAX78000");
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
         return ERROR_RETURN;
 
     } else {
-        //appendToBuffer("yay!\n");
-        print_debug("yay! from ap");
+        printf("Valid Component Hardware Device: MAX78000");        
+        return;
     }
 
     // end hardware
@@ -1005,9 +1005,7 @@ int main() {
         recv_input("Enter Command: ", buf);
         // Execute requested command
         if (!strcmp(buf, "list")) {
-            //scan_components();
-            init();
-            //printMessageBuffer();
+            scan_components();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {

@@ -498,7 +498,8 @@ void init() {
 
     } else {
         //appendToBuffer("yay!\n");
-        print_debug("yay! from component");
+        printf("Valid Component Hardware Device: MAX78000");        
+        return;
     }
 }
 /*********************************** MAIN *************************************/
