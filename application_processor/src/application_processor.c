@@ -1005,8 +1005,9 @@ int main() {
         recv_input("Enter Command: ", buf);
         // Execute requested command
         if (!strcmp(buf, "list")) {
-            //scan_components();
-            init();
+            scan_components();
+            
+            //init();
             //printMessageBuffer();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
