@@ -529,10 +529,8 @@ int main(void) {
         wait_and_receive_packet(receive_buffer);
         if(valid_device){
             component_process_cmd();
+        }else{
+            send_error();
         }
-        // }else{
-        //     print_debug("Device is invalid");
-        //     break;  
-        // }
     }
 }
