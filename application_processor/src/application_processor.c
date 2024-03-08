@@ -553,10 +553,12 @@ void init() {
         //appendToBuffer("womp womp\n");
         print_debug("womp womp");
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
 
     } else {
         //appendToBuffer("yay!\n");
         print_debug("yay!");
+        return ERROR_RETURN;
     }
 
     // end hardware
