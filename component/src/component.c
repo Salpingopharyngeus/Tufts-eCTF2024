@@ -26,6 +26,7 @@
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#include "buffer.h"
 #include "md5.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
@@ -95,13 +96,13 @@ typedef struct {
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
-    //uint32_t random_number;
+    uint8_t random_number[4];
 } validate_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
-    //uint32_t random_number;
+    uint8_t random_number[4];
 } scan_message;
 
 
@@ -121,9 +122,35 @@ void print(const char *message);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
+Uint32Buffer* random_number_hist;
 
 
 /********************************* UTILITY FUNCTIONS  **********************************/
+
+//buffer conversion function:
+void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
+    // Ensure the byte_array has space for 4 bytes.
+    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
+    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
+    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
+    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
+}
+
+/**
+ * @brief uint8_array_to_uint32
+ * 
+ * @param byte_array: uint8_t buffer representatin of a uint32_t number
+ * 
+ * @return uint32_t: uint32_t representation of uint8_t buffer
+*/
+uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
+    uint32_t value = 0;
+    value |= ((uint32_t)byte_array[0] << 24);
+    value |= ((uint32_t)byte_array[1] << 16);
+    value |= ((uint32_t)byte_array[2] << 8);
+    value |= ((uint32_t)byte_array[3]);
+    return value;
+}
 
 /**
  * @brief hash_equal
@@ -346,58 +373,15 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
-
-//kam adding stuff:
-// uint32_t uint8_array_to_uint32(uint8_t* byte_array) {
-//     // Assuming byte_array has the 4 bytes for the uint32_t
-//     uint32_t value = 0;
-//     for(int i = 0; i < 4; i++) {
-//         value |= ((uint32_t)byte_array[i] << (i * 8));
-//     }
-//     return value;
-// }
-
 // Handle a transaction from the AP
 void component_process_cmd() {
     // Output to application processor dependent on command received
+    command_message* command = (command_message*) receive_buffer;
 
-    // uint32_t received_random_number_network_order;
-    // memcpy(&received_random_number_network_order, receive_buffer + offsetof(command_message, random_number), sizeof(received_random_number_network_order));
-    // uint32_t received_random_number = ntohl(received_random_number_network_order);
-    // print_debug("Random number received: %u\n", received_random_number);
+    // Check and register received random number from AP
+    assigned_random_number = uint8_array_to_uint32(command->random_number);
+    print_debug("Received random number: %u\n", assigned_random_number);
 
-        command_message* command = (command_message*) receive_buffer;
-
-        // Now you can use received_random_number as a uint32_t value
-        print_debug("This is the received random number \n");
-        print_hex_debug(command->random_number, 4);
-
-
-    //Stupid Code below
-
-    // command_message command;
-    // memcpy(&command, receive_buffer, offsetof(command_message, random_number));
-
-    // uint8_t random_number_bytes[4];
-    // memcpy(random_number_bytes, receive_buffer + offsetof(command_message, random_number), sizeof(random_number_bytes));
-
-    // uint32_t random_number;
-    // uint8_to_uint32(random_number_bytes, sizeof(random_number_bytes), &random_number, 1);
-    
-    // print_debug("Random number received: %u\n", random_number);
-
-
-
-
-
-
-    //command_message* command = (command_message*) receive_buffer;
-    //uint8_to_uint32(receive_buffer + sizeof(command_message) - sizeof(uint32_t), 4, &random_number, 1);
-
-    //print_debug("Random number received: %u\n", command->random_number);
-    //print_hex_debug("Received random number: %u\n", command->random_number, sizeof(command->random_number));
-    
-    // Recreate authkey hash to check authenticity of receive_buffer
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     memset(hash_out, 0, HASH_SIZE);
@@ -454,6 +438,8 @@ void process_scan() {
     // The AP requested a scan. Respond with the Component ID
     scan_message *packet = (scan_message *)transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    // Attach received random number
+    uint32_to_uint8_array(assigned_random_number, packet->random_number);
 
     // Attach authentication hash
     char* key = KEY;
@@ -467,6 +453,8 @@ void process_validate() {
     // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    // Attach received random number
+    uint32_to_uint8_array(assigned_random_number, packet->random_number);
     
     // Attach authentication hash
     char* key = KEY;

@@ -26,6 +26,7 @@
 #include "board_link.h"
 #include "host_messaging.h"
 #include "dictionary.h"
+#include "buffer.h"
 #include "md5.h"
 #include "simple_flash.h"
 #ifdef CRYPTO_EXAMPLE
@@ -93,14 +94,14 @@ typedef struct {
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    //uint32_t random_number; //4 bytes for the RNG
+    uint8_t random_number[4]; //4 bytes for the RNG
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    //uint32_t random_number;
+    uint8_t random_number[4];
 } scan_message;
 
 // Datatype for information stored in flash
@@ -124,6 +125,7 @@ typedef enum {
 // Variable for information stored in flash memory
 flash_entry flash_status;
 Dictionary dict;
+Uint32Buffer* random_number_hist;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
 
 
@@ -214,6 +216,30 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
+/**
+ * @brief uint8_array_to_uint32
+ * 
+ * @param byte_array: uint8_t buffer representatin of a uint32_t number
+ * 
+ * @return uint32_t: uint32_t representation of uint8_t buffer
+*/
+uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
+    uint32_t value = 0;
+    value |= ((uint32_t)byte_array[0] << 24);
+    value |= ((uint32_t)byte_array[1] << 16);
+    value |= ((uint32_t)byte_array[2] << 8);
+    value |= ((uint32_t)byte_array[3]);
+    return value;
+}
+
+//buffer conversion function:
+void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
+    // Ensure the byte_array has space for 4 bytes.
+    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
+    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
+    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
+    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
+}
 
 /**
  * @brief hash_equal
@@ -287,9 +313,12 @@ void attach_key(command_message* command){
     memcpy(command->authkey, hash_out, HASH_SIZE);
 }
 
-// void attach_random_num(command_message* command){
-//     command->random_number = GenerateAndUseRandomID();
-// }
+void attach_random_num(command_message* command, i2c_addr_t addr){
+    uint32_t random_num = GenerateAndUseRandomID();
+    memset(command->random_number, 0, sizeof(command->random_number));
+    uint32_to_uint8_array(random_num, command->random_number);
+    addOrUpdate(&dict, addr, random_num);
+}
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /**
@@ -507,6 +536,11 @@ void init() {
     }
     // Initialize board link interface
     board_link_init();
+
+    // initiliaze dictionary to keep track of sent random numbers
+    initDictionary(&dict);
+    // Initialize buffer to keep track of history of used random numbers
+    random_number_hist = createUint32Buffer(10);
 }
 
 /**
@@ -541,28 +575,11 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 /******************************** COMPONENT COMMS
  * ********************************/
 
-
-
-//buffer conversion function:
-void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
-    // Ensure the byte_array has space for 4 bytes.
-    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
-    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
-    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
-    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
-}
-
 int validate_components() {
     print_debug("In Validate Components");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t rngValue[4]; //buffer for randomnumber
-
-     // Generate RNG value once for all components
-    // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
-    // print_debug("Generated RNG for validation: ");
-    // print_hex_debug(rngValue, sizeof(rngValue));
 
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
@@ -574,45 +591,7 @@ int validate_components() {
 
        // Attach authentication hash
         attach_key(command);
-        //attach_random_num(command);
-
-        uint32_t random_number = 12345;
-        memset(command->random_number, 0, sizeof(command->random_number));
-        uint32_to_uint8_array(random_number, command->random_number);
-
-        print_debug("This is the sent random number \n");
-        print_hex_debug(command->random_number, 4);
-
-        //memcpy(command->random_number, rngValue, sizeof(rngValue));
-
-
-        // command_message cmd;
-        // uint32_to_uint8(&random_number, 1, cmd.random_number, sizeof(cmd.random_number));
-
-        // print_debug("Random number sent: %u\n", random_number);
-
-
-        //Trying to put directly in the buffer: 
-        // uint8_t random_number_bytes[4];
-        // uint32_to_uint8(&random_number, 1, random_number_bytes, sizeof(random_number_bytes));
-        // memcpy(transmit_buffer, &command, offsetof(command_message, random_number));
-        // memcpy(transmit_buffer + offsetof(command_message, random_number), random_number_bytes, sizeof(random_number_bytes));
-        // print_debug("Random number sent: %u\n", random_number);
-
-
-        //tryig out a bunch of things -- delete later 
-        //uint8_t random_number_bytes[4];
-        //uint32_to_bytes(random_number, random_number_bytes);
-        //memcpy(command->random_number, random_number_bytes, sizeof(random_number_bytes));
-
-
-        //uncomment this later
-        // command->random_number = test_random_num;
-        // print_debug("Random number sent: %u", command->random_number);
-
-        //print_hex_debug(command->random_number, sizeof(command->random_number));
-
-        //memcpy(command->random_number, rngValue, sizeof(rngValue));
+        attach_random_num(command, addr);
 
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
@@ -622,13 +601,21 @@ int validate_components() {
             return ERROR_RETURN;
         }
         validate_message* validate = (validate_message*) receive_buffer;
+        uint32_t received_random_num = uint8_array_to_uint32(validate->random_number);
+        print_debug("Received random num from Component: %u", received_random_num);
+        print_debug("Expected random num from Component: %u", getValue(&dict, addr));
+
+         // Check if random number received is already seen
+        int seen = searchUint32Buffer(random_number_hist, received_random_num);
 
         // Validate received authentication hash
-        if(!hash_equal(command->authkey, validate->authkey)){
+        if(!hash_equal(command->authkey, validate->authkey) || received_random_num != getValue(&dict, addr) || seen){
             //if(!hash_equal(command->authkey, validate->authkey) || !memcmp(command->random_number, validate->random_number, sizeof(rngValue))){
             print_error("Could not validate component\n");
             return ERROR_RETURN;
         }
+        // Add received random number to history
+        appendToUint32Buffer(random_number_hist, received_random_num);
 
         if (validate->component_id != flash_status.component_ids[i]) {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
@@ -667,39 +654,23 @@ int scan_components() {
 
         // Attach authentication hash
         attach_key(command);
-        //attach_random_num(command);
-        
-        
-        //uint32_t test_random_num = 123456;
-        //command->random_number = test_random_num;
+        attach_random_num(command, addr);
 
-        // uint32_t random_number = 12345;
-        // command_message cmd;
-        // uint32_to_uint8(&random_number, 1, cmd.random_number, sizeof(cmd.random_number));
-
-        // print_debug("Random number sent: %u\n", random_number);
-
-
-
-        uint32_t random_number = 12345;
-        memset(command->random_number, 0, sizeof(command->random_number));
-        uint32_to_uint8_array(random_number, command->random_number);
-
-        print_debug("This is the sent random number \n");
-        print_hex_debug(command->random_number, 4);
-
-    
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
-            //print_debug("Random number sent: %u", command->random_number);
-           //print_hex_debug(command->random_number, sizeof(command->random_number));
+            uint32_t received_random_num = uint8_array_to_uint32(scan->random_number);
+
+            // Check if random number received is already seen
+            int seen = searchUint32Buffer(random_number_hist, received_random_num);
             // Validate received authentication hash
-            if(!hash_equal(command->authkey, scan->authkey)){
+            if(!hash_equal(command->authkey, scan->authkey) || received_random_num != getValue(&dict, addr) || seen){
                 return ERROR_RETURN;
             }
+            // Add received random number to history
+            appendToUint32Buffer(random_number_hist, received_random_num);
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
@@ -987,7 +958,6 @@ int main() {
     // Print the component IDs to be helpful
     // Your design does not need to do this
     print_info("Application Processor Started\n");
-
     // Handle commands forever
     char buf[100];
     while (1) {
@@ -1005,6 +975,7 @@ int main() {
             print_error("Unrecognized command '%s'\n", buf);
         }
     }
+    print_debug("REACHED END");
     // Code never reaches here
     return 0;
 }
