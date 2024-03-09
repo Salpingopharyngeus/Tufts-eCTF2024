@@ -385,8 +385,8 @@ void component_process_cmd() {
     command_message* command = (command_message*) receive_buffer;
 
     // Check and register received random number from AP
-    assigned_random_number = uint8_array_to_uint32(command->random_number);
-    print_debug("Received random number: %u\n", assigned_random_number);
+    uint32_t received_rn = uint8_array_to_uint32(command->random_number);
+    int seen = searchUint32Buffer(random_number_hist, received_rn);
 
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
@@ -394,7 +394,10 @@ void component_process_cmd() {
     md5hash(key, HASH_SIZE, hash_out);
 
     // Check validity of authkey hash
-    if (hash_equal(command->authkey, hash_out)){
+    if (hash_equal(command->authkey, hash_out) && !seen){
+        assigned_random_number = received_rn;
+        //print_debug("Received random number: %u\n", assigned_random_number);
+        appendToUint32Buffer(random_number_hist, received_rn);
         switch (command->opcode) {
             case COMPONENT_CMD_BOOT:
                 process_boot();
@@ -414,7 +417,6 @@ void component_process_cmd() {
                 break;
         }
     }else{
-        print_error("Conflicting Authentication Hashes!\n");
         send_error();
     }
 }
@@ -531,6 +533,7 @@ void init() {
     */ 
     MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
     MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+
     // Validate device checksum
     uint8_t usn[MXC_SYS_USN_LEN];
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
@@ -544,8 +547,9 @@ void init() {
     } else {
         valid_device = true;
         printf("Valid Component Hardware Device: MAX78000");        
-        return;
     }
+    // Initialize buffer to keep track of history of used random numbers
+    random_number_hist = createUint32Buffer(10);
 }
 /*********************************** MAIN *************************************/
 

@@ -628,8 +628,8 @@ int validate_components() {
         }
         validate_message* validate = (validate_message*) receive_buffer;
         uint32_t received_random_num = uint8_array_to_uint32(validate->random_number);
-        print_debug("Received random num from Component: %u", received_random_num);
-        print_debug("Expected random num from Component: %u", getValue(&dict, addr));
+        // print_debug("Received random num from Component: %u", received_random_num);
+        // print_debug("Expected random num from Component: %u", getValue(&dict, addr));
 
          // Check if random number received is already seen
         int seen = searchUint32Buffer(random_number_hist, received_random_num);
@@ -720,6 +720,8 @@ int boot_components() {
 
         // Attach authentication hash
         attach_key(command);
+        // Attach random number
+        attach_random_num(command, addr);
 
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -754,6 +756,8 @@ int attest_component(uint32_t component_id) {
 
     // Attach authentication hash
     attach_key(command);
+    // Attach random number
+    attach_random_num(command, addr);
 
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
