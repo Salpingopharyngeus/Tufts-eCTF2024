@@ -73,8 +73,7 @@
 */
 
 
-/******************************** TYPE DEFINITIONS
- * ********************************/
+/******************************** TYPE DEFINITIONS **********************************/
 // Commands received by Component using 32 bit integer
 typedef enum {
     COMPONENT_CMD_NONE,
@@ -84,8 +83,7 @@ typedef enum {
     COMPONENT_CMD_ATTEST
 } component_cmd_t;
 
-/******************************** TYPE DEFINITIONS
- * ********************************/
+/******************************** TYPE DEFINITIONS **********************************/
 // Data structure for receiving messages from the AP
 typedef struct {
     uint8_t opcode;
@@ -116,14 +114,13 @@ void process_attest(void);
 void print(const char *message);
 
 
-/********************************* GLOBAL VARIABLES
- * **********************************/
+/********************************* GLOBAL VARIABLES ************************************/
 // Global varaibles
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
 Uint32Buffer* random_number_hist;
-
+bool valid_device = false;
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
@@ -152,6 +149,15 @@ uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
     return value;
 }
 
+/**
+ * @brief send_error
+ * 
+ * Send error packet back to AP.
+*/
+void send_error(){
+    MXC_Delay(5000000);
+    send_packet_and_ack(ERROR_RETURN, transmit_buffer);
+}
 /**
  * @brief hash_equal
  * 
@@ -287,8 +293,8 @@ int secure_receive(uint8_t* buffer) {
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
-        print_error("Could not validate AP\n");
-        return ERROR_RETURN;
+        print_error("Invalid packet received that cannot be authenticated.\n");
+        send_error();
     }
 
     // Save assigned random_number from AP
@@ -403,11 +409,13 @@ void component_process_cmd() {
                 process_attest();
                 break;
             default:
-                print_error("Error: Unrecognized command received");
+                print_debug("Error: Unrecognized command received %d\n", command->opcode);
+                send_error();
                 break;
         }
     }else{
         print_error("Conflicting Authentication Hashes!\n");
+        send_error();
     }
 }
 
@@ -515,6 +523,30 @@ void process_attest() {
     memcpy(mod_uint8_transmit_buffer + 1, uint8_transmit_buffer, uint8_buffer_size);
     send_packet_and_ack(ATTEST_SIZE, mod_uint8_transmit_buffer);
 }
+
+void init() {
+    /*
+     Disabling the peripheral clock disables functionality while also saving power. 
+     Associated register states are retained but read and write access is blocked.
+    */ 
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+    // Validate device checksum
+    uint8_t usn[MXC_SYS_USN_LEN];
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
+
+    } else {
+        valid_device = true;
+        printf("Valid Component Hardware Device: MAX78000");        
+        return;
+    }
+}
 /*********************************** MAIN *************************************/
 
 int main(void) {
@@ -524,13 +556,21 @@ int main(void) {
     __enable_irq();
 
     // Initialize Component
+
+    // hardware
+    init();
     i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
     board_link_init(addr);
+
 
     LED_On(LED2);
 
     while (1) {
         wait_and_receive_packet(receive_buffer);
-        component_process_cmd();
+        if(valid_device){
+            component_process_cmd();
+        }else{
+            send_error();
+        }
     }
 }

@@ -51,6 +51,11 @@
 
 #include "../../deployment/global_secrets.h"
 
+// testing
+#include <string.h> // for strncat and strlen
+
+// end testing
+
 /********************************* CONSTANTS **********************************/
 
 // Passed in through ectf-params.h
@@ -78,6 +83,7 @@
 
 // Hash Digest
 #define HASH_SIZE 16
+
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -127,6 +133,7 @@ flash_entry flash_status;
 Dictionary dict;
 Uint32Buffer* random_number_hist;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
+bool valid_device = false; 
 
 
 /********************************* REFERENCE FLAG
@@ -431,7 +438,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
 
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
-        print_error("Could not validate Component\n");
+        print_error("Invalid packet received that cannot be authenticated.\n");
         return ERROR_RETURN;
     }
 
@@ -507,12 +514,34 @@ int get_provisioned_ids(uint32_t *buffer) {
 
 /********************************* UTILITIES **********************************/
 
+
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
-
+    /*
+     Disabling the peripheral clock disables functionality while also saving power. 
+     Associated register states are retained but read and write access is blocked.
+    */ 
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+    //MXC_SYS_ClockEnable()
     // Enable global interrupts
     __enable_irq();
+
+    // Validate device checksum
+    uint8_t usn[MXC_SYS_USN_LEN];
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
+        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
+        return ERROR_RETURN;
+
+    } else {
+        valid_device = true;
+        printf("Valid Component Hardware Device: MAX78000");        
+    }
 
     // Setup Flash
     flash_simple_init();
@@ -572,15 +601,12 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
     return len;
 }
 
-/******************************** COMPONENT COMMS
- * ********************************/
+/******************************** COMPONENT COMMS **********************************/
 
 int validate_components() {
-    print_debug("In Validate Components");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
@@ -626,7 +652,6 @@ int validate_components() {
 }
 
 int scan_components() {
-    print_debug("Scan Components");
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -935,7 +960,6 @@ void attempt_replace() {
 
 // Attest a component if the PIN is correct
 void attempt_attest() {
-    print_debug("Attempt Attest called!");
     char buf[50];
 
     if (validate_pin()) {
@@ -962,6 +986,10 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
+        if (!valid_device) {
+            print_error("Invalid Device!");
+            break;
+        }
         // Execute requested command
         if (!strcmp(buf, "list")) {
             scan_components();
