@@ -12,10 +12,12 @@
  * @copyright Copyright (c) 2024 The MITRE Corporation
  */
 
+#include "mxc_device.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+#include <tmr.h>
+#include <tmr_regs.h>
 
 #include "board_link.h"
 #include "host_messaging.h"
@@ -23,6 +25,41 @@
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
+
+// Timer to be used
+mxc_tmr_regs_t *timer = MXC_TMR0; // Replace with your specific timer
+// Starting ticks
+static uint32_t startTime = 0;
+// Function to start the timer, storing the start time
+void startTimer() {
+    // Assuming MXC_TMR_GetTicks() is a function that retrieves the current
+    // timer tick count
+    startTime = MXC_TMR_GetTicks(timer);
+}
+
+// Function to check if 3 seconds have passed since the timer started
+bool hasThreeSecondsPassed() {
+    uint32_t currentTime;
+    uint32_t timeElapsed;
+    mxc_tmr_unit_t units;
+
+    // Assuming MXC_TMR_GetTime() to calculate the time elapsed since startTime
+    // in seconds
+    MXC_TMR_GetTime(timer, startTime, &currentTime, &units);
+
+    // Check if the units are in seconds, then check if 3 seconds have elapsed
+    if (units == MXC_TMR_UNIT_SEC) {
+        timeElapsed = currentTime - startTime;
+        if (timeElapsed >= 3) {
+            // Optionally, reset startTime to check for another 3 second
+            // interval
+            printf("REBOOT");
+            return true;
+        }
+    }
+
+    return false;
+}
 
 /******************************** FUNCTION DEFINITIONS
  * ********************************/
@@ -82,20 +119,20 @@ int send_packet(i2c_addr_t address, uint8_t len, uint8_t *packet) {
  */
 int poll_and_receive_packet(i2c_addr_t address, uint8_t *packet) {
     int result = SUCCESS_RETURN;
-    time_t start_time = time(NULL);
+
+    startTimer();
+
     while (true) {
         result = i2c_simple_read_transmit_done(address);
 
         if (result < SUCCESS_RETURN) {
-            time_t current_time = time(NULL);
-            if (current_time - start_time >= 3) {
-                printf("Reboot\n");
+            if (hasThreeSecondsPassed()) {
+                printf("exited");
             }
             return ERROR_RETURN;
         } else if (result == SUCCESS_RETURN) {
-            time_t current_time = time(NULL);
-            if (current_time - start_time >= 3) {
-                printf("Reboot\n");
+            if (hasThreeSecondsPassed()) {
+                printf("exited");
             }
             break;
         }
@@ -103,32 +140,28 @@ int poll_and_receive_packet(i2c_addr_t address, uint8_t *packet) {
     }
     int len = i2c_simple_read_transmit_len(address);
     if (len < SUCCESS_RETURN) {
-        time_t current_time = time(NULL);
-        if (current_time - start_time >= 3) {
-            printf("Reboot\n");
+        if (hasThreeSecondsPassed()) {
+            printf("exited");
         }
         return ERROR_RETURN;
     }
     result =
         i2c_simple_read_data_generic(address, TRANSMIT, (uint8_t)len, packet);
     if (result < SUCCESS_RETURN) {
-        time_t current_time = time(NULL);
-        if (current_time - start_time >= 3) {
-            printf("Reboot\n");
+        if (hasThreeSecondsPassed()) {
+            printf("exited");
         }
         return ERROR_RETURN;
     }
     result = i2c_simple_write_transmit_done(address, true);
     if (result < SUCCESS_RETURN) {
-        time_t current_time = time(NULL);
-        if (current_time - start_time >= 3) {
-            printf("Reboot\n");
+        if (hasThreeSecondsPassed()) {
+            printf("exited");
         }
         return ERROR_RETURN;
     }
-    time_t current_time = time(NULL);
-    if (current_time - start_time >= 3) {
-        printf("Reboot\n");
+    if (hasThreeSecondsPassed()) {
+        printf("exited");
     }
     return len;
 }
