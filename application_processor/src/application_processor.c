@@ -26,6 +26,7 @@
 #include "board_link.h"
 #include "host_messaging.h"
 #include "dictionary.h"
+#include "buffer.h"
 #include "md5.h"
 #include "simple_flash.h"
 #ifdef CRYPTO_EXAMPLE
@@ -67,6 +68,9 @@
 #define AP_BOOT_MSG "Test boot message"
 */
 
+
+
+
 // Flash Macros
 #define FLASH_ADDR                                                             \
     ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
@@ -89,20 +93,21 @@
 typedef struct {
     uint8_t opcode; // 1 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    uint32_t random_number; //4 bytes for the RNG
+    uint8_t random_number[4]; //4 bytes for the RNG
 } command_message;
 
 // Data type for receiving a validate message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
-    //uint8_t random_number[4]; //4 bytes for the RNG
+    uint8_t random_number[4]; //4 bytes for the RNG
 } validate_message;
 
 // Data type for receiving a scan message
 typedef struct {
     uint32_t component_id; // 4 byte
     uint8_t authkey[HASH_SIZE]; // 16 bytes
+    uint8_t random_number[4];
 } scan_message;
 
 // Datatype for information stored in flash
@@ -126,6 +131,7 @@ typedef enum {
 // Variable for information stored in flash memory
 flash_entry flash_status;
 Dictionary dict;
+Uint32Buffer* random_number_hist;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
 bool valid_device = false; 
 
@@ -217,6 +223,30 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
+/**
+ * @brief uint8_array_to_uint32
+ * 
+ * @param byte_array: uint8_t buffer representatin of a uint32_t number
+ * 
+ * @return uint32_t: uint32_t representation of uint8_t buffer
+*/
+uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
+    uint32_t value = 0;
+    value |= ((uint32_t)byte_array[0] << 24);
+    value |= ((uint32_t)byte_array[1] << 16);
+    value |= ((uint32_t)byte_array[2] << 8);
+    value |= ((uint32_t)byte_array[3]);
+    return value;
+}
+
+//buffer conversion function:
+void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
+    // Ensure the byte_array has space for 4 bytes.
+    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
+    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
+    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
+    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
+}
 
 /**
  * @brief hash_equal
@@ -290,8 +320,11 @@ void attach_key(command_message* command){
     memcpy(command->authkey, hash_out, HASH_SIZE);
 }
 
-void attach_random_num(command_message* command){
-    command->random_number = GenerateAndUseRandomID();
+void attach_random_num(command_message* command, i2c_addr_t addr){
+    uint32_t random_num = GenerateAndUseRandomID();
+    memset(command->random_number, 0, sizeof(command->random_number));
+    uint32_to_uint8_array(random_num, command->random_number);
+    addOrUpdate(&dict, addr, random_num);
 }
 
 /******************************* POST BOOT FUNCTIONALITY *********************************/
@@ -377,6 +410,14 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+    
+    // Check if random number is unique
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if (seen) {
+        print_error("ERROR: Potential Replayed Packet!");
+        return ERROR_RETURN;
+    }
+    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -532,6 +573,11 @@ void init() {
     }
     // Initialize board link interface
     board_link_init();
+
+    // initiliaze dictionary to keep track of sent random numbers
+    initDictionary(&dict);
+    // Initialize buffer to keep track of history of used random numbers
+    random_number_hist = createUint32Buffer(10);
 }
 
 /**
@@ -569,12 +615,6 @@ int validate_components() {
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    //uint8_t rngValue[4];
-
-     // Generate RNG value once for all components
-    // GenerateAndUseRandomID(rngValue, sizeof(rngValue));
-    // print_debug("Generated RNG for validation: ");
-    // print_hex_debug(rngValue, sizeof(rngValue));
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
@@ -585,15 +625,7 @@ int validate_components() {
 
        // Attach authentication hash
         attach_key(command);
-        //attach_random_num(command);
-
-        uint32_t test_random_num = 123;
-        command->random_number = test_random_num;
-        print_debug("Random number sent: %u", command->random_number);
-
-        //print_hex_debug(command->random_number, sizeof(command->random_number));
-
-        //memcpy(command->random_number, rngValue, sizeof(rngValue));
+        attach_random_num(command, addr);
 
         // Send out command and receive result
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
@@ -603,13 +635,21 @@ int validate_components() {
             return ERROR_RETURN;
         }
         validate_message* validate = (validate_message*) receive_buffer;
+        uint32_t received_random_num = uint8_array_to_uint32(validate->random_number);
+        // print_debug("Received random num from Component: %u", received_random_num);
+        // print_debug("Expected random num from Component: %u", getValue(&dict, addr));
+
+         // Check if random number received is already seen
+        int seen = searchUint32Buffer(random_number_hist, received_random_num);
 
         // Validate received authentication hash
-        if(!hash_equal(command->authkey, validate->authkey)){
+        if(!hash_equal(command->authkey, validate->authkey) || received_random_num != getValue(&dict, addr) || seen){
             //if(!hash_equal(command->authkey, validate->authkey) || !memcmp(command->random_number, validate->random_number, sizeof(rngValue))){
             print_error("Could not validate component\n");
             return ERROR_RETURN;
         }
+        // Add received random number to history
+        appendToUint32Buffer(random_number_hist, received_random_num);
 
         if (validate->component_id != flash_status.component_ids[i]) {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
@@ -647,22 +687,23 @@ int scan_components() {
 
         // Attach authentication hash
         attach_key(command);
-        //attach_random_num(command);
-        uint32_t test_random_num = 123;
-        command->random_number = test_random_num;
-        
+        attach_random_num(command, addr);
 
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
 
         // Success, device is present
         if (len > 0) {
             scan_message* scan = (scan_message*) receive_buffer;
-            print_debug("Random number sent: %u", command->random_number);
-           //print_hex_debug(command->random_number, sizeof(command->random_number));
+            uint32_t received_random_num = uint8_array_to_uint32(scan->random_number);
+
+            // Check if random number received is already seen
+            int seen = searchUint32Buffer(random_number_hist, received_random_num);
             // Validate received authentication hash
-            if(!hash_equal(command->authkey, scan->authkey)){
+            if(!hash_equal(command->authkey, scan->authkey) || received_random_num != getValue(&dict, addr) || seen){
                 return ERROR_RETURN;
             }
+            // Add received random number to history
+            appendToUint32Buffer(random_number_hist, received_random_num);
             print_info("F>0x%08x\n", scan->component_id);
         }
     }
@@ -686,6 +727,8 @@ int boot_components() {
 
         // Attach authentication hash
         attach_key(command);
+        // Attach random number
+        attach_random_num(command, addr);
 
         int len = issue_cmd(addr, transmit_buffer, receive_buffer);
         if (len == ERROR_RETURN) {
@@ -693,11 +736,20 @@ int boot_components() {
             return ERROR_RETURN;
         }
 
+        uint8_t received_rn_buffer[4];
+        size_t start_index = len - sizeof(received_rn_buffer);
+        memcpy(received_rn_buffer, receive_buffer + start_index, sizeof(received_rn_buffer));
+        uint32_t received_random_num = uint8_array_to_uint32(received_rn_buffer);
+    
+        int seen = searchUint32Buffer(random_number_hist, received_random_num);
+
         // Validate received authentication hash
-        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
+        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE-4]) || received_random_num != getValue(&dict, addr) || seen){
             print_error("Could not boot component\n");
             return ERROR_RETURN;
         }
+        // Add received random number to history
+        appendToUint32Buffer(random_number_hist, received_random_num);
 
         // Print boot message from component
         print_info("0x%08x>%s\n", flash_status.component_ids[i], receive_buffer);
@@ -776,57 +828,57 @@ int attest_component(uint32_t component_id) {
 // YOUR DESIGN MUST NOT CHANGE THIS FUNCTION
 // Boot message is customized through the AP_BOOT_MSG macro
 void boot() {
-// Example of how to utilize included simple_crypto.h
-#ifdef CRYPTO_EXAMPLE
+    // Example of how to utilize included simple_crypto.h
+    #ifdef CRYPTO_EXAMPLE
     // This string is 16 bytes long including null terminator
     // This is the block size of included symmetric encryption
-    char *data = "Crypto Example!";
+    char* data = "Crypto Example!";
     uint8_t ciphertext[BLOCK_SIZE];
     uint8_t key[KEY_SIZE];
-
+    
     // Zero out the key
     bzero(key, BLOCK_SIZE);
 
     // Encrypt example data and print out
-    encrypt_sym((uint8_t *)data, BLOCK_SIZE, key, ciphertext);
+    encrypt_sym((uint8_t*)data, BLOCK_SIZE, key, ciphertext); 
     print_debug("Encrypted data: ");
     print_hex_debug(ciphertext, BLOCK_SIZE);
 
-    // Hash example encryption results
+    // Hash example encryption results 
     uint8_t hash_out[HASH_SIZE];
-    md5hash(ciphertext, BLOCK_SIZE, hash_out);
+    hash(ciphertext, BLOCK_SIZE, hash_out);
 
     // Output hash result
     print_debug("Hash result: ");
     print_hex_debug(hash_out, HASH_SIZE);
-
+    
     // Decrypt the encrypted message and print out
     uint8_t decrypted[BLOCK_SIZE];
     decrypt_sym(ciphertext, BLOCK_SIZE, key, decrypted);
     print_debug("Decrypted message: %s\r\n", decrypted);
-#endif
+    #endif
 
-// POST BOOT FUNCTIONALITY
-// DO NOT REMOVE IN YOUR DESIGN
-#ifdef POST_BOOT
-    POST_BOOT
-#else
+    // POST BOOT FUNCTIONALITY
+    // DO NOT REMOVE IN YOUR DESIGN
+    #ifdef POST_BOOT
+        POST_BOOT
+    #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    // while (1) {
-    //     LED_On(LED1);
-    //     MXC_Delay(500000);
-    //     LED_On(LED2);
-    //     MXC_Delay(500000);
-    //     LED_On(LED3);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED1);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED2);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED3);
-    //     MXC_Delay(500000);
-    // }
+    while (1) {
+        LED_On(LED1);
+        MXC_Delay(500000);
+        LED_On(LED2);
+        MXC_Delay(500000);
+        LED_On(LED3);
+        MXC_Delay(500000);
+        LED_Off(LED1);
+        MXC_Delay(500000);
+        LED_Off(LED2);
+        MXC_Delay(500000);
+        LED_Off(LED3);
+        MXC_Delay(500000);
+    }
     #endif
 }
 
@@ -938,6 +990,9 @@ int main() {
     // Initialize board
     init();
 
+    // Print the component IDs to be helpful
+    // Your design does not need to do this
+    print_info("Application Processor Started\n");
     // Handle commands forever
     char buf[100];
     while (1) {
@@ -959,6 +1014,7 @@ int main() {
             print_error("Unrecognized command '%s'\n", buf);
         }
     }
+    print_debug("REACHED END");
     // Code never reaches here
     return 0;
 }

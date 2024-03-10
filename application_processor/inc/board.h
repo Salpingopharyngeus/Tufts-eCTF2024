@@ -75,6 +75,8 @@ extern "C" {
  */
 #define LED2            1
 
+#define LED3            2
+
 /**
  * \brief   Initialize the BSP and board interfaces.
  * \returns #E_NO_ERROR if everything is successful

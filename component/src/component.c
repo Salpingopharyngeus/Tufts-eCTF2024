@@ -22,9 +22,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 #include "host_messaging.h"
 #include "simple_i2c_peripheral.h"
 #include "board_link.h"
+#include "buffer.h"
 #include "md5.h"
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
@@ -86,17 +88,19 @@ typedef enum {
 typedef struct {
     uint8_t opcode;
     uint8_t authkey[HASH_SIZE];
-    uint32_t random_number;
+    uint8_t random_number[4];
 } command_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
+    uint8_t random_number[4];
 } validate_message;
 
 typedef struct {
     uint32_t component_id;
     uint8_t authkey[HASH_SIZE];
+    uint8_t random_number[4];
 } scan_message;
 
 
@@ -115,9 +119,35 @@ void print(const char *message);
 uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
 uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
+Uint32Buffer* random_number_hist;
 bool valid_device = false;
 
 /********************************* UTILITY FUNCTIONS  **********************************/
+
+//buffer conversion function:
+void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
+    // Ensure the byte_array has space for 4 bytes.
+    byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
+    byte_array[1] = (value >> 16) & 0xFF; // Extracts the second byte.
+    byte_array[2] = (value >> 8) & 0xFF;  // Extracts the third byte.
+    byte_array[3] = value & 0xFF;         // Extracts the fourth byte.
+}
+
+/**
+ * @brief uint8_array_to_uint32
+ * 
+ * @param byte_array: uint8_t buffer representatin of a uint32_t number
+ * 
+ * @return uint32_t: uint32_t representation of uint8_t buffer
+*/
+uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
+    uint32_t value = 0;
+    value |= ((uint32_t)byte_array[0] << 24);
+    value |= ((uint32_t)byte_array[1] << 16);
+    value |= ((uint32_t)byte_array[2] << 8);
+    value |= ((uint32_t)byte_array[3]);
+    return value;
+}
 
 /**
  * @brief send_error
@@ -235,6 +265,14 @@ int secure_receive(uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+
+    // Check if random number is unique
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if (seen) {
+        print_error("ERROR: Potential Replayed Packet!");
+        return ERROR_RETURN;
+    }
+    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -354,17 +392,20 @@ void component_process_cmd() {
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
-    print_debug("Received random number: %u\n", (uint32_t) command->random_number);
-    //print_hex_debug(command->random_number, sizeof(command->random_number));
-    
-    // Recreate authkey hash to check authenticity of receive_buffer
+    // Check and register received random number from AP
+    uint32_t received_rn = uint8_array_to_uint32(command->random_number);
+    int seen = searchUint32Buffer(random_number_hist, received_rn);
+
     char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
     memset(hash_out, 0, HASH_SIZE);
     md5hash(key, HASH_SIZE, hash_out);
 
     // Check validity of authkey hash
-    if (hash_equal(command->authkey, hash_out)){
+    if (hash_equal(command->authkey, hash_out) && !seen){
+        assigned_random_number = received_rn;
+        //print_debug("Received random number: %u\n", assigned_random_number);
+        appendToUint32Buffer(random_number_hist, received_rn);
         switch (command->opcode) {
             case COMPONENT_CMD_BOOT:
                 process_boot();
@@ -384,7 +425,6 @@ void component_process_cmd() {
                 break;
         }
     }else{
-        print_error("Conflicting Authentication Hashes!\n");
         send_error();
     }
 }
@@ -401,9 +441,14 @@ void process_boot() {
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
     memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
 
-    // Calculate the total length of data to be sent
-    uint8_t total_len = len + HASH_SIZE;
+    // Attach received random number
+    uint8_t random_number_buffer[4];
+    uint32_to_uint8_array(assigned_random_number, random_number_buffer);
+    memcpy((void*)transmit_buffer + len + HASH_SIZE, random_number_buffer, sizeof(random_number_buffer));
 
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE + sizeof(random_number_buffer);
+    
     // Send the data
     send_packet_and_ack(total_len, transmit_buffer);
     
@@ -416,6 +461,8 @@ void process_scan() {
     // The AP requested a scan. Respond with the Component ID
     scan_message *packet = (scan_message *)transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    // Attach received random number
+    uint32_to_uint8_array(assigned_random_number, packet->random_number);
 
     // Attach authentication hash
     char* key = KEY;
@@ -429,6 +476,8 @@ void process_validate() {
     // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
+    // Attach received random number
+    uint32_to_uint8_array(assigned_random_number, packet->random_number);
     
     // Attach authentication hash
     char* key = KEY;
@@ -491,6 +540,7 @@ void init() {
     */ 
     MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
     MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+
     // Validate device checksum
     uint8_t usn[MXC_SYS_USN_LEN];
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
@@ -504,8 +554,9 @@ void init() {
     } else {
         valid_device = true;
         printf("Valid Component Hardware Device: MAX78000");        
-        return;
     }
+    // Initialize buffer to keep track of history of used random numbers
+    random_number_hist = createUint32Buffer(10);
 }
 /*********************************** MAIN *************************************/
 
