@@ -772,8 +772,6 @@ int attest_component(uint32_t component_id) {
 
     // Attach authentication hash
     attach_key(command);
-    // Attach random number
-    attach_random_num(command, addr);
 
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
@@ -783,19 +781,12 @@ int attest_component(uint32_t component_id) {
         print_error("Could not attest component\n");
         return ERROR_RETURN;
     }
-    // Extract the exact size of the attestation data specified in the packet
-    uint8_t attestation_size = receive_buffer[0];
-    
-    // Calculate the size of the remaining content
-    size_t remaining_size = len - 1;
-    uint8_t remaining_buffer[RECEIVE_SIZE];
-    memset(remaining_buffer, 0, RECEIVE_SIZE);
-    memcpy(remaining_buffer, receive_buffer + 1, remaining_size);
 
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
     memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
-    uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    //uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
     uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
     memset(decrypted, 0, len/sizeof(uint32_t));
