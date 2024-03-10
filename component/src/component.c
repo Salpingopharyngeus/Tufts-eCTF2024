@@ -266,6 +266,14 @@ int secure_receive(uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
 
+    // Check if random number is unique
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if (seen) {
+        print_error("ERROR: Potential Replayed Packet!");
+        return ERROR_RETURN;
+    }
+    appendToUint32Buffer(random_number_hist, random_number);
+
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
 
@@ -433,9 +441,14 @@ void process_boot() {
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
     memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
 
-    // Calculate the total length of data to be sent
-    uint8_t total_len = len + HASH_SIZE;
+    // Attach received random number
+    uint8_t random_number_buffer[4];
+    uint32_to_uint8_array(assigned_random_number, random_number_buffer);
+    memcpy((void*)transmit_buffer + len + HASH_SIZE, random_number_buffer, sizeof(random_number_buffer));
 
+    // Calculate the total length of data to be sent
+    uint8_t total_len = len + HASH_SIZE + sizeof(random_number_buffer);
+    
     // Send the data
     send_packet_and_ack(total_len, transmit_buffer);
     

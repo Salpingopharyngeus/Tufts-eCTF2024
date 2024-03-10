@@ -410,6 +410,14 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+    
+    // Check if random number is unique
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if (seen) {
+        print_error("ERROR: Potential Replayed Packet!");
+        return ERROR_RETURN;
+    }
+    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -711,8 +719,7 @@ int boot_components() {
     // Send boot command to each component
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
-        i2c_addr_t addr =
-            component_id_to_i2c_addr(flash_status.component_ids[i]);
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
         // Create command message
         command_message *command = (command_message *)transmit_buffer;
@@ -729,11 +736,20 @@ int boot_components() {
             return ERROR_RETURN;
         }
 
+        uint8_t received_rn_buffer[4];
+        size_t start_index = len - sizeof(received_rn_buffer);
+        memcpy(received_rn_buffer, receive_buffer + start_index, sizeof(received_rn_buffer));
+        uint32_t received_random_num = uint8_array_to_uint32(received_rn_buffer);
+    
+        int seen = searchUint32Buffer(random_number_hist, received_random_num);
+
         // Validate received authentication hash
-        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE])){
+        if (!hash_equal(command->authkey, &receive_buffer[len-HASH_SIZE-4]) || received_random_num != getValue(&dict, addr) || seen){
             print_error("Could not boot component\n");
             return ERROR_RETURN;
         }
+        // Add received random number to history
+        appendToUint32Buffer(random_number_hist, received_random_num);
 
         // Print boot message from component
         print_info("0x%08x>%s\n", flash_status.component_ids[i], receive_buffer);
@@ -821,57 +837,57 @@ int attest_component(uint32_t component_id) {
 // YOUR DESIGN MUST NOT CHANGE THIS FUNCTION
 // Boot message is customized through the AP_BOOT_MSG macro
 void boot() {
-// Example of how to utilize included simple_crypto.h
-#ifdef CRYPTO_EXAMPLE
+    // Example of how to utilize included simple_crypto.h
+    #ifdef CRYPTO_EXAMPLE
     // This string is 16 bytes long including null terminator
     // This is the block size of included symmetric encryption
-    char *data = "Crypto Example!";
+    char* data = "Crypto Example!";
     uint8_t ciphertext[BLOCK_SIZE];
     uint8_t key[KEY_SIZE];
-
+    
     // Zero out the key
     bzero(key, BLOCK_SIZE);
 
     // Encrypt example data and print out
-    encrypt_sym((uint8_t *)data, BLOCK_SIZE, key, ciphertext);
+    encrypt_sym((uint8_t*)data, BLOCK_SIZE, key, ciphertext); 
     print_debug("Encrypted data: ");
     print_hex_debug(ciphertext, BLOCK_SIZE);
 
-    // Hash example encryption results
+    // Hash example encryption results 
     uint8_t hash_out[HASH_SIZE];
-    md5hash(ciphertext, BLOCK_SIZE, hash_out);
+    hash(ciphertext, BLOCK_SIZE, hash_out);
 
     // Output hash result
     print_debug("Hash result: ");
     print_hex_debug(hash_out, HASH_SIZE);
-
+    
     // Decrypt the encrypted message and print out
     uint8_t decrypted[BLOCK_SIZE];
     decrypt_sym(ciphertext, BLOCK_SIZE, key, decrypted);
     print_debug("Decrypted message: %s\r\n", decrypted);
-#endif
+    #endif
 
-// POST BOOT FUNCTIONALITY
-// DO NOT REMOVE IN YOUR DESIGN
-#ifdef POST_BOOT
-    POST_BOOT
-#else
+    // POST BOOT FUNCTIONALITY
+    // DO NOT REMOVE IN YOUR DESIGN
+    #ifdef POST_BOOT
+        POST_BOOT
+    #else
     // Everything after this point is modifiable in your design
     // LED loop to show that boot occurred
-    // while (1) {
-    //     LED_On(LED1);
-    //     MXC_Delay(500000);
-    //     LED_On(LED2);
-    //     MXC_Delay(500000);
-    //     LED_On(LED3);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED1);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED2);
-    //     MXC_Delay(500000);
-    //     LED_Off(LED3);
-    //     MXC_Delay(500000);
-    // }
+    while (1) {
+        LED_On(LED1);
+        MXC_Delay(500000);
+        LED_On(LED2);
+        MXC_Delay(500000);
+        LED_On(LED3);
+        MXC_Delay(500000);
+        LED_Off(LED1);
+        MXC_Delay(500000);
+        LED_Off(LED2);
+        MXC_Delay(500000);
+        LED_Off(LED3);
+        MXC_Delay(500000);
+    }
     #endif
 }
 
