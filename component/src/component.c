@@ -457,7 +457,7 @@ void exchange_aes_key() {
     decrypt_sym(encrypted_aes_key, AES_KEY_SIZE, shared_secret, decrypted_aes_key);
 
     // Set the decrypted AES key as the external key for the component
-    MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
+    //MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
 }
 
 // Handle a transaction from the AP

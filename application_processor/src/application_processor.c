@@ -119,11 +119,11 @@ typedef struct {
 
 typedef struct {
     uint8_t opcode;
-    uint8_t public_key[32];
+    uint8_t public_key[X25519_KEY_LEN];
 } ap_public_key
 
 typedef struct {
-    uint8_t public_key[32];
+    uint8_t public_key[X25519_KEY_LEN];
 } comp_public_key
 
 typedef 
@@ -683,35 +683,46 @@ int exchange_aes_key(i2c_addr_t addr) {
     unsigned char ap_private_key[X25519_KEY_LEN];
     print_debug("Creating public/private key pair");
     x25519_base(ap_public_key, ap_private_key);
-    
-    // Exchange public keys
+    print_debug("AP PUBLIC KEY: %s", ap_public_key);
+    print_debug("AP PRIVATE KEY: %s", ap_private_key);
+
+    // Construct packet
     ap_public_key* ap_pub_key = (ap_public_key*) transmit_buffer;
     ap_pub_key->opcode = COMPONENT_AP_KEY_EXCHANGE;
     memcpy(ap_pub_key->public_key, ap_public_key, sizeof(ap_public_key));
 
     // Send AP's public key and receive component's public key
+    print_debug("Sending AP's public key to component.");
     int len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {
         print_error("Could not send AP public key to component\n");
         return ERROR_RETURN;
     }
+
+    // Receive Components public key
     comp_public_key* comp_key = (comp_public_key*) receive_buffer;
     uint8_t comp_pb_key[X25519_KEY_LEN];
     memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
+    print_debug("COMPONENT PUBLIC KEY: %s", ap_private_key);
 
     // Generate the AES key using the TRNG
+    print_debug("Generating AES Key");
     uint8_t aes_key[AES_KEY_SIZE];
     for (int i = 0; i < AES_KEY_SIZE; i++) {
         aes_key[i] = (uint8_t)GenerateAndUseRandomID();
     }
 
     // Generate the shared secret using x25519 key agreement
+    print_debug("Generating Shared secret Key");
     uint8_t shared_secret[X25519_KEY_LEN];
     x25519(shared_secret, ap_private_key, comp_pb_key);
+    print_debug("SHARED SECRET: %s", shared_secret);
 
     // Encrypt the AES key using the shared secret
+    print_debug("Encrypting AES key using shared secret");
     uint8_t encrypted_aes_key[AES_KEY_SIZE];
     encrypt_sym(aes_key, AES_KEY_SIZE, shared_secret, encrypted_aes_key);
+    print_debug("ENCRYPTED AES KEY: %s", encrypted_aes_key);
 
     // Send the encrypted AES key to the component
     memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
@@ -906,7 +917,7 @@ int attest_component(uint32_t component_id) {
     memset(decrypted, 0, len/sizeof(uint32_t));
 
     // in global secrets, 16 elements of 1 byte elements, 16*8bits = 128 bits
-    MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
+    //MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
 
     // see pg.359 of MAX78000 User Guide for dummy encryption reason
     size_t ATTEST_SIZE = 224;
