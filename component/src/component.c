@@ -103,6 +103,14 @@ typedef struct {
     uint8_t random_number[4];
 } scan_message;
 
+typedef struct {
+    uint8_t opcode;
+    uint8_t public_key[32];
+} ap_public_key
+
+typedef struct {
+    uint8_t public_key[32];
+} comp_public_key
 
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
@@ -387,46 +395,82 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
+void exchange_aes_key() {
+    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
+    uint8_t ap_pb_key[32];
+    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+
+    // Generate public and private key pair
+    unsigned char comp_public_key[32];
+    unsigned char comp_private_key[64];
+    ed25519_create_keypair(comp_public_key, comp_private_key, seed_ap);
+
+    // Send component's public key to the AP
+    comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
+    memcpy(comp_key->public_key, comp_public_key);
+    send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
+
+    memset(receive_buffer, 0, sizeof(receive_buffer));
+    wait_and_receive_packet(receive_buffer);
+
+    // Receive digitally signed aes key from AP
+    uint8_t encrypted_aes_key[64];
+    memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
+
+    // Decrypt the AES key using AP's public key
+    if (ed25519_verify((unsigned char *) encrypted_aes_key, (unsigned char *) aes_key, sizeof(aes_key), (unsigned char *) ap_pb_key)) {
+        // Set the AES key as the external key for the component
+        MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
+    } else {
+        print_error("Failed to decrypt AES key\n");
+    }
+}
+
 // Handle a transaction from the AP
 void component_process_cmd() {
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
-    // Check and register received random number from AP
-    uint32_t received_rn = uint8_array_to_uint32(command->random_number);
-    int seen = searchUint32Buffer(random_number_hist, received_rn);
+    if (command->opcode == COMPONENT_AP_KEY_EXCHANGE){
+        exchange_aes_key();
+    }else {
+         // Check and register received random number from AP
+        uint32_t received_rn = uint8_array_to_uint32(command->random_number);
+        int seen = searchUint32Buffer(random_number_hist, received_rn);
 
-    char* key = KEY;
-    uint8_t hash_out[HASH_SIZE];
-    memset(hash_out, 0, HASH_SIZE);
-    md5hash(key, HASH_SIZE, hash_out);
+        char* key = KEY;
+        uint8_t hash_out[HASH_SIZE];
+        memset(hash_out, 0, HASH_SIZE);
+        md5hash(key, HASH_SIZE, hash_out);
 
-    // Check validity of authkey hash
-    if (hash_equal(command->authkey, hash_out) && !seen){
-        assigned_random_number = received_rn;
-        //print_debug("Received random number: %u\n", assigned_random_number);
-        appendToUint32Buffer(random_number_hist, received_rn);
-        switch (command->opcode) {
-            case COMPONENT_CMD_BOOT:
-                process_boot();
-                break;
-            case COMPONENT_CMD_SCAN:
-                process_scan();
-                break;
-            case COMPONENT_CMD_VALIDATE:     
-                process_validate();
-                break;
-            case COMPONENT_CMD_ATTEST:
-                process_attest();
-                break;
-            default:
-                print_debug("Error: Unrecognized command received %d\n", command->opcode);
-                send_error();
-                break;
+        // Check validity of authkey hash
+        if (hash_equal(command->authkey, hash_out) && !seen){
+            assigned_random_number = received_rn;
+            //print_debug("Received random number: %u\n", assigned_random_number);
+            appendToUint32Buffer(random_number_hist, received_rn);
+            switch (command->opcode) {
+                case COMPONENT_CMD_BOOT:
+                    process_boot();
+                    break;
+                case COMPONENT_CMD_SCAN:
+                    process_scan();
+                    break;
+                case COMPONENT_CMD_VALIDATE:     
+                    process_validate();
+                    break;
+                case COMPONENT_CMD_ATTEST:
+                    process_attest();
+                    break;
+                default:
+                    print_debug("Error: Unrecognized command received %d\n", command->opcode);
+                    send_error();
+                    break;
+            }
+        }else{
+            send_error();
         }
-    }else{
-        send_error();
     }
+   
 }
 
 void process_boot() {
