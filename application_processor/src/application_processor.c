@@ -29,6 +29,9 @@
 #include "buffer.h"
 #include "md5.h"
 #include "simple_flash.h"
+#include "ed25519.h"
+#include "x25519.h"
+
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
 #endif
@@ -50,6 +53,8 @@
 #include "aes_functions.h"
 
 #include "../../deployment/global_secrets.h"
+#include "ed25519.h"
+#include "x25519.h"
 
 // testing
 #include <string.h> // for strncat and strlen
