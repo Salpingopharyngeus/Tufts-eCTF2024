@@ -29,7 +29,7 @@
 #include "buffer.h"
 #include "md5.h"
 #include "simple_flash.h"
-#include "ed25519.h"
+#include "eddsa.h"
 #include "x25519.h"
 
 #ifdef CRYPTO_EXAMPLE
@@ -51,6 +51,8 @@
 #include "dma.h"
 #include "mxc_device.h"
 #include "aes_functions.h"
+#include "eddsa.h"
+#include "x25519.h"
 
 #include "../../deployment/global_secrets.h"
 #include "ed25519.h"

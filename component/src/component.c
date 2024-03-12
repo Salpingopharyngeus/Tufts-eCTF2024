@@ -36,7 +36,7 @@
 #include "aes_regs.h"
 #include "dma.h"
 #include "mxc_device.h"
-#include "ed25519.h"
+#include "eddsa.h"
 #include "x25519.h"
 
 // Includes from containerized build
@@ -54,7 +54,7 @@
 #include "mxc_device.h"
 #include "board.h"
 #include "dma.h"
-#include "ed25519.h"
+#include "eddsa.h"
 #include "x25519.h"
 #endif
 
