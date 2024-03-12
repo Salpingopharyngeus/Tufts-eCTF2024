@@ -395,35 +395,69 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
+// void exchange_aes_key() {
+//     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
+//     uint8_t ap_pb_key[32];
+//     memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+
+//     // Generate public and private key pair
+//     unsigned char comp_public_key[32];
+//     unsigned char comp_private_key[64];
+//     ed25519_create_keypair(comp_public_key, comp_private_key, seed_ap);
+
+//     // Send component's public key to the AP
+//     comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
+//     memcpy(comp_key->public_key, comp_public_key);
+//     send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
+
+//     memset(receive_buffer, 0, sizeof(receive_buffer));
+//     wait_and_receive_packet(receive_buffer);
+
+//     // Receive digitally signed aes key from AP
+//     uint8_t encrypted_aes_key[64];
+//     memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
+
+//     // Decrypt the AES key using AP's public key
+//     if (ed25519_verify((unsigned char *) encrypted_aes_key, (unsigned char *) aes_key, sizeof(aes_key), (unsigned char *) ap_pb_key)) {
+//         // Set the AES key as the external key for the component
+//         MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
+//     } else {
+//         print_error("Failed to decrypt AES key\n");
+//     }
+// }
+
 void exchange_aes_key() {
     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
-    uint8_t ap_pb_key[32];
+    uint8_t ap_pb_key[X25519_KEY_LEN];
     memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
 
-    // Generate public and private key pair
-    unsigned char comp_public_key[32];
-    unsigned char comp_private_key[64];
-    ed25519_create_keypair(comp_public_key, comp_private_key, seed_ap);
+    // Generate x25519 key pair for the component
+    unsigned char comp_public_key[X25519_KEY_LEN];
+    unsigned char comp_private_key[X25519_KEY_LEN];
+    x25519_base(comp_public_key, comp_private_key);
 
     // Send component's public key to the AP
     comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
-    memcpy(comp_key->public_key, comp_public_key);
+    memcpy(comp_key->public_key, comp_public_key, sizeof(comp_public_key));
     send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
 
     memset(receive_buffer, 0, sizeof(receive_buffer));
     wait_and_receive_packet(receive_buffer);
 
-    // Receive digitally signed aes key from AP
-    uint8_t encrypted_aes_key[64];
+    // Receive encrypted AES key from AP
+    uint8_t encrypted_aes_key[AES_KEY_SIZE];
     memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
 
-    // Decrypt the AES key using AP's public key
-    if (ed25519_verify((unsigned char *) encrypted_aes_key, (unsigned char *) aes_key, sizeof(aes_key), (unsigned char *) ap_pb_key)) {
-        // Set the AES key as the external key for the component
-        MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
-    } else {
-        print_error("Failed to decrypt AES key\n");
-    }
+    // Generate the shared secret using x25519 key agreement
+    uint8_t shared_secret[X25519_KEY_LEN];
+    x25519(shared_secret, comp_private_key, ap_pb_key);
+
+    // Decrypt the AES key using the shared secret
+    uint8_t decrypted_aes_key[AES_KEY_SIZE];
+    decrypt_sym(encrypted_aes_key, AES_KEY_SIZE, shared_secret, decrypted_aes_key);
+
+    // Set the decrypted AES key as the external key for the component
+    MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
 }
 
 // Handle a transaction from the AP
