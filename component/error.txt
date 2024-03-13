@@ -1,0 +1,126 @@
+GNU Make 4.4.1
+Built for x86_64-pc-linux-gnu
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Reading makefiles...
+Loaded project.mk
+Updating makefiles....
+Updating goal targets....
+ File 'all' does not exist.
+  File 'mkbuildir' does not exist.
+ Must remake target 'mkbuildir'.
+ Successfully remade target file 'mkbuildir'.
+  File '/home/kali/rsa/Tufts-eCTF2024/component/build/max78000.elf' does not exist.
+   File '/home/kali/rsa/Tufts-eCTF2024/component/build/component.o' does not exist.
+  Must remake target '/home/kali/rsa/Tufts-eCTF2024/component/build/component.o'.
+  CC    src/component.c
+src/component.c: In function 'hash_equal':
+src/component.c:180:39: warning: division 'sizeof (uint8_t * {aka unsigned char *}) / sizeof (uint8_t {aka unsigned char})' does not compute the number of array elements [-Wsizeof-pointer-div]
+  180 |     size_t array_size = sizeof(hash1) / sizeof(hash1[0]);
+      |                                       ^
+src/component.c:179:26: note: first 'sizeof' operand was declared here
+  179 | bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+      |                 ~~~~~~~~~^~~~~
+In file included from src/component.c:28:
+src/component.c: In function 'secure_send':
+inc/board_link.h:23:22: warning: 'return' with a value, in function returning void [-Wreturn-type]
+   23 | #define ERROR_RETURN -1
+      |                      ^
+src/component.c:210:16: note: in expansion of macro 'ERROR_RETURN'
+  210 |         return ERROR_RETURN;
+      |                ^~~~~~~~~~~~
+src/component.c:206:6: note: declared here
+  206 | void secure_send(uint8_t* buffer, uint8_t len) {
+      |      ^~~~~~~~~~~
+inc/board_link.h:23:22: warning: 'return' with a value, in function returning void [-Wreturn-type]
+   23 | #define ERROR_RETURN -1
+      |                      ^
+src/component.c:219:16: note: in expansion of macro 'ERROR_RETURN'
+  219 |         return ERROR_RETURN;
+      |                ^~~~~~~~~~~~
+src/component.c:206:6: note: declared here
+  206 | void secure_send(uint8_t* buffer, uint8_t len) {
+      |      ^~~~~~~~~~~
+inc/board_link.h:23:22: warning: 'return' with a value, in function returning void [-Wreturn-type]
+   23 | #define ERROR_RETURN -1
+      |                      ^
+src/component.c:240:16: note: in expansion of macro 'ERROR_RETURN'
+  240 |         return ERROR_RETURN;
+      |                ^~~~~~~~~~~~
+src/component.c:206:6: note: declared here
+  206 | void secure_send(uint8_t* buffer, uint8_t len) {
+      |      ^~~~~~~~~~~
+src/component.c: In function 'secure_receive':
+src/component.c:272:13: warning: unused variable 'len' [-Wunused-variable]
+  272 |     uint8_t len = wait_and_receive_packet(buffer);
+      |             ^~~
+src/component.c: In function 'exchange_aes_key':
+src/component.c:441:5: warning: statement with no effect [-Wunused-value]
+  441 |     comp_public_key comp_key;
+      |     ^~~~~~~~~~~~~~~
+src/component.c:441:20: error: expected ';' before 'comp_key'
+  441 |     comp_public_key comp_key;
+      |                    ^~~~~~~~~
+      |                    ;
+src/component.c:442:12: error: 'comp_key' undeclared (first use in this function); did you mean 'ap_key'?
+  442 |     memcpy(comp_key.public_key, comp_public_key, sizeof(comp_public_key));
+      |            ^~~~~~~~
+      |            ap_key
+src/component.c:442:12: note: each undeclared identifier is reported only once for each function it appears in
+src/component.c: In function 'component_process_cmd':
+src/component.c:479:17: warning: pointer targets in passing argument 1 of 'md5hash' differ in signedness [-Wpointer-sign]
+  479 |         md5hash(key, HASH_SIZE, hash_out);
+      |                 ^~~
+      |                 |
+      |                 char *
+In file included from src/component.c:30:
+inc/md5.h:21:23: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'char *'
+   21 | void md5hash(uint8_t *input, size_t len, uint8_t *result);
+      |              ~~~~~~~~~^~~~~
+src/component.c: In function 'process_boot':
+src/component.c:519:13: warning: pointer targets in passing argument 1 of 'md5hash' differ in signedness [-Wpointer-sign]
+  519 |     md5hash(key, HASH_SIZE, hash_out);
+      |             ^~~
+      |             |
+      |             char *
+inc/md5.h:21:23: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'char *'
+   21 | void md5hash(uint8_t *input, size_t len, uint8_t *result);
+      |              ~~~~~~~~~^~~~~
+src/component.c: In function 'process_scan':
+src/component.c:549:13: warning: pointer targets in passing argument 1 of 'md5hash' differ in signedness [-Wpointer-sign]
+  549 |     md5hash(key, HASH_SIZE, hash_out);
+      |             ^~~
+      |             |
+      |             char *
+inc/md5.h:21:23: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'char *'
+   21 | void md5hash(uint8_t *input, size_t len, uint8_t *result);
+      |              ~~~~~~~~~^~~~~
+src/component.c: In function 'process_validate':
+src/component.c:564:13: warning: pointer targets in passing argument 1 of 'md5hash' differ in signedness [-Wpointer-sign]
+  564 |     md5hash(key, HASH_SIZE, hash_out);
+      |             ^~~
+      |             |
+      |             char *
+inc/md5.h:21:23: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'char *'
+   21 | void md5hash(uint8_t *input, size_t len, uint8_t *result);
+      |              ~~~~~~~~~^~~~~
+src/component.c: In function 'process_attest':
+src/component.c:603:9: warning: unused variable 'aes_success' [-Wunused-variable]
+  603 |     int aes_success = AES_encrypt(0, MXC_AES_128BITS, uint32_temp, uint32_transmit_buffer);
+      |         ^~~~~~~~~~~
+src/component.c:580:13: warning: unused variable 'EXACT_SIZE' [-Wunused-variable]
+  580 |     uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
+      |             ^~~~~~~~~~
+src/component.c: In function 'init':
+inc/board_link.h:23:22: warning: 'return' with a value, in function returning void [-Wreturn-type]
+   23 | #define ERROR_RETURN -1
+      |                      ^
+src/component.c:631:16: note: in expansion of macro 'ERROR_RETURN'
+  631 |         return ERROR_RETURN;
+      |                ^~~~~~~~~~~~
+src/component.c:615:6: note: declared here
+  615 | void init() {
+      |      ^~~~
+make: *** [/home/kali/rsa/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/kali/rsa/Tufts-eCTF2024/component/build/component.o] Error 1

@@ -1,0 +1,65 @@
+GNU Make 4.4.1
+Built for x86_64-pc-linux-gnu
+Copyright (C) 1988-2023 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+Reading makefiles...
+Loaded project.mk
+/home/kali/rsa/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/periphdriver.mk:99: warning: overriding recipe for target 'clean.periph'
+/home/kali/rsa/Tufts-eCTF2024/application_processor/project.mk:143: warning: ignoring old recipe for target 'clean.periph'
+Updating makefiles....
+Updating goal targets....
+ File 'all' does not exist.
+  File 'mkbuildir' does not exist.
+ Must remake target 'mkbuildir'.
+ Successfully remade target file 'mkbuildir'.
+  File '/home/kali/rsa/Tufts-eCTF2024/application_processor/build/max78000.elf' does not exist.
+   File '/home/kali/rsa/Tufts-eCTF2024/application_processor/build/application_processor.o' does not exist.
+  Must remake target '/home/kali/rsa/Tufts-eCTF2024/application_processor/build/application_processor.o'.
+  CC    src/application_processor.c
+src/application_processor.c: In function 'hash_equal':
+src/application_processor.c:278:38: warning: division 'sizeof (uint8_t * {aka unsigned char *}) / sizeof (uint8_t {aka unsigned char})' does not compute the number of array elements [-Wsizeof-pointer-div]
+  278 |     size_t array_size = sizeof(hash1)/sizeof(uint8_t);
+      |                                      ^
+src/application_processor.c:277:26: note: first 'sizeof' operand was declared here
+  277 | bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
+      |                 ~~~~~~~~~^~~~~
+src/application_processor.c: In function 'secure_receive':
+src/application_processor.c:425:13: warning: unused variable 'len' [-Wunused-variable]
+  425 |     uint8_t len = poll_and_receive_packet(address, buffer);
+      |             ^~~
+src/application_processor.c: In function 'init':
+src/application_processor.c:87:22: warning: 'return' with a value, in function returning void [-Wreturn-type]
+   87 | #define ERROR_RETURN -1
+      |                      ^
+src/application_processor.c:564:16: note: in expansion of macro 'ERROR_RETURN'
+  564 |         return ERROR_RETURN;
+      |                ^~~~~~~~~~~~
+src/application_processor.c:545:6: note: declared here
+  545 | void init() {
+      |      ^~~~
+src/application_processor.c: In function 'exchange_aes_key':
+src/application_processor.c:696:20: error: 'ap_pub_key' undeclared (first use in this function); did you mean 'ap_public_key'?
+  696 |     ap_public_key* ap_pub_key = (ap_public_key*) transmit_buffer;
+      |                    ^~~~~~~~~~
+      |                    ap_public_key
+src/application_processor.c:696:20: note: each undeclared identifier is reported only once for each function it appears in
+src/application_processor.c:696:48: error: expected expression before ')' token
+  696 |     ap_public_key* ap_pub_key = (ap_public_key*) transmit_buffer;
+      |                                                ^
+src/application_processor.c:730:5: warning: implicit declaration of function 'encrypt_sym' [-Wimplicit-function-declaration]
+  730 |     encrypt_sym(aes_key, AES_KEY_SIZE, shared_secret, encrypted_aes_key);
+      |     ^~~~~~~~~~~
+src/application_processor.c: In function 'scan_components':
+src/application_processor.c:794:9: warning: 'return' with no value, in function returning non-void [-Wreturn-type]
+  794 |         return;
+      |         ^~~~~~
+src/application_processor.c:791:5: note: declared here
+  791 | int scan_components() {
+      |     ^~~~~~~~~~~~~~~
+src/application_processor.c: In function 'attest_component':
+src/application_processor.c:933:9: warning: unused variable 'dummy_encrypt' [-Wunused-variable]
+  933 |     int dummy_encrypt = AES_encrypt(0, MXC_AES_128BITS, dummydata, dummyreceive);
+      |         ^~~~~~~~~~~~~
+make: *** [/home/kali/rsa/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/GCC/gcc.mk:299: /home/kali/rsa/Tufts-eCTF2024/application_processor/build/application_processor.o] Error 1

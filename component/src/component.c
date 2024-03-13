@@ -28,16 +28,12 @@
 #include "board_link.h"
 #include "buffer.h"
 #include "md5.h"
-#ifdef CRYPTO_EXAMPLE
-#include "simple_crypto.h"
-#endif
 
 #include "aes.h"
 #include "aes_regs.h"
 #include "dma.h"
 #include "mxc_device.h"
 #include "eddsa.h"
-//#include "x25519.h"
 
 // Includes from containerized build
 #include "../../deployment/global_secrets.h"
@@ -55,7 +51,7 @@
 #include "board.h"
 #include "dma.h"
 #include "eddsa.h"
-//#include "x25519.h"
+#include "x25519.h"
 #endif
 
 
@@ -80,12 +76,13 @@
 
 /******************************** TYPE DEFINITIONS **********************************/
 // Commands received by Component using 32 bit integer
-typedef enum {
+enum {
     COMPONENT_CMD_NONE,
     COMPONENT_CMD_SCAN,
     COMPONENT_CMD_VALIDATE,
     COMPONENT_CMD_BOOT,
-    COMPONENT_CMD_ATTEST
+    COMPONENT_CMD_ATTEST,
+    COMPONENT_AP_KEY_EXCHANGE
 } component_cmd_t;
 
 /******************************** TYPE DEFINITIONS **********************************/
@@ -111,11 +108,11 @@ typedef struct {
 typedef struct {
     uint8_t opcode;
     uint8_t public_key[X25519_KEY_LEN];
-} ap_public_key
+} ap_public_key;
 
 typedef struct {
     uint8_t public_key[X25519_KEY_LEN];
-} comp_public_key
+} comp_public_key;
 
 /********************************* FUNCTION DECLARATIONS **********************************/
 // Core function definitions
@@ -432,57 +429,75 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 // }
 
 void exchange_aes_key() {
-    // Receive AP's Public Key
+    print_debug("Exchange AES Key Function called\n");
+
+    // Accept AP's Public Key
     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
-    uint8_t ap_pb_key[X25519_KEY_LEN];
+    unsigned char ap_pb_key[X25519_KEY_LEN];
     memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
-    print_debug("AP's PUBLIC KEY: %s\n", ap_pb_key);
+    print_debug("AP PUBLIC KEY: \n");
+    print_hex_debug(ap_pb_key, sizeof(ap_pb_key));
 
     // Generate x25519 key pair for the component
-    print_debug("Generating Component Public/Private Key Pair\n");
-    unsigned char comp_public_key[X25519_KEY_LEN];
-    unsigned char comp_private_key[X25519_KEY_LEN];
-    x25519_base(comp_public_key, comp_private_key);
-    print_debug("COMP PUBLIC KEY: %s", comp_public_key);
-    print_debug("COMP PRIVATE KEY: %s", comp_private_key);
+    unsigned char comp_pb_key[X25519_KEY_LEN];
+    unsigned char comp_pr_key[X25519_KEY_LEN];
+    print_debug("Creating AP public/private key pair\n");
+    x25519_base(comp_pb_key, comp_pr_key);
+    print_debug("COMPONENT PUBLIC KEY: \n");
+    print_hex_debug(comp_pb_key, sizeof(comp_pb_key));
+    print_debug("COMPONENT PRIVATE KEY: \n");
+    print_hex_debug(comp_pr_key, sizeof(comp_pr_key));
 
     // Send component's public key to the AP
-    print_debug("Sending Component's Public Key to AP\n");
-    comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
-    memcpy(comp_key->public_key, comp_public_key, sizeof(comp_public_key));
-    send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
+    comp_public_key comp_key;
+    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
+    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
+    print_debug("SEND COMPONENT PUBLIC KEY\n");
+    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
 
-    // Wait to receive encrypted AES key from AP
+    // Receive encrypted AES key from AP
     memset(receive_buffer, 0, sizeof(receive_buffer));
     wait_and_receive_packet(receive_buffer);
 
-    // Receive encrypted AES key from AP
     uint8_t encrypted_aes_key[AES_KEY_SIZE];
     memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
-    print_debug("Received Encrypted AES Key: %s\n", encrypted_aes_key);
+    print_debug("RECEIVED AES KEY: \n");
+    print_hex_debug(encrypted_aes_key, sizeof(encrypted_aes_key));
 
     // Generate the shared secret using x25519 key agreement
-    print_debug("Generating shared secret\n");
+    print_debug("Generating Shared secret Key\n");
     uint8_t shared_secret[X25519_KEY_LEN];
-    x25519(shared_secret, comp_private_key, ap_pb_key);
-    print_debug("SHARED SECRET: %s", shared_secret);
+    x25519(shared_secret, comp_pr_key, ap_pb_key);
+    print_debug("SHARED SECRET: \n");
+    print_hex_debug(shared_secret, sizeof(shared_secret));
 
     // Decrypt the AES key using the shared secret
-    print_debug("Decrypting Encrypted AES Key using Shared Secret");
+    print_debug("DECRYPTING AES key using shared secret\n");
     uint8_t decrypted_aes_key[AES_KEY_SIZE];
-    decrypt_sym(encrypted_aes_key, AES_KEY_SIZE, shared_secret, decrypted_aes_key);
-    print_debug("DECRYPTED AES KEY: %s", decrypted_aes_key);
+    //memcpy(decrypted_aes_key, encrypted_aes_key, sizeof(encrypted_aes_key));
+    // Addds the dummy so that this xor occurs in constant time.
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < 16; i++) {
+        decrypted_aes_key[i] = encrypted_aes_key[i] ^ shared_secret[i];
+        //Meaning either way this xor is happening too.
+        dummy ^= decrypted_aes_key[i];
+    }
+    print_debug("DECRYPTED AES KEY: \n");
+    print_hex_debug(decrypted_aes_key, sizeof(decrypted_aes_key));
 
     // Set the decrypted AES key as the external key for the component
     MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
 }
-
 // Handle a transaction from the AP
 void component_process_cmd() {
+    print_debug("RECEIVE BUFFER: \n");
+    print_hex_debug(receive_buffer, sizeof(receive_buffer));
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
 
     if (command->opcode == COMPONENT_AP_KEY_EXCHANGE){
+        print_debug("AES KEY EXCHANGE: \n");
+        print_hex_debug(receive_buffer, sizeof(receive_buffer));
         exchange_aes_key();
     }else {
          // Check and register received random number from AP

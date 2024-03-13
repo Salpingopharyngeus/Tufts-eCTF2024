@@ -30,7 +30,7 @@
 #include "md5.h"
 #include "simple_flash.h"
 #include "eddsa.h"
-#include "x25519.h"
+#include "bcrypt.h"
 
 #ifdef CRYPTO_EXAMPLE
 #include "simple_crypto.h"
@@ -52,16 +52,15 @@
 #include "mxc_device.h"
 #include "aes_functions.h"
 #include "eddsa.h"
-#include "x25519.h"
 
 #include "../../deployment/global_secrets.h"
-#include "ed25519.h"
-#include "x25519.h"
 
 // testing
 #include <string.h> // for strncat and strlen
 
 // end testing
+
+#define AES_KEY_SIZE 16
 
 /********************************* CONSTANTS **********************************/
 
@@ -76,6 +75,8 @@
 */
 
 
+
+
 // Flash Macros
 #define FLASH_ADDR                                                             \
     ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
@@ -88,7 +89,7 @@
 
 // Hash Digest
 #define HASH_SIZE 16
-#define AES_KEY_SIZE 16
+
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -125,13 +126,13 @@ typedef struct {
 typedef struct {
     uint8_t opcode;
     uint8_t public_key[X25519_KEY_LEN];
-} ap_public_key
+} ap_public_key_packet;
 
 typedef struct {
     uint8_t public_key[X25519_KEY_LEN];
-} comp_public_key
+} comp_public_key;
 
-typedef 
+
 // Datatype for commands sent to components
 typedef enum {
     COMPONENT_CMD_NONE,
@@ -150,7 +151,7 @@ Dictionary dict;
 Uint32Buffer* random_number_hist;
 const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
 bool valid_device = false; 
-
+size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
 
 /********************************* REFERENCE FLAG
  * **********************************/
@@ -607,12 +608,15 @@ void init() {
  * 
  * Send a command to a component and receive the result
 */
-int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
+int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
 
-    size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
-
+    // size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
+    // size_t ACTUAL_SIZE = sizeof(transmit);
+    // if (ACTUAL_SIZE > PACKET_SIZE){
+    //     PACKET_SIZE = X25519_KEY_LEN;
+    // }
     // Send message
-    int result = send_packet(addr, PACKET_SIZE, transmit);
+    int result = send_packet(addr, packet_size, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
@@ -676,29 +680,118 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive) {
 //     }
 //     return SUCCESS_RETURN;
 // }
+// int exchange_hash_key(i2c_addr_t addr) {
+//     print_debug("EXCHANGE HASH KEY FUNCTION CALLED");
+//     // Buffers for board link communication
+//     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+//     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+
+//     // Generate x25519 key pair for the application processor
+//     unsigned char ap_public_key[X25519_KEY_LEN];
+//     unsigned char ap_private_key[X25519_KEY_LEN];
+//     print_debug("Creating AP public/private key pair");
+//     x25519_base(ap_public_key, ap_private_key);
+//     print_debug("AP PUBLIC KEY: ");
+//     print_hex_debug(ap_public_key, sizeof(ap_public_key));
+//     print_debug("AP PRIVATE KEY");
+//     print_hex_debug(ap_private_key, sizeof(ap_private_key));
+
+//     // Prepare the packet
+//     ap_public_key_packet packet;
+//     packet.opcode = COMPONENT_AP_KEY_EXCHANGE;
+//     memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
+//     memcpy(transmit_buffer, &packet, sizeof(packet));
+//     print_debug("AP PUBLIC KEY READY TO BE SENT: ");
+//     print_hex_debug(transmit_buffer, sizeof(transmit_buffer));
+
+//     // Send AP's public key and receive component's public key
+//     print_debug("Sending AP's public key to component.");
+//     size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
+//     int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
+//     if (len == ERROR_RETURN) {
+//         print_error("Could not send AP public key to component\n");
+//         return ERROR_RETURN;
+//     }
+
+//     // Receive Components public key
+//     comp_public_key* comp_key = (comp_public_key*) receive_buffer;
+//     unsigned char comp_pb_key[X25519_KEY_LEN];
+//     memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
+//     print_debug("COMPONENT PUBLIC KEY");
+//     print_hex_debug(comp_pb_key, sizeof(comp_pb_key));
+
+//     // Generate the AES key using the TRNG
+//     print_debug("Generating AES Key");
+//     uint8_t aes_key[AES_KEY_SIZE];
+//     for (int i = 0; i < AES_KEY_SIZE; i++) {
+//         aes_key[i] = (uint8_t)GenerateAndUseRandomID();
+//     }
+//     print_debug("AES KEY: ");
+//     print_hex_debug(aes_key, sizeof(aes_key));
+
+//     // Set External AES Key
+//     MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
+
+//     // Generate the shared secret using x25519 key agreement
+//     print_debug("Generating Shared secret Key");
+//     uint8_t shared_secret[X25519_KEY_LEN];
+//     x25519(shared_secret, ap_private_key, comp_pb_key);
+//     print_debug("SHARED SECRET: ");
+//     print_hex_debug(shared_secret, sizeof(shared_secret));
+
+//     // Encrypt the AES key using the shared secret
+//     print_debug("Encrypting AES key using shared secret");
+//     uint8_t encrypted_aes_key[AES_KEY_SIZE];
+//     //memcpy(encrypted_aes_key, aes_key, AES_KEY_SIZE);
+//     //Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
+//     volatile uint8_t dummy = 0;
+//     for (int i = 0; i < AES_KEY_SIZE; i++) {
+//         encrypted_aes_key[i] = aes_key[i] ^ shared_secret[i];
+//         //Ensures that either way some xor operation occurs.
+//         dummy ^= encrypted_aes_key[i];
+//     }
+//     print_debug("ENCRYPTED AES KEY: ");
+//     print_hex_debug(encrypted_aes_key, sizeof(encrypted_aes_key));
+
+//     // Send the encrypted AES key to the component
+//     memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
+//     size_t aes_key_packet_size = AES_KEY_SIZE;
+//     len = issue_cmd(addr, transmit_buffer, receive_buffer, aes_key_packet_size);
+//     if (len == ERROR_RETURN) {
+//         print_error("Failed to send encrypted AES key to component\n");
+//         return ERROR_RETURN;
+//     }
+//     return SUCCESS_RETURN;
+// }
 
 int exchange_aes_key(i2c_addr_t addr) {
     print_debug("EXCHANGE AES KEY FUNCTION CALLED");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-   
+
     // Generate x25519 key pair for the application processor
     unsigned char ap_public_key[X25519_KEY_LEN];
     unsigned char ap_private_key[X25519_KEY_LEN];
-    print_debug("Creating public/private key pair");
+    print_debug("Creating AP public/private key pair");
     x25519_base(ap_public_key, ap_private_key);
-    print_debug("AP PUBLIC KEY: %s", ap_public_key);
-    print_debug("AP PRIVATE KEY: %s", ap_private_key);
+    print_debug("AP PUBLIC KEY: ");
+    print_hex_debug(ap_public_key, sizeof(ap_public_key));
+    print_debug("AP PRIVATE KEY");
+    print_hex_debug(ap_private_key, sizeof(ap_private_key));
 
-    // Construct packet
-    ap_public_key* ap_pub_key = (ap_public_key*) transmit_buffer;
-    ap_pub_key->opcode = COMPONENT_AP_KEY_EXCHANGE;
-    memcpy(ap_pub_key->public_key, ap_public_key, sizeof(ap_public_key));
+    // Prepare the packet
+    ap_public_key_packet packet;
+    packet.opcode = COMPONENT_AP_KEY_EXCHANGE;
+    memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
+    memcpy(transmit_buffer, &packet, sizeof(packet));
+    print_debug("AP PUBLIC KEY READY TO BE SENT: ");
+    print_hex_debug(transmit_buffer, sizeof(transmit_buffer));
 
     // Send AP's public key and receive component's public key
     print_debug("Sending AP's public key to component.");
-    int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+    size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
+    int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
     if (len == ERROR_RETURN) {
         print_error("Could not send AP public key to component\n");
         return ERROR_RETURN;
@@ -706,9 +799,10 @@ int exchange_aes_key(i2c_addr_t addr) {
 
     // Receive Components public key
     comp_public_key* comp_key = (comp_public_key*) receive_buffer;
-    uint8_t comp_pb_key[X25519_KEY_LEN];
+    unsigned char comp_pb_key[X25519_KEY_LEN];
     memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
-    print_debug("COMPONENT PUBLIC KEY: %s", ap_private_key);
+    print_debug("COMPONENT PUBLIC KEY");
+    print_hex_debug(comp_pb_key, sizeof(comp_pb_key));
 
     // Generate the AES key using the TRNG
     print_debug("Generating AES Key");
@@ -716,24 +810,37 @@ int exchange_aes_key(i2c_addr_t addr) {
     for (int i = 0; i < AES_KEY_SIZE; i++) {
         aes_key[i] = (uint8_t)GenerateAndUseRandomID();
     }
+    print_debug("AES KEY: ");
+    print_hex_debug(aes_key, sizeof(aes_key));
+
+    // Set External AES Key
     MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
 
     // Generate the shared secret using x25519 key agreement
     print_debug("Generating Shared secret Key");
     uint8_t shared_secret[X25519_KEY_LEN];
     x25519(shared_secret, ap_private_key, comp_pb_key);
-    print_debug("SHARED SECRET: %s", shared_secret);
+    print_debug("SHARED SECRET: ");
+    print_hex_debug(shared_secret, sizeof(shared_secret));
 
     // Encrypt the AES key using the shared secret
     print_debug("Encrypting AES key using shared secret");
     uint8_t encrypted_aes_key[AES_KEY_SIZE];
-    encrypt_sym(aes_key, AES_KEY_SIZE, shared_secret, encrypted_aes_key);
-    print_debug("ENCRYPTED AES KEY: %s", encrypted_aes_key);
+    //memcpy(encrypted_aes_key, aes_key, AES_KEY_SIZE);
+    //Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        encrypted_aes_key[i] = aes_key[i] ^ shared_secret[i];
+        //Ensures that either way some xor operation occurs.
+        dummy ^= encrypted_aes_key[i];
+    }
+    print_debug("ENCRYPTED AES KEY: ");
+    print_hex_debug(encrypted_aes_key, sizeof(encrypted_aes_key));
 
     // Send the encrypted AES key to the component
-    print_debug("Sending encrypted AES key to Component");
     memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
-    len = issue_cmd(addr, transmit_buffer, receive_buffer);
+    size_t aes_key_packet_size = AES_KEY_SIZE;
+    len = issue_cmd(addr, transmit_buffer, receive_buffer, aes_key_packet_size);
     if (len == ERROR_RETURN) {
         print_error("Failed to send encrypted AES key to component\n");
         return ERROR_RETURN;
@@ -758,7 +865,7 @@ int validate_components() {
         attach_random_num(command, addr);
 
         // Send out command and receive result
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
 
         if (len == ERROR_RETURN) {
             print_error("Could not validate component\n");
@@ -819,7 +926,7 @@ int scan_components() {
         attach_key(command);
         attach_random_num(command, addr);
 
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
 
         // Success, device is present
         if (len > 0) {
@@ -860,7 +967,7 @@ int boot_components() {
         // Attach random number
         attach_random_num(command, addr);
 
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
         if (len == ERROR_RETURN) {
             print_error("Could not boot component\n");
             return ERROR_RETURN;
@@ -888,6 +995,7 @@ int boot_components() {
 }
 
 int attest_component(uint32_t component_id) {
+    print_debug("ATTEST COMPONENT FUNCTION CALLED!");
     // Buffers for board link communication
     size_t RECEIVE_SIZE = 224;
     uint8_t receive_buffer[RECEIVE_SIZE];
@@ -907,7 +1015,7 @@ int attest_component(uint32_t component_id) {
 
     // Send out command and receive result
     memset(receive_buffer, 0, RECEIVE_SIZE);
-    int len = issue_cmd(addr, transmit_buffer, receive_buffer);
+    int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
 
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
