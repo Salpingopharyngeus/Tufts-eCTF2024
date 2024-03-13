@@ -36,7 +36,7 @@
 #include "eddsa.h"
 
 // Includes from containerized build
-#include "../../deployment/global_secrets.h"
+//#include "../../deployment/global_secrets.h"
 #include "ectf_params.h"
 
 #ifdef POST_BOOT
@@ -82,7 +82,8 @@ enum {
     COMPONENT_CMD_VALIDATE,
     COMPONENT_CMD_BOOT,
     COMPONENT_CMD_ATTEST,
-    COMPONENT_AP_KEY_EXCHANGE
+    COMPONENT_AP_KEY_EXCHANGE,
+    COMPONENT_AP_HASH_KEY_EXCHANGE
 } component_cmd_t;
 
 /******************************** TYPE DEFINITIONS **********************************/
@@ -131,6 +132,7 @@ uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
 Uint32Buffer* random_number_hist;
 bool valid_device = false;
+uint8_t KEY[4];
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
@@ -165,7 +167,7 @@ uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
  * Send error packet back to AP.
 */
 void send_error(){
-    MXC_Delay(5000000);
+    //MXC_Delay(5000000);
     send_packet_and_ack(ERROR_RETURN, transmit_buffer);
 }
 /**
@@ -192,7 +194,7 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
 // AES request
 mxc_aes_req_t req;
 
-const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
+//const uint8_t external_aes_key[] = EXTERNAL_AES_KEY;
 
 /******************************* POST BOOT FUNCTIONALITY **********************************/
 /**
@@ -397,40 +399,9 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     }
 }
 
-// void exchange_aes_key() {
-//     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
-//     uint8_t ap_pb_key[32];
-//     memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
-
-//     // Generate public and private key pair
-//     unsigned char comp_public_key[32];
-//     unsigned char comp_private_key[64];
-//     ed25519_create_keypair(comp_public_key, comp_private_key, seed_ap);
-
-//     // Send component's public key to the AP
-//     comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
-//     memcpy(comp_key->public_key, comp_public_key);
-//     send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
-
-//     memset(receive_buffer, 0, sizeof(receive_buffer));
-//     wait_and_receive_packet(receive_buffer);
-
-//     // Receive digitally signed aes key from AP
-//     uint8_t encrypted_aes_key[64];
-//     memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
-
-//     // Decrypt the AES key using AP's public key
-//     if (ed25519_verify((unsigned char *) encrypted_aes_key, (unsigned char *) aes_key, sizeof(aes_key), (unsigned char *) ap_pb_key)) {
-//         // Set the AES key as the external key for the component
-//         MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
-//     } else {
-//         print_error("Failed to decrypt AES key\n");
-//     }
-// }
-
-void exchange_aes_key() {
-    print_debug("Exchange AES Key Function called\n");
-
+void exchange_hash_key() {
+    print_debug("Exchange HASH Key Function called\n");
+    size_t HASH_KEY_SIZE = sizeof(KEY);
     // Accept AP's Public Key
     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
     unsigned char ap_pb_key[X25519_KEY_LEN];
@@ -459,10 +430,10 @@ void exchange_aes_key() {
     memset(receive_buffer, 0, sizeof(receive_buffer));
     wait_and_receive_packet(receive_buffer);
 
-    uint8_t encrypted_aes_key[AES_KEY_SIZE];
-    memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
-    print_debug("RECEIVED AES KEY: \n");
-    print_hex_debug(encrypted_aes_key, sizeof(encrypted_aes_key));
+    uint8_t encrypted_hash_key[HASH_KEY_SIZE];
+    memcpy(encrypted_hash_key, receive_buffer, sizeof(encrypted_hash_key));
+    print_debug("RECEIVED HASH KEY: \n");
+    print_hex_debug(encrypted_hash_key, sizeof(encrypted_hash_key));
 
     // Generate the shared secret using x25519 key agreement
     print_debug("Generating Shared secret Key\n");
@@ -472,7 +443,65 @@ void exchange_aes_key() {
     print_hex_debug(shared_secret, sizeof(shared_secret));
 
     // Decrypt the AES key using the shared secret
-    print_debug("DECRYPTING AES key using shared secret\n");
+    print_debug("DECRYPTING HASH key using shared secret\n");
+    uint8_t decrypted_hash_key[HASH_KEY_SIZE];
+    // Adds the dummy so that this xor occurs in constant time.
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < HASH_KEY_SIZE; i++) {
+        decrypted_hash_key[i] = encrypted_hash_key[i] ^ shared_secret[i];
+        //Meaning either way this xor is happening too.
+        dummy ^= decrypted_hash_key[i];
+    }
+    memcpy(KEY, decrypted_hash_key, HASH_KEY_SIZE);
+    print_debug("DECRYPTED HASH KEY: \n");
+    print_hex_debug(KEY, HASH_KEY_SIZE);
+}
+
+void exchange_aes_key() {
+    //print_debug("Exchange AES Key Function called\n");
+
+    // Accept AP's Public Key
+    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
+    unsigned char ap_pb_key[X25519_KEY_LEN];
+    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+    //print_debug("AP PUBLIC KEY: \n");
+    //print_hex_debug(ap_pb_key, sizeof(ap_pb_key));
+
+    // Generate x25519 key pair for the component
+    unsigned char comp_pb_key[X25519_KEY_LEN];
+    unsigned char comp_pr_key[X25519_KEY_LEN];
+    //print_debug("Creating AP public/private key pair\n");
+    x25519_base(comp_pb_key, comp_pr_key);
+    //print_debug("COMPONENT PUBLIC KEY: \n");
+    //print_hex_debug(comp_pb_key, sizeof(comp_pb_key));
+    //print_debug("COMPONENT PRIVATE KEY: \n");
+    //print_hex_debug(comp_pr_key, sizeof(comp_pr_key));
+
+    // Send component's public key to the AP
+    comp_public_key comp_key;
+    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
+    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
+    //print_debug("SEND COMPONENT PUBLIC KEY\n");
+    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
+
+    // Receive encrypted AES key from AP
+    memset(receive_buffer, 0, sizeof(receive_buffer));
+    wait_and_receive_packet(receive_buffer);
+
+    uint8_t encrypted_aes_key[AES_KEY_SIZE];
+    memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
+    //print_debug("RECEIVED AES KEY: \n");
+    //print_hex_debug(encrypted_aes_key, sizeof(encrypted_aes_key));
+
+    // Generate the shared secret using x25519 key agreement
+    //print_debug("Generating Shared secret Key\n");
+    uint8_t shared_secret[X25519_KEY_LEN];
+    x25519(shared_secret, comp_pr_key, ap_pb_key);
+    //print_debug("SHARED SECRET: \n");
+    //print_hex_debug(shared_secret, sizeof(shared_secret));
+
+    // Decrypt the AES key using the shared secret
+    //print_debug("DECRYPTING AES key using shared secret\n");
     uint8_t decrypted_aes_key[AES_KEY_SIZE];
     //memcpy(decrypted_aes_key, encrypted_aes_key, sizeof(encrypted_aes_key));
     // Addds the dummy so that this xor occurs in constant time.
@@ -482,33 +511,31 @@ void exchange_aes_key() {
         //Meaning either way this xor is happening too.
         dummy ^= decrypted_aes_key[i];
     }
-    print_debug("DECRYPTED AES KEY: \n");
-    print_hex_debug(decrypted_aes_key, sizeof(decrypted_aes_key));
+    //print_debug("DECRYPTED AES KEY: \n");
+    //print_hex_debug(decrypted_aes_key, sizeof(decrypted_aes_key));
 
     // Set the decrypted AES key as the external key for the component
     MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
 }
 // Handle a transaction from the AP
 void component_process_cmd() {
-    print_debug("RECEIVE BUFFER: \n");
-    print_hex_debug(receive_buffer, sizeof(receive_buffer));
     // Output to application processor dependent on command received
     command_message* command = (command_message*) receive_buffer;
-
     if (command->opcode == COMPONENT_AP_KEY_EXCHANGE){
         print_debug("AES KEY EXCHANGE: \n");
-        print_hex_debug(receive_buffer, sizeof(receive_buffer));
         exchange_aes_key();
-    }else {
+    } else if (command->opcode == COMPONENT_AP_HASH_KEY_EXCHANGE){
+        print_debug("HASH KEY EXCHANGE: \n");
+        exchange_hash_key();
+    }
+    else {
          // Check and register received random number from AP
         uint32_t received_rn = uint8_array_to_uint32(command->random_number);
         int seen = searchUint32Buffer(random_number_hist, received_rn);
-
-        char* key = KEY;
+        //char* key = KEY;
         uint8_t hash_out[HASH_SIZE];
         memset(hash_out, 0, HASH_SIZE);
-        md5hash(key, HASH_SIZE, hash_out);
-
+        md5hash(KEY, sizeof(KEY), hash_out);
         // Check validity of authkey hash
         if (hash_equal(command->authkey, hash_out) && !seen){
             assigned_random_number = received_rn;
@@ -536,7 +563,6 @@ void component_process_cmd() {
             send_error();
         }
     }
-   
 }
 
 void process_boot() {
@@ -545,9 +571,9 @@ void process_boot() {
     uint8_t len = strlen(COMPONENT_BOOT_MSG) + 1;
 
     // Attach authentication hash
-    char* key = KEY;
+    //char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    md5hash(key, HASH_SIZE, hash_out);
+    md5hash(KEY, sizeof(KEY), hash_out);
     memcpy((void*)transmit_buffer, COMPONENT_BOOT_MSG, len);
     memcpy((void*)transmit_buffer + len, hash_out, HASH_SIZE);
 
@@ -575,14 +601,15 @@ void process_scan() {
     uint32_to_uint8_array(assigned_random_number, packet->random_number);
 
     // Attach authentication hash
-    char* key = KEY;
+    //char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    md5hash(key, HASH_SIZE, hash_out);
+    md5hash(KEY, sizeof(KEY), hash_out);
     memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(scan_message), transmit_buffer);
 }
 
 void process_validate() {
+    print_debug("PROCESS VALIDATE CALLED \n");
     // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
@@ -590,9 +617,11 @@ void process_validate() {
     uint32_to_uint8_array(assigned_random_number, packet->random_number);
     
     // Attach authentication hash
-    char* key = KEY;
+    //char* key = KEY;
     uint8_t hash_out[HASH_SIZE];
-    md5hash(key, HASH_SIZE, hash_out);
+    md5hash(KEY, sizeof(KEY), hash_out);
+    print_debug("AUTH HASH FROM COMPONENT: \n");
+    print_hex_debug(hash_out, HASH_SIZE);
     memcpy(packet->authkey, hash_out, HASH_SIZE);
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
@@ -656,14 +685,14 @@ void init() {
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
-        printf("Invalid Component Hardware Device: Not MAX78000");
+        printf("Invalid Component Hardware Device: Not MAX78000\n");
         valid_device = false;
         //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
         return ERROR_RETURN;
 
     } else {
         valid_device = true;
-        printf("Valid Component Hardware Device: MAX78000");        
+        printf("Valid Component Hardware Device: MAX78000\n");        
     }
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
