@@ -76,8 +76,6 @@
 */
 
 
-
-
 // Flash Macros
 #define FLASH_ADDR                                                             \
     ((MXC_FLASH_MEM_BASE + MXC_FLASH_MEM_SIZE) - (2 * MXC_FLASH_PAGE_SIZE))
@@ -90,7 +88,7 @@
 
 // Hash Digest
 #define HASH_SIZE 16
-
+#define AES_KEY_SIZE 16
 
 /******************************** TYPE DEFINITIONS ********************************/
 // Data structure for sending commands to component
@@ -718,6 +716,7 @@ int exchange_aes_key(i2c_addr_t addr) {
     for (int i = 0; i < AES_KEY_SIZE; i++) {
         aes_key[i] = (uint8_t)GenerateAndUseRandomID();
     }
+    MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
 
     // Generate the shared secret using x25519 key agreement
     print_debug("Generating Shared secret Key");
@@ -732,6 +731,7 @@ int exchange_aes_key(i2c_addr_t addr) {
     print_debug("ENCRYPTED AES KEY: %s", encrypted_aes_key);
 
     // Send the encrypted AES key to the component
+    print_debug("Sending encrypted AES key to Component");
     memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
     len = issue_cmd(addr, transmit_buffer, receive_buffer);
     if (len == ERROR_RETURN) {

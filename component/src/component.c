@@ -37,7 +37,7 @@
 #include "dma.h"
 #include "mxc_device.h"
 #include "eddsa.h"
-#include "x25519.h"
+//#include "x25519.h"
 
 // Includes from containerized build
 #include "../../deployment/global_secrets.h"
@@ -55,13 +55,14 @@
 #include "board.h"
 #include "dma.h"
 #include "eddsa.h"
-#include "x25519.h"
+//#include "x25519.h"
 #endif
 
 
 
 // Define the maximum length of encrypted data
 #define HASH_SIZE 16
+#define AES_KEY_SIZE 16
 #include "aes_functions.h"
 
 /********************************* CONSTANTS **********************************/
@@ -109,11 +110,11 @@ typedef struct {
 
 typedef struct {
     uint8_t opcode;
-    uint8_t public_key[32];
+    uint8_t public_key[X25519_KEY_LEN];
 } ap_public_key
 
 typedef struct {
-    uint8_t public_key[32];
+    uint8_t public_key[X25519_KEY_LEN];
 } comp_public_key
 
 /********************************* FUNCTION DECLARATIONS **********************************/
@@ -431,37 +432,49 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
 // }
 
 void exchange_aes_key() {
+    // Receive AP's Public Key
     ap_public_key* ap_key = (ap_public_key*) receive_buffer;
     uint8_t ap_pb_key[X25519_KEY_LEN];
     memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+    print_debug("AP's PUBLIC KEY: %s\n", ap_pb_key);
 
     // Generate x25519 key pair for the component
+    print_debug("Generating Component Public/Private Key Pair\n");
     unsigned char comp_public_key[X25519_KEY_LEN];
     unsigned char comp_private_key[X25519_KEY_LEN];
     x25519_base(comp_public_key, comp_private_key);
+    print_debug("COMP PUBLIC KEY: %s", comp_public_key);
+    print_debug("COMP PRIVATE KEY: %s", comp_private_key);
 
     // Send component's public key to the AP
+    print_debug("Sending Component's Public Key to AP\n");
     comp_public_key *comp_key = (comp_public_key *)transmit_buffer;
     memcpy(comp_key->public_key, comp_public_key, sizeof(comp_public_key));
     send_packet_and_ack(sizeof(comp_public_key), transmit_buffer);
 
+    // Wait to receive encrypted AES key from AP
     memset(receive_buffer, 0, sizeof(receive_buffer));
     wait_and_receive_packet(receive_buffer);
 
     // Receive encrypted AES key from AP
     uint8_t encrypted_aes_key[AES_KEY_SIZE];
     memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
+    print_debug("Received Encrypted AES Key: %s\n", encrypted_aes_key);
 
     // Generate the shared secret using x25519 key agreement
+    print_debug("Generating shared secret\n");
     uint8_t shared_secret[X25519_KEY_LEN];
     x25519(shared_secret, comp_private_key, ap_pb_key);
+    print_debug("SHARED SECRET: %s", shared_secret);
 
     // Decrypt the AES key using the shared secret
+    print_debug("Decrypting Encrypted AES Key using Shared Secret");
     uint8_t decrypted_aes_key[AES_KEY_SIZE];
     decrypt_sym(encrypted_aes_key, AES_KEY_SIZE, shared_secret, decrypted_aes_key);
+    print_debug("DECRYPTED AES KEY: %s", decrypted_aes_key);
 
     // Set the decrypted AES key as the external key for the component
-    //MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
+    MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
 }
 
 // Handle a transaction from the AP
@@ -600,7 +613,7 @@ void process_attest() {
     memset(uint32_transmit_buffer, 0, ATTEST_SIZE/sizeof(uint32_t));
 
     // Set the external encryption key
-    MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
+    //MXC_AES_SetExtKey(external_aes_key, MXC_AES_128BITS);
 
     // Encrypt contents of uint32_t representation of attestation data and store result in uint32_t transmit buffer
     int aes_success = AES_encrypt(0, MXC_AES_128BITS, uint32_temp, uint32_transmit_buffer);
