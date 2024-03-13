@@ -1,5 +1,5 @@
-# eCTF Insecure Example
-This repository holds the insecure example design for an eCTF MISC system.
+# Tufts eCTF - 2024
+This repository holds the design for an eCTF MISC system designed by the team at Tufts University.
 
 
 ## Layout
@@ -271,4 +271,30 @@ options:
 **Example Utilization**
 ```
 ectf_attestation -a /dev/ttyUSB0 -p 123456 -c 0x11111124
+```
+
+## Branches
+
+- **release**: Built from MITRE's insecure example
+- **Code-Review**: Contains fixes to small vulnerabilities from other branches
+- **Jake_being_silly**: Contains working AES implementation for attestation message
+- **RSA**: Attempt at using RSA for key encryption
+- **Software-Two-2**: Contains Bcrypt functionality for attestation pin and replacement token
+- **buffer-test**: ???
+- **ddos_prevention**: Contains timing delays for ddos prevention during packet sending process
+- **insecure-attack**: Branch for fixing the "bar" bug.
+- **pre_boot_rng_new**: Functional pre-boot true random number generator
+- **pre_boot_rng**: Attempt at using true random number generator pre boot
+- **real_merge_attempt**: Branch used as merge result from Software_team_one and Jake_being_silly
+- **rsa_key_exchange**: (Work in progress) RSA encrypts AES keys prior to being sent over I2C channel
+- **silly-serial**: Branch used by hardware team for checking if components are valid
+- **software_team_one**: Contains functional secure send and secure receive
+- **usn_test**: Uses msdk library to confirm uniqueness of component serial numbers - confirms architecture and memory are MAX78000 boards as expected
+
+## Run Script
+
+To build the application, use the provided `run.sh` script:
+
+```
+./run.sh
 ```
