@@ -635,7 +635,7 @@ int exchange_hash_key() {
     print_debug("Generated HASH Key");
     size_t HASH_KEY_SIZE = sizeof(KEY);
     uint32_t random_id = GenerateAndUseRandomID();
-    uint32_to_uint8_array(random, KEY);
+    uint32_to_uint8_array(random_id, KEY);
     print_hex_debug(KEY, HASH_KEY_SIZE);
 
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
