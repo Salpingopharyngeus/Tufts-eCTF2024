@@ -212,21 +212,6 @@ void md5hash(uint8_t *input, size_t len, uint8_t *result){
     md5Finalize(&ctx);
 
     memcpy(result, ctx.digest, 16);
-    // uint8_t resized[16];
-    // memset(resized, 0, 16);
-
-    // // Copy the input into the resized buffer
-    // memcpy(resized, input, len);
-
-    // // Pad the remaining bytes of the resized buffer with zeros
-    // memset(resized + len, 0, 16 - len);
-    
-    // MD5Context ctx;
-    // md5Init(&ctx);
-    // md5Update(&ctx, (uint8_t *)resized, 16); // Always pass 16 bytes to the hashing function
-    // md5Finalize(&ctx);
-
-    // memcpy(result, ctx.digest, 16);
 }
 
 void md5File(FILE *file, uint8_t *result){
