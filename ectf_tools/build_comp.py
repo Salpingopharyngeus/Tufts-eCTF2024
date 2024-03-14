@@ -80,14 +80,21 @@ def build_component(
 
     logger.info("Running build")
     output = asyncio.run(run_shell(
-        f"cd {design} && "
+        f"cd {design} && " # assuming you're already in nix-shell, for Pi
         f"pwd && "
-        f"nix-shell --command "
-        f"\"cd component && "
+        f" cd component && "
         f" make clean && "
         f" make && make release && "
         f" cp build/max78000.elf {output_elf} && "
-        f" cp build/max78000.bin {output_bin}\""
+        f" cp build/max78000.bin {output_bin}"
+        #f"cd {design} && "
+        #f"pwd && "
+        #f"nix-shell --command "
+        #f"\"cd component && "
+        #f" make clean && "
+        #f" make && make release && "
+        #f" cp build/max78000.elf {output_elf} && "
+        #f" cp build/max78000.bin {output_bin}\""
     ))
 
     if not os.path.exists(output_bin):

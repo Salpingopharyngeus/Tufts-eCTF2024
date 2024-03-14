@@ -2,13 +2,15 @@
 
 # Get the absolute path of the current directory
 current_directory=$(pwd)
-ap_device="tty.usbmodem1302"
-compA_device="tty.usbmodem1202"
-compB_device="tty.usbmodem1402"
+
+# Changes for Pi in device and daplink
+ap_device="ttyACM0"
+compA_device="ttyACM1"
+compB_device="ttyACM2"
 bootloader_file="$current_directory/insecure.bin"
-DAPLINK_VOLUME="/Volumes/DAPLINK/"
-DAPLINK1_VOLUME="/Volumes/DAPLINK 1/"
-DAPLINK2_VOLUME="/Volumes/DAPLINK 2/"
+DAPLINK_VOLUME="/media/eCTF1/DAPLINK/"
+DAPLINK1_VOLUME="/media/eCTF1/DAPLINK1/"
+DAPLINK2_VOLUME="/media/eCTF1/DAPLINK2/"
 
 # Print the result
 echo "The absolute path of the current directory is: $current_directory"
