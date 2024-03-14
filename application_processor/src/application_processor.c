@@ -414,13 +414,13 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
     
-    // // Check if random number is unique
-    // int seen = searchUint32Buffer(random_number_hist, random_number);
-    // if (seen) {
-    //     print_error("ERROR: Potential Replayed Packet!");
-    //     return ERROR_RETURN;
-    // }
-    // appendToUint32Buffer(random_number_hist, random_number);
+    // Check if random number is unique
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if (seen) {
+        print_error("ERROR: Potential Replayed Packet!");
+        return ERROR_RETURN;
+    }
+    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
