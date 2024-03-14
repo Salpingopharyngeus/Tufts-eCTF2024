@@ -341,6 +341,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     initDictionary(&dict);
     
     // Set Maximum Packet Size for Secure Send
+    print_debug("Set Maximum Packet Size for Secure Send");
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
     // Ensure length of data to send does not exceed limits
@@ -350,6 +351,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     }
 
     // Create secure packet
+    print_debug("Create Secure Packet");
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
     uint32_t random_number = GenerateAndUseRandomID();
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
@@ -362,6 +364,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     size_t key_len = sizeof(KEY);
 
     // Build Authenication Hash
+    print_debug("Build Authentication Hash");
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
     memset(data_key_randnum, 0, data_key_randnum_len);
@@ -378,11 +381,13 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     free(data_key_randnum);
 
     // Add security attributes to packet
+    print_debug("Add Security Attributes to packet");
     memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authenication hash
     temp_buffer[data_len_position] = len; // add data length
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
 
     // Update random number assignment for component
+    print_debug("Update random number assignment for component");
     addOrUpdate(&dict, address, random_number);
 
     // Send the packet
@@ -409,13 +414,13 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
     
-    // Check if random number is unique
-    int seen = searchUint32Buffer(random_number_hist, random_number);
-    if (seen) {
-        print_error("ERROR: Potential Replayed Packet!");
-        return ERROR_RETURN;
-    }
-    appendToUint32Buffer(random_number_hist, random_number);
+    // // Check if random number is unique
+    // int seen = searchUint32Buffer(random_number_hist, random_number);
+    // if (seen) {
+    //     print_error("ERROR: Potential Replayed Packet!");
+    //     return ERROR_RETURN;
+    // }
+    // appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -480,7 +485,9 @@ int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8
 }
 
 int test_secure_send() {
+    print_debug("EXCHANGING HASH KEY");
     exchange_hash_key();
+    print_debug("HASH KEY EXCHANGED");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
