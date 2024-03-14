@@ -1,6 +1,43 @@
 # Tufts eCTF - 2024
 This repository holds the design for an eCTF MISC system designed by the team at Tufts University.
 
+## Overview
+Our approach focuses on providing a 'Minimal Viable Product' that satisfies the security requirements at a level we are most confident in completing and testing. We aim to implement robust security controls that steer away from an over-engineered approach but do not compromise on core security practices. Our methodologies allow us to effectively implement and concretely test both functional and security requirements while providing flexibility to append additional layers of security.
+
+## Security Requirements
+1. **Application Processor (AP) Boot Validation**
+   - The AP should only boot if all components are present AND valid. Our solution involves:
+     - Checking if the required number of components are connected
+     - Verifying component IDs against provisioned IDs
+     - Implementing a two-way authentication using a confidential piece of data from Global Secrets
+
+2. **Component Boot Validation**
+   - Components should only boot after being commanded by a valid AP that has confirmed the component's integrity. We implement a two-way authentication scheme between the AP and components before the boot process.
+
+3. **Confidentiality of Attestation PIN and Replacement Token**
+   - The Attestation PIN and Replacement Token will be encrypted using a robust symmetric encryption method (e.g., AES256) or hashed before being passed in during the AP Build step to ensure they are not stored in plain text.
+
+4. **Confidentiality of Component Attestation Data**
+   - The Component Attestation Data will be encrypted in storage and decrypted by the AP only when needed to ensure confidentiality.
+
+5. **Secure Communications**
+   - The integrity and authenticity of messages sent and received using the post-boot "MISC" secure communications functionality will be ensured through:
+     - Two-way authentication before every data transaction
+     - Symmetric encryption for each data transaction
+     - Checking packet size and setting packet frequency to prevent packet injection
+
+## Functional Requirements
+Our implementation covers the following functional requirements:
+- Build Deployment and Global Secrets generation
+- Listing connected Components
+- Attesting Components with a valid Attestation PIN
+- Replacing Components with a valid Replacement Token
+- Secure Boot process with integrity checks
+- Secure Send & Receive functionality after successful boot
+
+Please refer to the design document for more detailed information on our solutions and additional ideas for implementation.
+
+
 
 ## Layout
 
