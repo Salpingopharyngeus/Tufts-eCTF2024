@@ -131,6 +131,7 @@ uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
 Uint32Buffer* random_number_hist;
 bool valid_device = false;
+bool INITIAL_HASH_SET = false;
 uint8_t KEY[4];
 
 /********************************* UTILITY FUNCTIONS  **********************************/
@@ -266,7 +267,6 @@ int secure_receive(uint8_t* buffer) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
     uint8_t len = wait_and_receive_packet(buffer);
-    component_process_cmd();
     
     // Extract the random number
     uint32_t random_number;
@@ -489,6 +489,9 @@ void component_process_cmd() {
     if (command->opcode == COMPONENT_AP_KEY_EXCHANGE){
         exchange_aes_key();
     } else if (command->opcode == COMPONENT_AP_HASH_KEY_EXCHANGE){
+        if(!INITIAL_HASH_SET) {
+            INITIAL_HASH_SET = true;
+        }
         exchange_hash_key();
     }
     else {
@@ -648,6 +651,7 @@ void init() {
     }
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
+
 }
 /*********************************** MAIN *************************************/
 
@@ -664,6 +668,15 @@ int main(void) {
     board_link_init(addr);
 
     LED_On(LED2);
+
+    while(!INITIAL_HASH_SET) {
+        wait_and_receive_packet(receive_buffer);
+        if(valid_device){
+            component_process_cmd();
+        }else{
+            send_error();
+        }
+    }
 
     while (1) {
         secure_receive(receive_buffer);

@@ -485,9 +485,7 @@ int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8
 }
 
 int test_secure_send() {
-    print_debug("EXCHANGING HASH KEY");
-    exchange_hash_key();
-    print_debug("HASH KEY EXCHANGED");
+    print_debug("test secure send called");
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
