@@ -450,57 +450,61 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     }
 
     // Extract the original message
-    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    // memcpy(original_message, buffer, data_len);
-    // original_message[data_len] = '\0'; // Null-terminate the string
+    uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    memcpy(original_message, buffer, data_len);
+    original_message[data_len] = '\0'; // Null-terminate the string
+
+    print_debug("Original message: ");
+    print_debug("%s", original_message);
+    print_debug("----------------------------------------\n");
 
     // Return number of bytes of original data
     return data_len;
 }
 
 // TEST FUNCTIONS
-// int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
+int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
 
-//     // Send message
-//     int result = secure_send(addr, transmit, len);
-//     if (result == ERROR_RETURN) {
-//         return ERROR_RETURN;
-//     }
+    // Send message
+    int result = secure_send(addr, transmit, len);
+    if (result == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
     
-//     // Receive message
-//     int received_bytes = secure_receive(addr, receive);
-//     if (received_bytes == ERROR_RETURN) {
-//         return ERROR_RETURN;
-//     }
-//     return received_bytes;
-//     //return result;
-// }
+    // Receive message
+    int received_bytes = secure_receive(addr, receive);
+    if (received_bytes == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
+    return received_bytes;
+    //return result;
+}
 
-// int test_secure_send() {
-//     // Buffers for board link communication
-//     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-//     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+int test_secure_send() {
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
     
-//     // Send validate command to each component
-//     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-//         // Set the I2C address of the component
-//         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+    // Send validate command to each component
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        // Set the I2C address of the component
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
-//         char* test_message = "Hello, this is a test message";
-//         size_t len = strlen(test_message);
-//         memcpy(transmit_buffer, test_message, len);
+        char* test_message = "Hello, this is a test message";
+        size_t len = strlen(test_message);
+        memcpy(transmit_buffer, test_message, len);
 
-//         // run secure_send
-//         int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
+        // run secure_send
+        int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
 
-//         if (code == ERROR_RETURN) {
-//             print_error("Failed secure send\n");
-//             return ERROR_RETURN;
-//         }
-//     }
-//     freeDictionary(&dict);
-//     return SUCCESS_RETURN;
-// }
+        if (code == ERROR_RETURN) {
+            print_error("Failed secure send\n");
+            return ERROR_RETURN;
+        }
+    }
+    freeDictionary(&dict);
+    return SUCCESS_RETURN;
+}
 
 /**
  * @brief Get Provisioned IDs
@@ -1129,7 +1133,8 @@ int main() {
         }
         // Execute requested command
         if (!strcmp(buf, "list")) {
-            scan_components();
+            //scan_components();
+            test_secure_send();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {

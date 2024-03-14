@@ -314,9 +314,15 @@ int secure_receive(uint8_t* buffer) {
     assigned_random_number = random_number;
     
     // Extract the original message
-    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    // memcpy(original_message, buffer, data_len);
-    // original_message[data_len] = '\0'; // Null-terminate the string
+    uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    memcpy(original_message, buffer, data_len);
+    original_message[data_len] = '\0'; // Null-terminate the string
+
+    print_debug("Original message: \n");
+    print_debug("%s\n", original_message);
+    print_debug("----------------------------------------\n");
+
+    secure_send(original_message, data_len);
 
     // Return number of bytes of original data
     return data_len;
@@ -659,11 +665,12 @@ int main(void) {
     LED_On(LED2);
 
     while (1) {
-        wait_and_receive_packet(receive_buffer);
-        if(valid_device){
-            component_process_cmd();
-        }else{
-            send_error();
-        }
+        secure_receive(receive_buffer);
+        // wait_and_receive_packet(receive_buffer);
+        // if(valid_device){
+        //     component_process_cmd();
+        // }else{
+        //     send_error();
+        // }
     }
 }
