@@ -1,41 +1,67 @@
-# Tufts eCTF - 2024
-This repository holds the design for an eCTF MISC system designed by the team at Tufts University.
+# Mitre eCTF 2024 - Team Tufts
 
 ## Overview
-Our approach focuses on providing a 'Minimal Viable Product' that satisfies the security requirements at a level we are most confident in completing and testing. We aim to implement robust security controls that steer away from an over-engineered approach but do not compromise on core security practices. Our methodologies allow us to effectively implement and concretely test both functional and security requirements while providing flexibility to append additional layers of security.
+
+This README outlines our team's implementation plan for the Mitre eCTF 2024 competition. Our strategy focuses on delivering a Minimal Viable Product that meets the security requirements while being realistic about our time and skills. We aim to implement robust security controls without over-engineering, allowing us to iterate and enhance our security as needed.
 
 ## Security Requirements
-1. **Application Processor (AP) Boot Validation**
-   - The AP should only boot if all components are present AND valid. Our solution involves:
-     - Checking if the required number of components are connected
-     - Verifying component IDs against provisioned IDs
-     - Implementing a two-way authentication using a confidential piece of data from Global Secrets
 
-2. **Component Boot Validation**
-   - Components should only boot after being commanded by a valid AP that has confirmed the component's integrity. We implement a two-way authentication scheme between the AP and components before the boot process.
+### Security Requirement 1
 
-3. **Confidentiality of Attestation PIN and Replacement Token**
-   - The Attestation PIN and Replacement Token will be encrypted using a robust symmetric encryption method (e.g., AES256) or hashed before being passed in during the AP Build step to ensure they are not stored in plain text.
+**Task:** The Application Processor (AP) should only boot if all components are present and valid.
 
-4. **Confidentiality of Component Attestation Data**
-   - The Component Attestation Data will be encrypted in storage and decrypted by the AP only when needed to ensure confidentiality.
+**Solution:**
+- **Check if components are present:** Utilize Host Tools to list all connected components. The system will only boot if the expected number of components is connected. This ensures that no unauthorized components are connected.
+- **Check if components are valid:** Verify each component's ID to ensure it matches the IDs of the components the AP is provisioned for. Additionally, use a special authentication packet and Global Secrets to authenticate the components. This ensures that only legitimate and authorized components are connected.
 
-5. **Secure Communications**
-   - The integrity and authenticity of messages sent and received using the post-boot "MISC" secure communications functionality will be ensured through:
-     - Two-way authentication before every data transaction
-     - Symmetric encryption for each data transaction
-     - Checking packet size and setting packet frequency to prevent packet injection
+**Additional Ideas for Implementation (Pending time constraints):**
+- Possible addition of hardware verification to verify the board identity. This would add another layer of verification to ensure that the connected components are the exact boards specified, preventing any unauthorized components from being used.
 
-## Functional Requirements
-Our implementation covers the following functional requirements:
-- Build Deployment and Global Secrets generation
-- Listing connected Components
-- Attesting Components with a valid Attestation PIN
-- Replacing Components with a valid Replacement Token
-- Secure Boot process with integrity checks
-- Secure Send & Receive functionality after successful boot
+### Security Requirement 2
 
-Please refer to the design document for more detailed information on our solutions and additional ideas for implementation.
+**Task:** Components should only boot after being commanded by a valid AP that has confirmed the component's integrity.
+
+**Solution:**
+- Set up a two-way authentication scheme between the AP and components. Before booting, the AP will send an authentication request to each component device. If the request is legitimate (verified using expected values stored in Global Secrets), the component will respond with True, indicating that the AP is valid.
+- This authentication process covers various scenarios, including valid AP and valid components, invalid AP and valid components, valid AP and invalid components, and invalid AP and invalid components.
+
+**Additional Solutions:**
+- Standardize the input and output voltage between the AP and components in a way that only valid devices will be configured to. This adds an additional validation step to ensure that only authorized components are connected.
+
+### Security Requirement 3
+
+**Task:** The Attestation PIN and Replacement Token should be kept confidential.
+
+**Solution:**
+- Encrypt the Attestation PIN and Replacement Token using AES256 or another encryption/hashing scheme before passing them during the AP Build step. Keys for this step will be stored in Global Secrets to prevent them from being easily determined or guessed by static analysis.
+
+**Additional Ideas for Implementation:**
+- Utilize a memory-safe comparison function (memcompare) to protect against buffer overflow attacks.
+
+### Security Requirement 4
+
+**Task:** Component Attestation Data should be kept confidential.
+
+**Solution:**
+- Encrypt the Component Attestation Data in storage using keys stored in Global Secrets. This ensures that even if the data is captured by reading it off of flash memory or by intercepting it in transit, it cannot be viewed in plaintext without correctly inputting a Component ID and PIN.
+
+### Security Requirement 5
+
+**Task:** The integrity and authenticity of messages sent and received using the post-boot "MISC" secure communications functionality should be ensured.
+
+**Solution:**
+- Verify the AP and components using a two-way authentication protocol before every data transaction to ensure their integrity.
+- Use symmetric encryption for each data transaction between the AP and components to ensure the confidentiality and authenticity of the messages.
+- Check packet size and set packet frequency to prevent packet injection, ensuring that only valid messages are sent and received.
+
+**Additional Ideas:**
+- Detect injections in the communication bus by pinging devices on the I2C channel to detect a 'listener' listening to our data.
+- Implement unique IDs for data packets to prevent repetition, observation-based, or replay attacks.
+
+## Conclusion
+
+Our approach focuses on robust authentication, encryption, and integrity checks to secure our system against potential attacks. As we progress, we will refine our implementation based on experimentation and testing.
+
 
 
 
