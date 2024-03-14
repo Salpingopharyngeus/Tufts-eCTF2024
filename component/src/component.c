@@ -225,7 +225,7 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
     memcpy(temp_buffer, buffer, len);
     
-    size_t key_len = strlen(KEY);
+    size_t key_len = sizeof(KEY);
 
      // Build Authenication Hash
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
@@ -287,7 +287,7 @@ int secure_receive(uint8_t* buffer) {
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
-    size_t key_len = strlen(KEY);
+    size_t key_len = sizeof(KEY);
 
     size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);

@@ -338,6 +338,7 @@ void attach_random_num(command_message* command, i2c_addr_t addr){
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
+    exchange_hash_key();
     initDictionary(&dict);
     
     // Set Maximum Packet Size for Secure Send
@@ -359,7 +360,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
     memcpy(temp_buffer, buffer, len);
 
-    size_t key_len = strlen(KEY);
+    size_t key_len = sizeof(KEY);
 
     // Build Authenication Hash
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
@@ -425,7 +426,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
-    size_t key_len = strlen(KEY);
+    size_t key_len = sizeof(KEY);
 
     size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
@@ -576,6 +577,8 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
+
+    exchange_hash_key();
 }
 
 /**
@@ -1036,6 +1039,7 @@ int validate_token() {
 
 // Boot the components and board if the components validate
 void attempt_boot() {
+    exchange_hash_key();
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -1092,6 +1096,7 @@ void attempt_replace() {
 
 // Attest a component if the PIN is correct
 void attempt_attest() {
+    exchange_hash_key();
     char buf[50];
 
     if (validate_pin()) {
@@ -1122,7 +1127,6 @@ int main() {
             print_error("Invalid Device!");
             break;
         }
-        //exchange_hash_key();
         // Execute requested command
         if (!strcmp(buf, "list")) {
             scan_components();
