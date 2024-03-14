@@ -29,11 +29,17 @@ def build_depl(
     logger.info("Running build")
     output = asyncio.run(run_shell(
         f"cd {design} && "
-        f"pwd && "
-        f"nix-shell --command "
-        f"\"cd deployment && "
+        f"pwd && " # assuming you're already in nix-shell, for Pi
+        f"cd deployment && "
         f" make clean && "
-        f" make\""
+        f" make"
+        
+        # f"cd {design} && "
+        # f"pwd && "
+        # f"nix-shell --command "
+        # f"\"cd deployment && "
+        # f" make clean && "
+        # f" make\""
     ))
 
     logger.info("Built deployment")
