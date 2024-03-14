@@ -338,7 +338,6 @@ void attach_random_num(command_message* command, i2c_addr_t addr){
 
 */
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    exchange_hash_key();
     initDictionary(&dict);
     
     // Set Maximum Packet Size for Secure Send
@@ -481,6 +480,7 @@ int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8
 }
 
 int test_secure_send() {
+    exchange_hash_key();
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
