@@ -266,6 +266,7 @@ int secure_receive(uint8_t* buffer) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
     uint8_t len = wait_and_receive_packet(buffer);
+    component_process_cmd();
     
     // Extract the random number
     uint32_t random_number;
