@@ -42,7 +42,7 @@
 #endif
 // Includes from containerized build
 #include "ectf_params.h"
-//#include "global_secrets.h"
+#include "global_secrets.h"
 #include <time.h>
 #include "trng_util.h"
 
@@ -337,11 +337,11 @@ void attach_random_num(command_message* command, i2c_addr_t addr){
  * This function must be implemented by your team to align with the security requirements.
 
 */
+
 int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     initDictionary(&dict);
     
     // Set Maximum Packet Size for Secure Send
-    print_debug("Set Maximum Packet Size for Secure Send");
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
     // Ensure length of data to send does not exceed limits
@@ -351,7 +351,6 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     }
 
     // Create secure packet
-    print_debug("Create Secure Packet");
     uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
     uint32_t random_number = GenerateAndUseRandomID();
     memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
@@ -361,10 +360,9 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
     memcpy(temp_buffer, buffer, len);
 
-    size_t key_len = sizeof(KEY);
+    size_t key_len = strlen(TEAM_ALIAS);
 
     // Build Authenication Hash
-    print_debug("Build Authentication Hash");
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
     memset(data_key_randnum, 0, data_key_randnum_len);
@@ -373,7 +371,7 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, len);
-    memcpy(data_key_randnum + len, KEY, key_len);
+    memcpy(data_key_randnum + len, TEAM_ALIAS, key_len);
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t hash_out[HASH_SIZE];
@@ -381,13 +379,11 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     free(data_key_randnum);
 
     // Add security attributes to packet
-    print_debug("Add Security Attributes to packet");
     memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authenication hash
     temp_buffer[data_len_position] = len; // add data length
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
 
     // Update random number assignment for component
-    print_debug("Update random number assignment for component");
     addOrUpdate(&dict, address, random_number);
 
     // Send the packet
@@ -413,14 +409,6 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-    
-    // Check if random number is unique
-    int seen = searchUint32Buffer(random_number_hist, random_number);
-    if (seen) {
-        print_error("ERROR: Potential Replayed Packet!");
-        return ERROR_RETURN;
-    }
-    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -430,7 +418,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
-    size_t key_len = sizeof(KEY);
+    size_t key_len = strlen(TEAM_ALIAS);
 
     size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
@@ -440,7 +428,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, data_len);
-    memcpy(data_key_randnum + data_len, KEY, key_len);
+    memcpy(data_key_randnum + data_len, TEAM_ALIAS, key_len);
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t check_hash[HASH_SIZE];
@@ -449,7 +437,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
 
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
-        print_error("Invalid packet received that cannot be authenticated.\n");
+        print_error("Could not validate Component\n");
         return ERROR_RETURN;
     }
 
@@ -586,8 +574,7 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
-
-    exchange_hash_key();
+    //exchange_hash_key();
 }
 
 /**

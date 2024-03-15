@@ -28,7 +28,7 @@
 #include "board_link.h"
 #include "buffer.h"
 #include "md5.h"
-
+#include "global_secrets.h"
 #include "aes.h"
 #include "aes_regs.h"
 #include "dma.h"
@@ -226,7 +226,7 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
     memcpy(temp_buffer, buffer, len);
     
-    size_t key_len = sizeof(KEY);
+    size_t key_len = strlen(TEAM_ALIAS);
 
      // Build Authenication Hash
     size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
@@ -237,7 +237,7 @@ void secure_send(uint8_t* buffer, uint8_t len) {
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, len);
-    memcpy(data_key_randnum + len, KEY, key_len);
+    memcpy(data_key_randnum + len, TEAM_ALIAS, key_len);
     memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t hash_out[HASH_SIZE];
@@ -249,7 +249,6 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     temp_buffer[data_len_position] = len; // add data length
     memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
     
-    // Send packet
     send_packet_and_ack(MAX_PACKET_SIZE, temp_buffer); 
 }
 
@@ -266,19 +265,11 @@ void secure_send(uint8_t* buffer, uint8_t len) {
 int secure_receive(uint8_t* buffer) {
     size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
 
-    uint8_t len = wait_and_receive_packet(buffer);
-    
+    uint8_t len = wait_and_receive_packet(buffer); // Adjust this part according to your actual implementation
+
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-
-    // Check if random number is unique
-    int seen = searchUint32Buffer(random_number_hist, random_number);
-    if (seen) {
-        print_error("ERROR: Potential Replayed Packet!");
-        return ERROR_RETURN;
-    }
-    appendToUint32Buffer(random_number_hist, random_number);
 
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
@@ -288,7 +279,7 @@ int secure_receive(uint8_t* buffer) {
     memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
 
     // Recreate authkey hash to check authenticity of receive_buffer
-    size_t key_len = sizeof(KEY);
+    size_t key_len = strlen(TEAM_ALIAS);
 
     size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
@@ -298,7 +289,7 @@ int secure_receive(uint8_t* buffer) {
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, data_len);
-    memcpy(data_key_randnum + data_len, KEY, key_len);
+    memcpy(data_key_randnum + data_len, TEAM_ALIAS, key_len);
     memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
 
     uint8_t check_hash[HASH_SIZE];
@@ -307,8 +298,8 @@ int secure_receive(uint8_t* buffer) {
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
-        print_error("Invalid packet received that cannot be authenticated.\n");
-        send_error();
+        print_error("Could not validate AP\n");
+        return ERROR_RETURN;
     }
 
     // Save assigned random_number from AP
@@ -325,7 +316,7 @@ int secure_receive(uint8_t* buffer) {
 
     secure_send(original_message, data_len);
 
-    // Return number of bytes of original data
+    // Return length of original data
     return data_len;
 }
 
@@ -669,14 +660,14 @@ int main(void) {
 
     LED_On(LED2);
 
-    while(!INITIAL_HASH_SET) {
-        wait_and_receive_packet(receive_buffer);
-        if(valid_device){
-            component_process_cmd();
-        }else{
-            send_error();
-        }
-    }
+    // while(!INITIAL_HASH_SET) {
+    //     wait_and_receive_packet(receive_buffer);
+    //     if(valid_device){
+    //         component_process_cmd();
+    //     }else{
+    //         send_error();
+    //     }
+    // }
 
     while (1) {
         secure_receive(receive_buffer);
