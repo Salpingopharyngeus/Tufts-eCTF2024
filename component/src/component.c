@@ -486,9 +486,6 @@ void component_process_cmd() {
     if (command->opcode == COMPONENT_AP_KEY_EXCHANGE){
         exchange_aes_key();
     } else if (command->opcode == COMPONENT_AP_HASH_KEY_EXCHANGE){
-        if(!INITIAL_HASH_SET) {
-            INITIAL_HASH_SET = true;
-        }
         exchange_hash_key();
     }
     else {
