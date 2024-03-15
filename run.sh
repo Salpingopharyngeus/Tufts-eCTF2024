@@ -2,15 +2,13 @@
 
 # Get the absolute path of the current directory
 current_directory=$(pwd)
-
-# Changes for Pi in device and daplink
-ap_device="ttyACM0"
-compA_device="ttyACM1"
-compB_device="ttyACM2"
+ap_device="tty.usbmodem11302"
+compA_device="tty.usbmodem11202"
+compB_device="tty.usbmodem11402"
 bootloader_file="$current_directory/insecure.bin"
-DAPLINK_VOLUME="/media/eCTF1/DAPLINK/"
-DAPLINK1_VOLUME="/media/eCTF1/DAPLINK1/"
-DAPLINK2_VOLUME="/media/eCTF1/DAPLINK2/"
+DAPLINK_VOLUME="/Volumes/DAPLINK/"
+DAPLINK1_VOLUME="/Volumes/DAPLINK 1/"
+DAPLINK2_VOLUME="/Volumes/DAPLINK 2/"
 
 # Print the result
 echo "The absolute path of the current directory is: $current_directory"
@@ -35,7 +33,7 @@ sudo poetry run ectf_update --infile "$current_directory/build/ap.img" --port "/
 
 # Build Component A
 echo "Building Component A...."
-sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ad "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ac "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" || { echo "ERROR: Failed to build Component A."; exit 1; }
+sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "McLean" -ad "08/08/08" -ac "Fritz" || { echo "ERROR: Failed to build Component A."; exit 1; }
 
 # Flash updated Component A img file to AP device
 echo "Flashing updated comp.img file onto Component A $compA_device...."
