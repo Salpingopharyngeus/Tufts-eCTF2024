@@ -131,7 +131,6 @@ uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 uint32_t assigned_random_number = 0;
 Uint32Buffer* random_number_hist;
 bool valid_device = false;
-bool INITIAL_HASH_SET = false;
 uint8_t KEY[4];
 
 /********************************* UTILITY FUNCTIONS  **********************************/
@@ -271,6 +270,16 @@ int secure_receive(uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
 
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if(seen){
+        print_error("ERROR: POTENTIAL REPLAY ATTACK!\n");
+        return ERROR_RETURN;
+    }else{
+        // Save assigned random_number from AP
+        appendToUint32Buffer(random_number_hist, random_number);
+        assigned_random_number = random_number;
+    }
+
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
 
@@ -301,20 +310,17 @@ int secure_receive(uint8_t* buffer) {
         print_error("Could not validate AP\n");
         return ERROR_RETURN;
     }
-
-    // Save assigned random_number from AP
-    assigned_random_number = random_number;
     
     // Extract the original message
-    uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    memcpy(original_message, buffer, data_len);
-    original_message[data_len] = '\0'; // Null-terminate the string
+    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    // memcpy(original_message, buffer, data_len);
+    // original_message[data_len] = '\0'; // Null-terminate the string
 
-    print_debug("Original message: \n");
-    print_debug("%s\n", original_message);
-    print_debug("----------------------------------------\n");
+    // print_debug("Original message: \n");
+    // print_debug("%s\n", original_message);
+    // print_debug("----------------------------------------\n");
 
-    secure_send(original_message, data_len);
+    // secure_send(original_message, data_len);
 
     // Return length of original data
     return data_len;
@@ -660,22 +666,12 @@ int main(void) {
 
     LED_On(LED2);
 
-    // while(!INITIAL_HASH_SET) {
-    //     wait_and_receive_packet(receive_buffer);
-    //     if(valid_device){
-    //         component_process_cmd();
-    //     }else{
-    //         send_error();
-    //     }
-    // }
-
     while (1) {
-        secure_receive(receive_buffer);
-        // wait_and_receive_packet(receive_buffer);
-        // if(valid_device){
-        //     component_process_cmd();
-        // }else{
-        //     send_error();
-        // }
+        wait_and_receive_packet(receive_buffer);
+        if(valid_device){
+            component_process_cmd();
+        }else{
+            send_error();
+        }
     }
 }

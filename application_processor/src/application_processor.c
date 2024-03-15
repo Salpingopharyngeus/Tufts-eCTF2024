@@ -156,44 +156,6 @@ uint8_t KEY[4];
 // getting this running than to try to untangle this
 // NOTE: you're not allowed to do this in your code
 // Remove this in your design
-typedef uint32_t aErjfkdfru;
-const aErjfkdfru aseiFuengleR[] = {
-    0x1ffe4b6, 0x3098ac,  0x2f56101, 0x11a38bb, 0x485124,  0x11644a7, 0x3c74e8,
-    0x3c74e8,  0x2f56101, 0x12614f7, 0x1ffe4b6, 0x11a38bb, 0x1ffe4b6, 0x12614f7,
-    0x1ffe4b6, 0x12220e3, 0x3098ac,  0x1ffe4b6, 0x2ca498,  0x11a38bb, 0xe6d3b7,
-    0x1ffe4b6, 0x127bc,   0x3098ac,  0x11a38bb, 0x1d073c6, 0x51bd0,   0x127bc,
-    0x2e590b1, 0x1cc7fb2, 0x1d073c6, 0xeac7cb,  0x51bd0,   0x2ba13d5, 0x2b22bad,
-    0x2179d2e, 0};
-const aErjfkdfru djFIehjkklIH[] = {
-    0x138e798, 0x2cdbb14, 0x1f9f376, 0x23bcfda, 0x1d90544, 0x1cad2d2, 0x860e2c,
-    0x860e2c,  0x1f9f376, 0x38ec6f2, 0x138e798, 0x23bcfda, 0x138e798, 0x38ec6f2,
-    0x138e798, 0x31dc9ea, 0x2cdbb14, 0x138e798, 0x25cbe0c, 0x23bcfda, 0x199a72,
-    0x138e798, 0x11c82b4, 0x2cdbb14, 0x23bcfda, 0x3225338, 0x18d7fbc, 0x11c82b4,
-    0x35ff56,  0x2b15630, 0x3225338, 0x8a977a,  0x18d7fbc, 0x29067fe, 0x1ae6dee,
-    0x4431c8,  0};
-typedef int skerufjp;
-skerufjp siNfidpL(skerufjp verLKUDSfj) {
-    aErjfkdfru ubkerpYBd = 12 + 1;
-    skerufjp xUrenrkldxpxx = 2253667944 % 0x432a1f32;
-    aErjfkdfru UfejrlcpD = 1361423303;
-    verLKUDSfj = (verLKUDSfj + 0x12345678) % 60466176;
-    while (xUrenrkldxpxx-- != 0) {
-        verLKUDSfj = (ubkerpYBd * verLKUDSfj + UfejrlcpD) % 0x39aa400;
-    }
-    return verLKUDSfj;
-}
-typedef uint8_t kkjerfI;
-kkjerfI deobfuscate(aErjfkdfru veruioPjfke, aErjfkdfru veruioPjfwe) {
-    skerufjp fjekovERf = 2253667944 % 0x432a1f32;
-    aErjfkdfru veruicPjfwe, verulcPjfwe;
-    while (fjekovERf-- != 0) {
-        veruioPjfwe = (veruioPjfwe - siNfidpL(veruioPjfke)) % 0x39aa400;
-        veruioPjfke = (veruioPjfke - siNfidpL(veruioPjfwe)) % 60466176;
-    }
-    veruicPjfwe = (veruioPjfke + 0x39aa400) % 60466176;
-    verulcPjfwe = (veruioPjfwe + 60466176) % 0x39aa400;
-    return veruicPjfwe * 60466176 + verulcPjfwe - 89;
-}
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
@@ -410,6 +372,15 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
 
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if(seen){
+        print_error("ERROR: POTENTIAL REPLAY ATTACK!");
+        return ERROR_RETURN;
+    }else{
+        // Save assigned random_number from AP
+        appendToUint32Buffer(random_number_hist, random_number);
+    }
+
     // Extract the data length
     uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
 
@@ -442,62 +413,62 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     }
 
     // Extract the original message
-    uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    memcpy(original_message, buffer, data_len);
-    original_message[data_len] = '\0'; // Null-terminate the string
+    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
+    // memcpy(original_message, buffer, data_len);
+    // original_message[data_len] = '\0'; // Null-terminate the string
 
-    print_debug("Original message: ");
-    print_debug("%s", original_message);
-    print_debug("----------------------------------------\n");
+    // print_debug("Original message: ");
+    // print_debug("%s", original_message);
+    // print_debug("----------------------------------------\n");
 
     // Return number of bytes of original data
     return data_len;
 }
 
 // TEST FUNCTIONS
-int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
+// int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
 
-    // Send message
-    int result = secure_send(addr, transmit, len);
-    if (result == ERROR_RETURN) {
-        return ERROR_RETURN;
-    }
+//     // Send message
+//     int result = secure_send(addr, transmit, len);
+//     if (result == ERROR_RETURN) {
+//         return ERROR_RETURN;
+//     }
     
-    // Receive message
-    int received_bytes = secure_receive(addr, receive);
-    if (received_bytes == ERROR_RETURN) {
-        return ERROR_RETURN;
-    }
-    return received_bytes;
-    //return result;
-}
+//     // Receive message
+//     int received_bytes = secure_receive(addr, receive);
+//     if (received_bytes == ERROR_RETURN) {
+//         return ERROR_RETURN;
+//     }
+//     return received_bytes;
+//     //return result;
+// }
 
-int test_secure_send() {
-    print_debug("test secure send called");
-    // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+// int test_secure_send() {
+//     print_debug("test secure send called");
+//     // Buffers for board link communication
+//     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+//     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
     
-    // Send validate command to each component
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+//     // Send validate command to each component
+//     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+//         // Set the I2C address of the component
+//         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
 
-        char* test_message = "Hello, this is a test message";
-        size_t len = strlen(test_message);
-        memcpy(transmit_buffer, test_message, len);
+//         char* test_message = "Hello, this is a test message";
+//         size_t len = strlen(test_message);
+//         memcpy(transmit_buffer, test_message, len);
 
-        // run secure_send
-        int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
+//         // run secure_send
+//         int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
 
-        if (code == ERROR_RETURN) {
-            print_error("Failed secure send\n");
-            return ERROR_RETURN;
-        }
-    }
-    freeDictionary(&dict);
-    return SUCCESS_RETURN;
-}
+//         if (code == ERROR_RETURN) {
+//             print_error("Failed secure send\n");
+//             return ERROR_RETURN;
+//         }
+//     }
+//     freeDictionary(&dict);
+//     return SUCCESS_RETURN;
+// }
 
 /**
  * @brief Get Provisioned IDs
@@ -574,7 +545,6 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
-    //exchange_hash_key();
 }
 
 /**
@@ -1125,8 +1095,7 @@ int main() {
         }
         // Execute requested command
         if (!strcmp(buf, "list")) {
-            //scan_components();
-            test_secure_send();
+            scan_components();
         } else if (!strcmp(buf, "boot")) {
             attempt_boot();
         } else if (!strcmp(buf, "replace")) {
