@@ -1094,13 +1094,13 @@ int main() {
             break;
         }
         // Execute requested command
-        if (!strcmp(buf, "list")) {
+        if (!strncmp(buf, "list", 4)) {
             scan_components();
-        } else if (!strcmp(buf, "boot")) {
+        } else if (!strncmp(buf, "boot", 4)) {
             attempt_boot();
-        } else if (!strcmp(buf, "replace")) {
+        } else if (!strncmp(buf, "replace", 7)) {
             attempt_replace();
-        } else if (!strcmp(buf, "attest")) {
+        } else if (!strncmp(buf, "attest", 6)) {
             attempt_attest();
         } else {
             print_error("Unrecognized command '%s'\n", buf);

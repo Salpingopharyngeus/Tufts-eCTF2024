@@ -448,7 +448,7 @@ int main(void)
 		for (o_size = -1; o_size <= (int)sizeof(o_buf); o_size++) {
 			int ok_n = ok && o_size == (int)sizeof(o_buf);
 			const char *x = "abc";
-			strcpy(o_buf, x);
+			strcpy(o_buf, x, 4);
 			if (o_size >= 3) {
 				x = "*0";
 				if (setting[0] == '*' && setting[1] == '0')
