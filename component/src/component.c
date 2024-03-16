@@ -50,7 +50,7 @@
 #include "board.h"
 #include "dma.h"
 #include "eddsa.h"
-#include "x25519.h"
+//#include "x25519.h"
 #endif
 
 
