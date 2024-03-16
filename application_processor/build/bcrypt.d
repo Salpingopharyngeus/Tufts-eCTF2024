@@ -1,4 +1,4 @@
-/Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/application_processor/build/bcrypt.o: \
+/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/bcrypt.o: \
  src/bcrypt.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \

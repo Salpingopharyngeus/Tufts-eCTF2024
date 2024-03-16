@@ -1,4 +1,4 @@
-/Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/application_processor/build/bignum.o: \
+/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/bignum.o: \
  src/bignum.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \

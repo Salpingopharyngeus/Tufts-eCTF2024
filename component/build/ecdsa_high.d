@@ -1,4 +1,4 @@
-/Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/component/build/ecdsa_high.o: \
+/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/ecdsa_high.o: \
  src/ecdsa_high.c inc/bignum_ecdsa_generic_api.h inc/ucl_config.h \
  inc/ucl_types.h inc/ecdsa_generic_api.h inc/bignum_ecdsa_generic_api.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \

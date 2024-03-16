@@ -1,5 +1,5 @@
-/Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/application_processor/build/camera.o: \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.c \
+/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/camera.o: \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdlib.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/ieeefp.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
@@ -27,11 +27,11 @@
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdint.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_intsup.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_stdint.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
  inc/system_max78000.h inc/gcr_regs.h inc/mxc_errors.h inc/mxc_pins.h \
  inc/gpio.h inc/gpio_regs.h inc/board.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
@@ -41,11 +41,11 @@
  inc/mxc_device.h inc/mxc_assert.h inc/mxc_sys.h inc/lpgcr_regs.h \
  inc/mcr_regs.h inc/cameraif.h inc/cameraif_regs.h inc/dma.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdbool.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/dma_regs.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/dma_regs.h \
  inc/uart.h inc/uart_regs.h inc/mxc_delay.h inc/gpio.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692_regs.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/debayering.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692_regs.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/debayering.h \
  inc/tmr_regs.h \
- /Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/sccb.h \
+ /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/sccb.h \
  inc/spi_regs.h inc/spi.h inc/spi_regs.h inc/mxc_lock.h

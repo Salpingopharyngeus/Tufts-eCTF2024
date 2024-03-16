@@ -1,4 +1,4 @@
-/Users/kmirza/Desktop/Mitre/Tufts-eCTF2024/component/build/ucl_aes_ecb.o: \
+/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/ucl_aes_ecb.o: \
  src/ucl_aes_ecb.c inc/ucl_types.h inc/ucl_defs.h inc/ucl_retdefs.h \
  inc/ucl_aes.h inc/ucl_types.h inc/ucl_aes_ecb.h inc/ucl_aes.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \

@@ -121,7 +121,6 @@ void process_boot(void);
 void process_scan(void);
 void process_validate(void);
 void process_attest(void);
-void print(const char *message);
 
 
 /********************************* GLOBAL VARIABLES ************************************/
@@ -202,7 +201,6 @@ bool hash_equal(uint8_t* hash1, uint8_t* hash2) {
 void secure_send(uint8_t* buffer, uint8_t len) {
     // Ensure component is not initializing communication with AP.
     if (assigned_random_number == 0){
-        print_error("Component attempting to initiate communication with AP first!\n");
         return ERROR_RETURN;
     }
 
@@ -211,7 +209,6 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     
     // Ensure length of data to send does not exceed limits
     if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
-        print_error("Message too long");
         return ERROR_RETURN;
     }
 
@@ -232,7 +229,6 @@ void secure_send(uint8_t* buffer, uint8_t len) {
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
     memset(data_key_randnum, 0, data_key_randnum_len);
     if (!data_key_randnum) {
-        print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, len);
@@ -272,7 +268,6 @@ int secure_receive(uint8_t* buffer) {
 
     int seen = searchUint32Buffer(random_number_hist, random_number);
     if(seen){
-        print_error("ERROR: POTENTIAL REPLAY ATTACK!\n");
         return ERROR_RETURN;
     }else{
         // Save assigned random_number from AP
@@ -294,7 +289,6 @@ int secure_receive(uint8_t* buffer) {
     uint8_t* data_key_randnum = malloc(data_key_randnum_len);
     memset(data_key_randnum, 0, data_key_randnum_len);
     if (!data_key_randnum) {
-        print_error("Memory allocation failed for data_key_randnum");
         return ERROR_RETURN;
     }
     memcpy(data_key_randnum, buffer, data_len);
@@ -307,7 +301,6 @@ int secure_receive(uint8_t* buffer) {
     
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash)){
-        print_error("Could not validate AP\n");
         return ERROR_RETURN;
     }
     
@@ -381,7 +374,6 @@ void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t
     // Ensure the provided uint8_buffer has enough space
     size_t required_size = num_elements * sizeof(uint32_t);
     if (uint8_buffer_size < required_size) {
-        printf("Error: Insufficient space in uint8_buffer\n");
         return;
     }
 
@@ -514,7 +506,6 @@ void component_process_cmd() {
                     process_attest();
                     break;
                 default:
-                    print_debug("Error: Unrecognized command received %d\n", command->opcode);
                     send_error();
                     break;
             }
@@ -593,7 +584,8 @@ void process_attest() {
     uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
     
     char attestation_data[ATTEST_SIZE]; // Assuming a sufficiently large buffer size
-    sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
+    snprintf(attestation_data, ATTEST_SIZE, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER); //!!!!!!
+    //sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
     // Store Attestation Data in uint8_t* buffer
     uint8_t temp_buffer[ATTEST_SIZE];
@@ -635,13 +627,11 @@ void init() {
     int usn_error = MXC_SYS_GetUSN(usn, NULL);
 
     if (usn_error != E_NO_ERROR) {
-        printf("Invalid Component Hardware Device: Not MAX78000\n");
         valid_device = false;
         return ERROR_RETURN;
 
     } else {
-        valid_device = true;
-        printf("Valid Component Hardware Device: MAX78000\n");        
+        valid_device = true;  
     }
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);

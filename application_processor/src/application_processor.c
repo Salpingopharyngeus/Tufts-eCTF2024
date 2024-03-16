@@ -739,7 +739,7 @@ int validate_components() {
         }
         // Add received random number to history
         appendToUint32Buffer(random_number_hist, received_random_num);
-
+        
         if (validate->component_id != flash_status.component_ids[i]) {
             print_error("Component ID: 0x%08x invalid\n", flash_status.component_ids[i]);
             return ERROR_RETURN;
@@ -989,7 +989,7 @@ int validate_pin() {
 
 // Function to validate the replacement token
 int validate_token() {
-    char buf[50];
+    char buf[50]; // Chang, check for timing
     recv_input("Enter token: ", buf);
     print_debug("Verifying Token...\n");
     
@@ -1063,7 +1063,7 @@ void attempt_replace() {
 // Attest a component if the PIN is correct
 void attempt_attest() {
     exchange_hash_key();
-    char buf[50];
+    char buf[50]; // check for timing changes
 
     if (validate_pin()) {
         return;
@@ -1089,6 +1089,7 @@ int main() {
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
+        printf("Received command: %s\n", buf); 
         if (!valid_device) {
             print_error("Invalid Device!");
             break;
@@ -1103,7 +1104,7 @@ int main() {
         } else if (!strncmp(buf, "attest", 6)) {
             attempt_attest();
         } else {
-            print_error("Unrecognized command '%s'\n", buf);
+            print_error("Unrecognized command");
         }
     }
     // Code never reaches here
