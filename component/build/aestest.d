@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/aestest.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/component/build/aestest.o: \
  src/aestest.c inc/ucl_testing_config.h inc/ucl_types.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \

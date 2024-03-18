@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/ucl_sia256.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/component/build/ucl_sia256.o: \
  src/ucl_sia256.c inc/ucl_hash.h inc/ucl_config.h inc/ucl_types.h \
  inc/ucl_defs.h inc/ucl_retdefs.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \

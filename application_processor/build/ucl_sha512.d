@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/ucl_sha512.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/application_processor/build/ucl_sha512.o: \
  src/ucl_sha512.c inc/ucl_hash.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \

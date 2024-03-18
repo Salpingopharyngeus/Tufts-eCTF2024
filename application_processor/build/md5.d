@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/md5.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/application_processor/build/md5.o: \
  src/md5.c inc/md5.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \

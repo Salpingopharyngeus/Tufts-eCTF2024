@@ -1,5 +1,5 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/ov7692.o: \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692.c \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/component/build/ov7692.o: \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/newlib.h \
@@ -29,20 +29,20 @@
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/strings.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/string.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/math.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692_regs.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/debayering.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/tmr_regs.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/sccb.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/camera.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/ov7692_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/debayering.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/tmr_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Camera/sccb.h \
  inc/gpio.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
  inc/mxc_delay.h inc/mxc_device.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
  inc/mxc_errors.h inc/mxc_pins.h inc/gpio.h

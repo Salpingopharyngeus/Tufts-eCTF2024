@@ -33,7 +33,7 @@ sudo poetry run ectf_update --infile "$current_directory/build/ap.img" --port "/
 
 # Build Component A
 echo "Building Component A...."
-sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "McLean" -ad "08/08/08" -ac "Fritz" || { echo "ERROR: Failed to build Component A."; exit 1; }
+sudo poetry run ectf_build_comp -d "$current_directory" -on comp -od build -id 0x11111124 -b "Component boot" -al "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ad "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" -ac "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" || { echo "ERROR: Failed to build Component A."; exit 1; }
 
 # Flash updated Component A img file to AP device
 echo "Flashing updated comp.img file onto Component A $compA_device...."

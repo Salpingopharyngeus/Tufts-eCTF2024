@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/wrapper.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/application_processor/build/wrapper.o: \
  src/wrapper.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdlib.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/ieeefp.h \

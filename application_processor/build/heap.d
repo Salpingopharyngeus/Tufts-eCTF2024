@@ -1,5 +1,5 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/heap.o: \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Source/heap.c \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/application_processor/build/heap.o: \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Source/heap.c \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdint.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdint.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_default_types.h \

@@ -366,5 +366,5 @@ cython_debug/
 
 !device/lib
 .github -r
-application_processor/build/
-component/build/
+application_processor/build/*
+component/build/*

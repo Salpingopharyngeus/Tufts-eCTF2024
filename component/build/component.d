@@ -1,6 +1,6 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/component.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/component/build/component.o: \
  src/component.c \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/Boards/MAX78000/FTHR_RevA/Include/board.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/Boards/MAX78000/FTHR_RevA/Include/board.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/newlib.h \
@@ -18,36 +18,36 @@
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_types.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/lock.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/stdio.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/spi_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/spi_regs.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdint.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdint.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_intsup.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_stdint.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Display/tft_ili9341.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gpio_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Display/tft_ili9341.h \
  inc/spi.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdbool.h \
  inc/mxc_sys.h inc/mxc_device.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/max78000.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/core_cm4.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_version.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_compiler.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/cmsis_gcc.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/5.9.0/Core/Include/mpu_armv7.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/system_max78000.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
  inc/mxc_errors.h inc/mxc_pins.h inc/gpio.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/lpgcr_regs.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/lpgcr_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/gcr_regs.h \
  inc/mxc_assert.h inc/mxc_lock.h inc/gpio.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Touchscreen/tsc2046.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/LED/led.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/Touchscreen/tsc2046.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/LED/led.h \
  inc/mxc_assert.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/PushButton/pb.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/MiscDrivers/PushButton/pb.h \
  inc/i2c.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/i2c_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/CMSIS/Device/Maxim/MAX78000/Include/i2c_regs.h \
  inc/mxc_delay.h inc/mxc_errors.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/nvic_table.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Include/MAX78000/nvic_table.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdlib.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/stdlib.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/alloca.h \
@@ -57,10 +57,10 @@
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/string.h \
  /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/inttypes.h \
  inc/host_messaging.h inc/simple_i2c_peripheral.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva_regs.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva.h \
  inc/mxc_device.h inc/mxc_lock.h inc/mxc_sys.h \
- /Users/khanturr/Desktop/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva_regs.h \
+ /Users/samchung/Library/eCTF/Tufts-eCTF2024/msdk/Libraries/PeriphDrivers/Source/I2C/i2c_reva_regs.h \
  inc/dma.h inc/dma_regs.h inc/i2c.h inc/board_link.h \
  inc/simple_i2c_peripheral.h inc/buffer.h inc/md5.h \
  ../deployment/global_secrets.h inc/aes.h inc/aes_regs.h \

@@ -1,4 +1,4 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/component/build/ecdsa_generic_api.o: \
+/Users/samchung/Library/eCTF/Tufts-eCTF2024/component/build/ecdsa_generic_api.o: \
  src/ecdsa_generic_api.c inc/bignum_ecdsa_generic_api.h inc/ucl_config.h \
  inc/ucl_types.h inc/ecdsa_generic_api.h inc/bignum_ecdsa_generic_api.h \
  inc/ucl_config.h inc/ucl_types.h inc/ucl_sys.h inc/ucl_defs.h \

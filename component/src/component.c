@@ -574,6 +574,8 @@ void process_validate() {
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
 
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN-1];
+
     // Construct Attestation String Data
     uint8_t attest_loc_size = sizeof(ATTESTATION_LOC);
     uint8_t attest_date_size = sizeof(ATTESTATION_DATE);
@@ -611,7 +613,16 @@ void process_attest() {
     memset(uint8_transmit_buffer, 0, uint8_buffer_size);
     uint32_to_uint8(uint32_transmit_buffer, num_elements, uint8_transmit_buffer, uint8_buffer_size);
 
-    send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
+
+    // Set first byte of transmit buffer to be EXACT SIZE
+    // Set the next 224 bytes of space to be the encrypted attestation data
+    // [EXACT_SIZE|ENCRYPTED_ATTESTATION_DATA]
+    memset(transmit_buffer, 0, sizeof(transmit_buffer));
+    transmit_buffer[0] = EXACT_SIZE;
+    memcpy(transmit_buffer+1, uint8_transmit_buffer, sizeof(uint8_transmit_buffer));
+
+    //send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
+    send_packet_and_ack(sizeof(transmit_buffer), transmit_buffer);
 }
 
 void init() {
