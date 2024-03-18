@@ -560,12 +560,14 @@ void init() {
 */
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
 
+    print_info("issue_cmd: send_packet"); // DELETE
     // Send message
     int result = send_packet(addr, packet_size, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
 
+    print_info("issue_cmd: poll_and_receive_packet"); // DELETE
     // Receive message
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
@@ -602,6 +604,7 @@ int exchange_hash_key() {
 
         // Send AP's public key and receive component's public key
         size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
+        print_info("ap_pb_key_packet_size: %i", ap_pb_key_packet_size); // DELETE
         int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
         if (len == ERROR_RETURN) {
             print_error("Could not send AP public key to component\n");
