@@ -572,12 +572,18 @@ void init() {
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
 
     // Send message
+    if (replace_called) {
+        print_info("ISSUE_CMD: send_packet"); // DELETE
+    }
     int result = send_packet(addr, packet_size, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
 
     // Receive message
+    if (replace_called) {
+        print_info("ISSUE_CMD: poll_and_receive_packet"); // DELETE
+    }
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
         return ERROR_RETURN;
