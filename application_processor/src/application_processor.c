@@ -921,7 +921,7 @@ int attest_component(uint32_t component_id) {
     
     // size_t buffer_size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]);
     // uint8_decrypted[buffer_size - 1] = '\0';
-    exact_decrypted[EXACT_SIZE] = '\0';
+    exact_decrypted[EXACT_SIZE-1] = '\0';
 
     if (decrypt_success == 0) {
         // Print out attestation data

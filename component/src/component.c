@@ -577,17 +577,19 @@ void process_attest() {
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN-1];
 
     // Construct Attestation String Data
-    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC);
-    uint8_t attest_date_size = sizeof(ATTESTATION_DATE);
-    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER);
+    uint8_t attest_loc_size = sizeof(ATTESTATION_LOC) - 1;
+    uint8_t attest_date_size = sizeof(ATTESTATION_DATE) - 1;
+    uint8_t attest_cust_size = sizeof(ATTESTATION_CUSTOMER) - 1;
 
     size_t ATTEST_SIZE = 224;
     uint8_t fixed_size = 17;
     uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
     
+    // uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
+    //             ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
+
     char attestation_data[ATTEST_SIZE]; // Assuming a sufficiently large buffer size
-    snprintf(attestation_data, ATTEST_SIZE, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER); //!!!!!!
-    //sprintf(attestation_data, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
+    snprintf(attestation_data, ATTEST_SIZE, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
 
     // Store Attestation Data in uint8_t* buffer
     uint8_t temp_buffer[ATTEST_SIZE];
