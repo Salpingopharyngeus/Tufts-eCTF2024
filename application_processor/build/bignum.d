@@ -1,25 +1,25 @@
-/Users/khanturr/Desktop/Tufts-eCTF2024/application_processor/build/bignum.o: \
+/home/kali/Submission_2/Tufts-eCTF2024/application_processor/build/bignum.o: \
  src/bignum.c \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/newlib.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_newlib_version.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/config.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/ieeefp.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/features.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/cdefs.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_default_types.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stddef.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdarg.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/reent.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_types.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_types.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/lock.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/stdio.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/stdio.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/newlib.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_newlib_version.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/config.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/ieeefp.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/features.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/cdefs.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_default_types.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stddef.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include/stdarg.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/reent.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/_ansi.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_types.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/machine/_types.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/lock.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/stdio.h \
  inc/bignum_ecdsa_generic_api.h inc/ucl_config.h inc/ucl_types.h \
  inc/ecdsa_generic_api.h inc/bignum_ecdsa_generic_api.h inc/ucl_retdefs.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_locale.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/strings.h \
- /nix/store/in2l2igwq5mv5ba0gmcky68dp82qs2hn-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/string.h
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/string.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/_locale.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/strings.h \
+ /nix/store/669gar994hvsbmjwx9dzml36nijka00g-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/sys/string.h

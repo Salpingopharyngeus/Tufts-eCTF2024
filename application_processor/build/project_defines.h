@@ -384,7 +384,6 @@
 #define __HAVE_SPECULATION_SAFE_VALUE 1
 #define __GCC_HAVE_DWARF2_CFI_ASM 1
 #define __PRAGMA_REDEFINE_EXTNAME 1
-#define __SSP_ALL__ 2
 #define __SIZEOF_WCHAR_T__ 4
 #define __SIZEOF_WINT_T__ 4
 #define __SIZEOF_PTRDIFF_T__ 4
