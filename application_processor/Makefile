@@ -424,13 +424,13 @@ all:
 # 	Extend the functionality of the "all" recipe here
 	@echo "Injecting bcrypt pins"
 	@poetry run python src/bcrypt_pin.py inc/ectf_params.h
-	arm-none-eabi-size --format=berkeley $(BUILD_DIR)/$(PROJECT).elf
 
 libclean: 
 	$(MAKE)  -f ${PERIPH_DRIVER_DIR}/periphdriver.mk clean.periph
-	
-clean: 
-#	Extend the functionality of the "clean" recipe here
+
+clean:
+	rm -f src/*.o bcrypt.a *~ core
+	$(MAKE) -C crypt_blowfish clean
 
 # The rule to clean out all the build products.
 distclean: clean libclean

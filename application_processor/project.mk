@@ -21,54 +21,25 @@ MFLOAT_ABI=soft
 IPATH+=../deployment
 IPATH+=inc/
 VPATH+=src/
+IPATH+=crypt_blowfish/
+VPATH+=crypt_blowfish/
 
-VPATH+= /src/crypt-blowfish
+CFLAGS += -Iinc -Icrypt_blowfish
+CFLAGS += -Iinc -Icrypt_blowfish -Icrypt_blowfish/
 
-# Custom rule for compiling crypt_blowfish.c
-application_processor/crypt_blowfish/crypt_blowfish.o: application_processor/src/crypt_blowfish/crypt_blowfish.c application_processor/crypt_blowfish/crypt_blowfish.h
-	$(CC) $(CFLAGS) $(foreach dir,$(IPATH),-I$(dir)) -c $< -o $@
-crypt_blowfish.o: application_processor/crypt_blowfish/crypt_blowfish.h
 
-# Add the source files of crypt_blowfish directly for compilation
-SRCS += /crypt-blowfish/crypt_blowfish.c \
-		/crypt-blowfish/x86.S \
-		/crypt-blowfish/crypt_gensalt.c \
-		/crypt-blowfish/wrapper.c
+CFLAGS = $(shell grep '^CFLAGS = ' crypt_blowfish/Makefile | cut -d= -f2-)
+.PHONY: crypt_blowfish
 
-# Specify the include directory for the crypt_blowfish headers
-IPATH += /crypt-blowfish
+bcrypt.a: src/bcrypt.o crypt_blowfish
+	ar rcs bcrypt.a src/bcrypt.o crypt_blowfish/*.o
 
-# Add any necessary compiler flags, mimicking those from the crypt_blowfish Makefile
-CFLAGS += -W -Wall -O2 -fomit-frame-pointer -funroll-loops
+src/bcrypt.o: src/bcrypt.c
+	$(CC) $(CFLAGS) -Iinc -Icrypt_blowfish -c src/bcrypt.c -o src/bcrypt.o
 
-# Add the library path for the linker (if the library is a compiled binary)
-# Assuming the library file is named libcrypt_blowfish.a and located in the same directory
-LIBRARY_PATHS += /crypt-blowfish
 
-# Add the library to be linked
-# Note: When specifying the library, you typically omit the 'lib' prefix and '.a' (or '.so') suffix
-LIBRARIES += crypt_blowfish
-
-# If the library path needs to be explicitly included during the link stage, use LDFLAGS
-LDFLAGS += -L/crypt-blowfish
-
-# Inform the linker to use the crypt_blowfish library
-LDFLAGS += -lcrypt_blowfish
-
-# Modifies the build process to hash the PIN and TOKEN in the ectf_params.h file before the build process begins. 
-# This is done by adding a custom target to the Makefile that runs a Python script to hash the PIN and TOKEN values in the ectf_params.h file. 
-# The custom target is then added to the pre-build process to ensure that it runs before the build process begins.
-
-# Define the path to ectf_params.h
-ECTF_PARAMS_PATH := inc/ectf_params.h
-
-# Custom target for processing ectf_params.h
-process-ectf-params: $(ECTF_PARAMS_PATH)
-	@echo "Running Python script to hash PIN and TOKEN in $(ECTF_PARAMS_PATH)..."
-	@python3 src/bcrypt_pin.py $(ECTF_PARAMS_PATH)
-
-# Ensure the custom script runs before the build process
-pre-build: process-ectf-params
+crypt_blowfish:
+	$(MAKE) -C crypt_blowfish
 
 # ****************** eCTF Bootloader *******************
 # DO NOT REMOVE

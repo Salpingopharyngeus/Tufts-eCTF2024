@@ -11,7 +11,7 @@ def hash_pin_in_file(file_path):
         print(f'Hashing pin and token in {file_path}')
         content = file.read()
         # Regex to find the pin in the file
-        pin_pattern = re.compile(r'#define AP_PIN "(\d{6})"')
+        pin_pattern = re.compile(r'#define AP_PIN "(\w+)"')
         match = pin_pattern.search(content)
         if match:
             pin = match.group(1).encode('utf-8')
