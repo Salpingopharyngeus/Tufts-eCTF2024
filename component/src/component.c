@@ -573,7 +573,6 @@ void process_validate() {
 // Modify the process_attest function to encrypt the len variable
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
-
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN-1];
 
     // Construct Attestation String Data
@@ -584,9 +583,6 @@ void process_attest() {
     size_t ATTEST_SIZE = 224;
     uint8_t fixed_size = 17;
     uint8_t EXACT_SIZE = attest_loc_size + attest_date_size + attest_cust_size + fixed_size;
-    
-    // uint8_t len = sprintf((char*)transmit_buffer, "LOC>%s\nDATE>%s\nCUST>%s\n",
-    //             ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER) + 1;
 
     char attestation_data[ATTEST_SIZE]; // Assuming a sufficiently large buffer size
     snprintf(attestation_data, ATTEST_SIZE, "LOC>%s\nDATE>%s\nCUST>%s\n", ATTESTATION_LOC, ATTESTATION_DATE, ATTESTATION_CUSTOMER);
@@ -618,7 +614,6 @@ void process_attest() {
 
     // Set first byte of transmit buffer to be EXACT SIZE
     // Set the next 224 bytes of space to be the encrypted attestation data
-    // [EXACT_SIZE|ENCRYPTED_ATTESTATION_DATA]
     memset(transmit_buffer, 0, sizeof(transmit_buffer));
     transmit_buffer[0] = EXACT_SIZE;
     memcpy(transmit_buffer+1, uint8_transmit_buffer, sizeof(uint8_transmit_buffer));

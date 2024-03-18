@@ -870,10 +870,7 @@ int attest_component(uint32_t component_id) {
     // Send out command and receive result
     int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
 
-    print_info("RECEVIED PACKET SIZE: %d", len);
-
     uint8_t EXACT_SIZE = receive_buffer[0];
-    print_info("EXACT SIZE: %u", EXACT_SIZE);
     
     memcpy(attestation_data, receive_buffer+1, PADDED_SIZE);
 
@@ -907,34 +904,14 @@ int attest_component(uint32_t component_id) {
     memset(uint8_decrypted, 0, uint8_decrypted_size);
     uint32_to_uint8(decrypted, num_elements, uint8_decrypted, sizeof(uint8_decrypted));
 
-    print_info("DECRYPTED BUFFER BEFORE EXACT SIZING: ");
-    for (int i = 0; i < sizeof(uint8_decrypted); i++) {
-        if (i < sizeof(uint8_decrypted) - 1) {
-            print_info("%02hhX, ", uint8_decrypted[i]);
-        }
-        else {
-            print_info("%02hhX\n", uint8_decrypted[i]);
-        }
-    }
     uint8_t exact_decrypted[EXACT_SIZE];
     memcpy(exact_decrypted, uint8_decrypted, sizeof(exact_decrypted));
     
-    // size_t buffer_size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]);
-    // uint8_decrypted[buffer_size - 1] = '\0';
     exact_decrypted[EXACT_SIZE-1] = '\0';
 
     if (decrypt_success == 0) {
         // Print out attestation data
         print_info("C>0x%08x\n", component_id);
-        for (int i = 0; i < sizeof(exact_decrypted); i++) {
-            if (i < sizeof(exact_decrypted) - 1) {
-                print_info("%02hhX, ", exact_decrypted[i]);
-            }
-            else {
-                print_info("%02hhX\n", exact_decrypted[i]);
-            }
-        }
-        //print_info("%s", uint8_decrypted);
         print_info("%s", exact_decrypted);
         return SUCCESS_RETURN;
     }
@@ -1006,7 +983,6 @@ int validate_pin() {
     char buf[50];
     
     recv_input("Enter pin: ", buf);
-    print_debug("Verifying PIN...\n");
     if(bcrypt_checkpw(buf, AP_PIN)==0){
         print_debug("Pin Accepted!\n");     
         
@@ -1020,7 +996,6 @@ int validate_pin() {
 int validate_token() {
     char buf[50]; // Chang, check for timing
     recv_input("Enter token: ", buf);
-    print_debug("Verifying Token...\n");
     
     if(bcrypt_checkpw(buf, AP_TOKEN)==0){
 
@@ -1113,12 +1088,10 @@ int main() {
 
     // Print the component IDs to be helpful
     // Your design does not need to do this
-    print_info("Application Processor Started\n");
     // Handle commands forever
     char buf[100];
     while (1) {
         recv_input("Enter Command: ", buf);
-        printf("Received command: %s\n", buf); 
         if (!valid_device) {
             print_error("Invalid Device!");
             break;
