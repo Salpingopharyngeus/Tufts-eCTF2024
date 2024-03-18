@@ -151,6 +151,7 @@ bool valid_device = false;
 size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
 uint8_t KEY[4];
 bool replace_called = false; // DELETE
+flash_entry before_replace;
 
 /********************************* REFERENCE FLAG ************************************/
 // trust me, it's easier to get the boot reference flag by
@@ -539,6 +540,15 @@ void init() {
         flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
                            sizeof(flash_entry));
     }
+
+    /*** DELETE THIS MF */
+    before_replace.flash_magic = FLASH_MAGIC;
+    before_replace.component_cnt = COMPONENT_CNT;
+    uint32_t component_ids[COMPONENT_CNT] = {COMPONENT_IDS};
+    memcpy(before_replace.component_ids, component_ids,
+               COMPONENT_CNT * sizeof(uint32_t));
+    /* TO HERE */
+
     // Initialize board link interface
     board_link_init();
 
@@ -751,6 +761,10 @@ int validate_components() {
 
 int scan_components() {
     if (replace_called) { // DELETE ALL
+        print_info("PREVIOUS STATE OF COMPONENT IDS:");
+        for (unsigned i = 0; i < before_replace.component_cnt; i++) {
+            print_info("P>0x%08x\n", before_replace.component_ids[i]);
+        }
         print_info("CURRENT STATE OF COMPONENT IDS: ");
         for (unsigned i = 0; i < flash_status.component_cnt; i++) {
             print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -1048,6 +1062,7 @@ void attempt_replace() {
     sscanf(buf, "%x", &component_id_in);
     recv_input("Component ID Out: ", buf);
     sscanf(buf, "%x", &component_id_out);
+
 
     // Find the component to swap out
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
