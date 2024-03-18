@@ -848,8 +848,9 @@ int boot_components() {
 
 int attest_component(uint32_t component_id) {
     // Buffers for board link communication
-    size_t RECEIVE_SIZE = 224;
-    uint8_t receive_buffer[RECEIVE_SIZE];
+    size_t PADDED_SIZE = 224;
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN-1];
+    uint8_t attestation_data[PADDED_SIZE];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
 
     // Set the I2C address of the component
@@ -867,8 +868,14 @@ int attest_component(uint32_t component_id) {
     attach_random_num(command, addr);
 
     // Send out command and receive result
-    memset(receive_buffer, 0, RECEIVE_SIZE);
     int len = issue_cmd(addr, transmit_buffer, receive_buffer, PACKET_SIZE);
+
+    print_info("RECEVIED PACKET SIZE: %d", len);
+
+    uint8_t EXACT_SIZE = receive_buffer[0];
+    print_info("EXACT SIZE: %u", EXACT_SIZE);
+    
+    memcpy(attestation_data, receive_buffer+1, PADDED_SIZE);
 
     if (len == ERROR_RETURN) {
         print_error("Could not attest component\n");
@@ -876,13 +883,13 @@ int attest_component(uint32_t component_id) {
     }
 
     // Convert uint8_t receive buffer to uint32_t transmit buffer
-    uint32_t uint32_receive_buffer[len / sizeof(uint32_t)];
-    memset(uint32_receive_buffer, 0, len / sizeof(uint32_t));
+    uint32_t uint32_receive_buffer[PADDED_SIZE / sizeof(uint32_t)];
+    memset(uint32_receive_buffer, 0, PADDED_SIZE / sizeof(uint32_t));
     //uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
-    uint8_to_uint32(receive_buffer, sizeof(receive_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
+    uint8_to_uint32(attestation_data, sizeof(attestation_data), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
-    uint32_t decrypted[len / sizeof(uint32_t)]; // Decrypted data buffer
-    memset(decrypted, 0, len/sizeof(uint32_t));
+    uint32_t decrypted[PADDED_SIZE / sizeof(uint32_t)]; // Decrypted data buffer
+    memset(decrypted, 0, PADDED_SIZE/sizeof(uint32_t));
 
     // see pg.359 of MAX78000 User Guide for dummy encryption reason
     size_t ATTEST_SIZE = 224;
@@ -900,13 +907,35 @@ int attest_component(uint32_t component_id) {
     memset(uint8_decrypted, 0, uint8_decrypted_size);
     uint32_to_uint8(decrypted, num_elements, uint8_decrypted, sizeof(uint8_decrypted));
 
-    size_t buffer_size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]);
-    uint8_decrypted[buffer_size - 1] = '\0';
+    print_info("DECRYPTED BUFFER BEFORE EXACT SIZING: ");
+    for (int i = 0; i < sizeof(uint8_decrypted); i++) {
+        if (i < sizeof(uint8_decrypted) - 1) {
+            print_info("%02hhX, ", uint8_decrypted[i]);
+        }
+        else {
+            print_info("%02hhX\n", uint8_decrypted[i]);
+        }
+    }
+    uint8_t exact_decrypted[EXACT_SIZE];
+    memcpy(exact_decrypted, uint8_decrypted, sizeof(exact_decrypted));
+    
+    // size_t buffer_size = sizeof(uint8_decrypted) / sizeof(uint8_decrypted[0]);
+    // uint8_decrypted[buffer_size - 1] = '\0';
+    exact_decrypted[EXACT_SIZE] = '\0';
 
     if (decrypt_success == 0) {
         // Print out attestation data
         print_info("C>0x%08x\n", component_id);
-        print_info("%s", uint8_decrypted);
+        for (int i = 0; i < sizeof(exact_decrypted); i++) {
+            if (i < sizeof(exact_decrypted) - 1) {
+                print_info("%02hhX, ", exact_decrypted[i]);
+            }
+            else {
+                print_info("%02hhX\n", exact_decrypted[i]);
+            }
+        }
+        //print_info("%s", uint8_decrypted);
+        print_info("%s", exact_decrypted);
         return SUCCESS_RETURN;
     }
     return ERROR_RETURN;
