@@ -493,6 +493,7 @@ int get_provisioned_ids(uint32_t *buffer) {
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
+    print_info("INSIDE INIT");
     /*
      Disabling the peripheral clock disables functionality while also saving power. 
      Associated register states are retained but read and write access is blocked.
@@ -732,7 +733,7 @@ int validate_components() {
 
          // Check if random number received is already seen
         int seen = searchUint32Buffer(random_number_hist, received_random_num);
-        
+
         // Validate received authentication hash
         if(!hash_equal(command->authkey, validate->authkey) || received_random_num != getValue(&dict, addr) || seen){
             print_error("Could not validate component\n");
@@ -1080,7 +1081,9 @@ void attempt_attest() {
 
 int main() {
     // Initialize board
+    print_info("BEFORE INIT");
     init();
+    print_info("AFTER INIT");
 
     // Print the component IDs to be helpful
     // Your design does not need to do this
