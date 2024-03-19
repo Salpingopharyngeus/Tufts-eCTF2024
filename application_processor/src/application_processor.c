@@ -493,7 +493,6 @@ int get_provisioned_ids(uint32_t *buffer) {
 // Initialize the device
 // This must be called on startup to initialize the flash and i2c interfaces
 void init() {
-    print_info("INSIDE INIT");
     /*
      Disabling the peripheral clock disables functionality while also saving power. 
      Associated register states are retained but read and write access is blocked.
@@ -547,9 +546,8 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
-    uint32_t initial_key = 12345;
+    uint32_t initial_key = 1234567890;
     uint32_to_uint8_array(initial_key, KEY);
-    //exchange_hash_key();
 }
 
 /**
@@ -800,6 +798,7 @@ int scan_components() {
 }
 
 int boot_components() {
+    exchange_hash_key();
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -846,6 +845,7 @@ int boot_components() {
 }
 
 int attest_component(uint32_t component_id) {
+    exchange_hash_key();
     // Buffers for board link communication
     size_t PADDED_SIZE = 224;
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN-1];
@@ -1083,27 +1083,25 @@ void attempt_attest() {
 
 int main() {
     // Initialize board
-    print_info("BEFORE INIT");
     init();
-    print_info("AFTER INIT");
 
     // Print the component IDs to be helpful
     // Your design does not need to do this
     // Handle commands forever
     char buf[100];
-    bool first_hash_exchange = true;
+    //bool first_hash_exchange = true;
     while (1) {
         recv_input("Enter Command: ", buf);
         if (!valid_device) {
             print_error("Invalid Device!");
             break;
         }
-        if (first_hash_exchange){
-            if (strncmp(buf, "list", 4) != 0){
-                 exchange_hash_key();
-            }
-            first_hash_exchange = false;   
-        }
+        // if (first_hash_exchange){
+        //     if (strncmp(buf, "list", 4) != 0){
+        //          exchange_hash_key();
+        //     }
+        //     first_hash_exchange = false;   
+        // }
         // Execute requested command
         if (!strncmp(buf, "list", 4)) {
             scan_components();

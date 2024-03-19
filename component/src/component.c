@@ -642,9 +642,8 @@ void init() {
     }
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
-    uint32_t initial_key = 12345;
+    uint32_t initial_key = 1234567890;
     uint32_to_uint8_array(initial_key, KEY);
-
 }
 /*********************************** MAIN *************************************/
 
