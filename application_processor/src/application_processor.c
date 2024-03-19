@@ -150,8 +150,6 @@ Uint32Buffer* random_number_hist;
 bool valid_device = false; 
 size_t PACKET_SIZE = HASH_SIZE + sizeof(uint8_t) + sizeof(uint32_t);
 uint8_t KEY[4];
-bool replace_called = false; // DELETE
-flash_entry before_replace;
 
 /********************************* REFERENCE FLAG ************************************/
 // trust me, it's easier to get the boot reference flag by
@@ -541,14 +539,6 @@ void init() {
                            sizeof(flash_entry));
     }
 
-    /*** DELETE THIS MF */
-    before_replace.flash_magic = FLASH_MAGIC;
-    before_replace.component_cnt = COMPONENT_CNT;
-    uint32_t component_ids[COMPONENT_CNT] = {COMPONENT_IDS};
-    memcpy(before_replace.component_ids, component_ids,
-               COMPONENT_CNT * sizeof(uint32_t));
-    /* TO HERE */
-
     // Initialize board link interface
     board_link_init();
 
@@ -572,18 +562,17 @@ void init() {
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
 
     // Send message
-    if (replace_called) {
-        print_info("ISSUE_CMD: send_packet"); // DELETE
-    }
+    print_debug("ISSUE_CMD: send_packet");
+    print_debug("Address: 0x%x\n", addr);
+    print_debug("Packet size: %d", packet_size);
+    print_debug("Transmit buffer raw data: ");
+    print_hex_debug(transmit, packet_size);
     int result = send_packet(addr, packet_size, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
 
-    // Receive message
-    if (replace_called) {
-        print_info("ISSUE_CMD: poll_and_receive_packet"); // DELETE
-    }
+    print_info("ISSUE_CMD: poll_and_receive_packet");
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
         return ERROR_RETURN;
@@ -601,6 +590,8 @@ int exchange_hash_key() {
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+
+        print_debug("Sending exchange hash key request to component 0x%x\n", addr);
         
         // Buffers for board link communication
         uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
@@ -766,16 +757,6 @@ int validate_components() {
 }
 
 int scan_components() {
-    if (replace_called) { // DELETE ALL
-        print_info("PREVIOUS STATE OF COMPONENT IDS:");
-        for (unsigned i = 0; i < before_replace.component_cnt; i++) {
-            print_info("P>0x%08x\n", before_replace.component_ids[i]);
-        }
-        print_info("CURRENT STATE OF COMPONENT IDS: ");
-        for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-            print_info("P>0x%08x\n", flash_status.component_ids[i]);
-        }
-    } // TO HERE
     exchange_hash_key();
     if (validate_components()) {
         print_error("Components could not be validated\n");
@@ -1083,7 +1064,6 @@ void attempt_replace() {
             print_debug("Replaced 0x%08x with 0x%08x\n", component_id_out,
                         component_id_in);
             print_success("Replace\n");
-            replace_called = true;
             return;
         }
     }

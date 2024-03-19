@@ -67,9 +67,11 @@ void send_packet_and_ack(uint8_t len, uint8_t* packet) {
  * once the message is available it is returned in the buffer pointer to by packet 
 */
 uint8_t wait_and_receive_packet(uint8_t* packet) {
+    print_debug("RECEIVED PACKET FROM AP: \n");
     while(!I2C_REGS[RECEIVE_DONE][0]);
 
     uint8_t len = I2C_REGS[RECEIVE_LEN][0];
     memcpy(packet, (void*)I2C_REGS[RECEIVE], len);
+    print_hex_debug(packet, len);
     return len;
 }

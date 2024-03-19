@@ -53,19 +53,27 @@ i2c_addr_t component_id_to_i2c_addr(uint32_t component_id) {
  * Function sends an arbitrary packet over i2c to a specified component
 */
 int send_packet(i2c_addr_t address, uint8_t len, uint8_t* packet) {
+    print_debug("REACHED BOARD_LINK");
+    print_debug("PACKET TO SEND TO COMPONENT: ");
+    print_hex_debug(packet, len);
     int result;
+
+    print_debug("REACHED POINT A");
     result = i2c_simple_write_receive_len(address, len);
     if (result < SUCCESS_RETURN) {
         return ERROR_RETURN;
     }
+    print_debug("REACHED POINT B");
     result = i2c_simple_write_data_generic(address, RECEIVE, len, packet);
     if (result < SUCCESS_RETURN) {
         return ERROR_RETURN;
     }
+    print_debug("REACHED POINT C");
     result = i2c_simple_write_receive_done(address, true);
     if (result < SUCCESS_RETURN) {
         return ERROR_RETURN;
     }
+    print_debug("REACHED POINT D");
     return SUCCESS_RETURN;
 }
 
