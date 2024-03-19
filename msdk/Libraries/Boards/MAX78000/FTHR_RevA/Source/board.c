@@ -46,6 +46,7 @@
 #include "max20303.h"
 #include "mxc_delay.h"
 #include "spi_regs.h"
+
 #define MAX20303_I2C MXC_I2C1
 
 /***** Global Variables *****/

@@ -189,7 +189,6 @@ endif
 #  add this below when arm-none-eabi-gcc version is past 4.8 -fno-isolate-erroneous-paths-dereference                                \
 
 # Universal optimization flags added to all builds
-SECURITY_C_FLAGS ?= -fstack-protector-all
 DEFAULT_OPTIMIZE_FLAGS ?= -ffunction-sections -fdata-sections -fsingle-precision-constant
 DEFAULT_WARNING_FLAGS ?= -Wall -Wno-format -Wdouble-promotion
 
@@ -200,8 +199,7 @@ CFLAGS=-mthumb                                                                 \
        -Wa,-mimplicit-it=thumb                                                 \
        $(MXC_OPTIMIZE_CFLAGS)   											   \
        $(DEFAULT_OPTIMIZE_FLAGS)   										       \
-       $(SECURITY_C_FLAGS)   										       \
-	   $(MXC_OPTIMIZE_CFLAGS)   											   \
+       $(DEFAULT_WARNING_FLAGS)   										       \
        -MD                                                                     \
        -c
 

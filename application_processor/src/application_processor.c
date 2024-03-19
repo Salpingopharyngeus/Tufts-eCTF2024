@@ -546,6 +546,7 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
+    exchange_hash_key();
 }
 
 /**
@@ -561,18 +562,11 @@ void init() {
 */
 int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
 
-    // Send message
-    print_debug("ISSUE_CMD: send_packet");
-    print_debug("Address: 0x%x\n", addr);
-    print_debug("Packet size: %d", packet_size);
-    print_debug("Transmit buffer raw data: ");
-    print_hex_debug(transmit, packet_size);
     int result = send_packet(addr, packet_size, transmit);
     if (result == ERROR_RETURN) {
         return ERROR_RETURN;
     }
 
-    print_info("ISSUE_CMD: poll_and_receive_packet");
     int len = poll_and_receive_packet(addr, receive);
     if (len == ERROR_RETURN) {
         return ERROR_RETURN;
@@ -740,6 +734,11 @@ int validate_components() {
          // Check if random number received is already seen
         int seen = searchUint32Buffer(random_number_hist, received_random_num);
 
+        print_debug("EXPECTED AUTH HASH: ");
+        print_hex_debug(command->authkey, sizeof(command->authkey));
+        print_debug("RECEIVED AUTH HASH: ");
+        print_hex_debug(validate->authkey, sizeof(validate->authkey));
+
         // Validate received authentication hash
         if(!hash_equal(command->authkey, validate->authkey) || received_random_num != getValue(&dict, addr) || seen){
             print_error("Could not validate component\n");
@@ -757,11 +756,11 @@ int validate_components() {
 }
 
 int scan_components() {
-    exchange_hash_key();
-    if (validate_components()) {
-        print_error("Components could not be validated\n");
-        return;
-    }
+    //exchange_hash_key();
+    // if (validate_components()) {
+    //     print_error("Components could not be validated\n");
+    //     return;
+    // }
     // Print out provisioned component IDs
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -1099,14 +1098,22 @@ int main() {
     // Your design does not need to do this
     // Handle commands forever
     char buf[100];
+    bool first_hash_exchange = true;
     while (1) {
         recv_input("Enter Command: ", buf);
         if (!valid_device) {
             print_error("Invalid Device!");
             break;
         }
+        if (first_hash_exchange){
+            print_debug("FIRST HASH KEY EXCHANGE!");
+            exchange_hash_key();
+            first_hash_exchange = false;
+        }
         // Execute requested command
         if (!strncmp(buf, "list", 4)) {
+            print_debug("CURRENT HASH KEY: ");
+            print_hex_debug(KEY, sizeof(KEY));
             scan_components();
         } else if (!strncmp(buf, "boot", 4)) {
             attempt_boot();

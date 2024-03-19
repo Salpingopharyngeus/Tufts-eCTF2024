@@ -133,9 +133,6 @@ int i2c_simple_write_receive_done(i2c_addr_t addr, bool done) {
  * specified value
 */
 int i2c_simple_write_receive_len(i2c_addr_t addr, uint8_t len) {
-    print_debug("REACHED i2c_simple_write_receive_len");
-    print_debug("Component Address: 0x%x", addr);
-    print_debug("Length: %u", len);
     return i2c_simple_write_status_generic(addr, RECEIVE_LEN, len); 
 }
 
@@ -269,17 +266,10 @@ int i2c_simple_read_status_generic(i2c_addr_t addr, ECTF_I2C_REGS reg) {
  * Write any register that is 1B in size
 */
 int i2c_simple_write_status_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t value) {
-    print_debug("REACHED i2c_simple_write_status_generic");
-    print_debug("value: %u", value);
-    print_debug("addr: 0x%x\n", addr);
     uint8_t packet[2];
-    print_debug("REACHED POINT A");
     packet[0] = (uint8_t) reg;
-    print_debug("REACHED POINT B");
     packet[1] = value;
-    print_debug("REACHED POINT C");
     mxc_i2c_req_t request;
-    print_debug("REACHED POINT D");
     request.i2c = I2C_INTERFACE;
     request.addr = addr;
     request.tx_len = 2;
@@ -288,6 +278,5 @@ int i2c_simple_write_status_generic(i2c_addr_t addr, ECTF_I2C_REGS reg, uint8_t 
     request.rx_buf = 0;
     request.restart = 0;
     request.callback = NULL;
-    print_debug("REACHED POINT E");
     return MXC_I2C_MasterTransaction(&request);
 }
