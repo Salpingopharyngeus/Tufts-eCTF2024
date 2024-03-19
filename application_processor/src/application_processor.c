@@ -546,7 +546,7 @@ void init() {
     initDictionary(&dict);
     // Initialize buffer to keep track of history of used random numbers
     random_number_hist = createUint32Buffer(10);
-    exchange_hash_key();
+    //exchange_hash_key();
 }
 
 /**
@@ -584,8 +584,6 @@ int exchange_hash_key() {
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         // Set the I2C address of the component
         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-
-        print_debug("Sending exchange hash key request to component 0x%x\n", addr);
         
         // Buffers for board link communication
         uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
@@ -706,6 +704,7 @@ int exchange_aes_key(i2c_addr_t addr) {
 }
 
 int validate_components() {
+    exchange_hash_key();
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
@@ -733,12 +732,7 @@ int validate_components() {
 
          // Check if random number received is already seen
         int seen = searchUint32Buffer(random_number_hist, received_random_num);
-
-        print_debug("EXPECTED AUTH HASH: ");
-        print_hex_debug(command->authkey, sizeof(command->authkey));
-        print_debug("RECEIVED AUTH HASH: ");
-        print_hex_debug(validate->authkey, sizeof(validate->authkey));
-
+        
         // Validate received authentication hash
         if(!hash_equal(command->authkey, validate->authkey) || received_random_num != getValue(&dict, addr) || seen){
             print_error("Could not validate component\n");
@@ -756,11 +750,6 @@ int validate_components() {
 }
 
 int scan_components() {
-    //exchange_hash_key();
-    // if (validate_components()) {
-    //     print_error("Components could not be validated\n");
-    //     return;
-    // }
     // Print out provisioned component IDs
     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
         print_info("P>0x%08x\n", flash_status.component_ids[i]);
@@ -1016,7 +1005,6 @@ int validate_token() {
 
 // Boot the components and board if the components validate
 void attempt_boot() {
-    exchange_hash_key();
     if (validate_components()) {
         print_error("Components could not be validated\n");
         return;
@@ -1106,14 +1094,11 @@ int main() {
             break;
         }
         if (first_hash_exchange){
-            print_debug("FIRST HASH KEY EXCHANGE!");
             exchange_hash_key();
             first_hash_exchange = false;
         }
         // Execute requested command
         if (!strncmp(buf, "list", 4)) {
-            print_debug("CURRENT HASH KEY: ");
-            print_hex_debug(KEY, sizeof(KEY));
             scan_components();
         } else if (!strncmp(buf, "boot", 4)) {
             attempt_boot();

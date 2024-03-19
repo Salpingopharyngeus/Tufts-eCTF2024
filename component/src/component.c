@@ -479,8 +479,6 @@ void component_process_cmd() {
         exchange_aes_key();
     } else if (command->opcode == COMPONENT_AP_HASH_KEY_EXCHANGE){
         exchange_hash_key();
-        print_debug("SET HASH KEY: \n");
-        print_hex_debug(KEY, sizeof(KEY));
     }
     else {
          // Check and register received random number from AP
@@ -544,9 +542,6 @@ void process_boot() {
 }
 
 void process_scan() {
-    print_debug("PROCESS SCAN CALLED!\n");
-    print_debug("CURRENT HASH KEY: \n");
-    print_hex_debug(KEY, sizeof(KEY));
     // The AP requested a scan. Respond with the Component ID
     scan_message *packet = (scan_message *)transmit_buffer;
     packet->component_id = COMPONENT_ID;
@@ -561,9 +556,6 @@ void process_scan() {
 }
 
 void process_validate() {
-    print_debug("PROCESS VALIDATE CALLED!\n");
-    print_debug("CURRENT HASH KEY: \n");
-    print_hex_debug(KEY, sizeof(KEY));
     // The AP requested a validation. Respond with the Component I
     validate_message* packet = (validate_message*) transmit_buffer;
     packet->component_id = COMPONENT_ID;
@@ -664,7 +656,6 @@ int main(void) {
     // hardware
     init();
     i2c_addr_t addr = component_id_to_i2c_addr(COMPONENT_ID);
-    print_debug("SET COMPONENT ID: 0x%x\n", addr);
     board_link_init(addr);
 
     LED_On(LED2);
