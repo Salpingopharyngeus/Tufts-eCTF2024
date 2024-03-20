@@ -408,6 +408,21 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
 
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
+        for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+            print_info("P>0x%08x\n", flash_status.component_ids[i]);
+        }
+        print_info("address: 0x%02X\n", address);
+        print_info("EXPECTED RANDOM NUMBER: %u", getValue(&dict, address));
+        print_info("RECEIVED RANDOM NUMBER: %u", random_number);
+        print_info("\nRECEIVED HASH: ");
+        for (size_t i = 0; i < sizeof(received_hash); ++i) {
+            print_info("%02X ", received_hash[i]); // Print each byte in hexadecimal format
+        }
+        print_info("\n--------------------------------------------------\n");
+        print_info("CHECK HASH: ");
+        for (size_t i = 0; i < sizeof(check_hash); ++i) {
+            print_info("%02X ", check_hash[i]); // Print each byte in hexadecimal format
+        }
         print_error("Could not validate Component\n");
         return ERROR_RETURN;
     }
