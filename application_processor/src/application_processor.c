@@ -521,7 +521,7 @@ void init() {
     random_number_hist = createUint32Buffer(10);
 
     // Initialize starter hash key 
-    uint32_t initial_key = 1234567890;
+    uint32_t initial_key = INIT_H_KEY;
     uint32_to_uint8_array(initial_key, KEY);
 }
 
