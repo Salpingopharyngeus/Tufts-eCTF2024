@@ -314,148 +314,6 @@ void attach_random_num(command_message* command, i2c_addr_t addr){
     addOrUpdate(&dict, addr, random_num);
 }
 
-/**
- * @brief exchange_hash_key
- * 
- * @return int: SUCCESS_RETURN or ERROR_RETURN
- * 
- * Exchange new hash key with components using Public Key encryption
-*/
-int exchange_hash_key() {
-    // Generate the AES key using the TRNG
-    size_t HASH_KEY_SIZE = sizeof(KEY);
-    uint32_t random_id = GenerateAndUseRandomID();
-    uint32_to_uint8_array(random_id, KEY);
-
-    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-        // Set the I2C address of the component
-        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-        
-        // Buffers for board link communication
-        uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-        uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
-        // Generate x25519 key pair for the application processor
-        unsigned char ap_public_key[X25519_KEY_LEN];
-        unsigned char ap_private_key[X25519_KEY_LEN];
-        x25519_base(ap_public_key, ap_private_key);
-
-        // Prepare the packet
-        ap_public_key_packet packet;
-        packet.opcode = COMPONENT_AP_HASH_KEY_EXCHANGE;
-        memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
-        memcpy(transmit_buffer, &packet, sizeof(packet));
-
-        // Send AP's public key and receive component's public key
-        size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
-        int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
-        if (len == ERROR_RETURN) {
-            print_error("Could not send AP public key to component\n");
-            return ERROR_RETURN;
-        }
-
-        // Receive Components public key
-        comp_public_key* comp_key = (comp_public_key*) receive_buffer;
-        unsigned char comp_pb_key[X25519_KEY_LEN];
-        memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
-
-        // Generate the shared secret using x25519 key agreement
-        uint8_t shared_secret[X25519_KEY_LEN];
-        x25519(shared_secret, ap_private_key, comp_pb_key);
-
-        // Encrypt the AES key using the shared secret
-        uint8_t encrypted_hash_key[HASH_KEY_SIZE];
-        
-        // Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
-        volatile uint8_t dummy = 0;
-        for (int i = 0; i < HASH_KEY_SIZE; i++) {
-            encrypted_hash_key[i] = KEY[i] ^ shared_secret[i];
-            //Ensures that either way some xor operation occurs.
-            dummy ^= encrypted_hash_key[i];
-        }
-
-        // Send the encrypted HASH key to the component
-        memcpy(transmit_buffer, encrypted_hash_key, sizeof(encrypted_hash_key));
-        size_t hash_key_packet_size = HASH_KEY_SIZE;
-        len = issue_cmd(addr, transmit_buffer, receive_buffer, hash_key_packet_size);
-        if (len == ERROR_RETURN) {
-            print_error("Failed to send encrypted AES key to component\n");
-            return ERROR_RETURN;
-        } 
-    }
-    return SUCCESS_RETURN;
-}
-
-/**
- * @brief exchange_aes_key
- * 
- * @return int: SUCCESS_RETURN or ERROR_RETURN
- * 
- * Exchange new aes_key key with components using Public Key encryption
-*/
-int exchange_aes_key(i2c_addr_t addr) {
-    // Buffers for board link communication
-    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-
-    // Generate x25519 key pair for the application processor
-    unsigned char ap_public_key[X25519_KEY_LEN];
-    unsigned char ap_private_key[X25519_KEY_LEN];
-    x25519_base(ap_public_key, ap_private_key);
-
-    // Prepare the packet
-    ap_public_key_packet packet;
-    packet.opcode = COMPONENT_AP_KEY_EXCHANGE;
-    memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
-    memcpy(transmit_buffer, &packet, sizeof(packet));
-
-    // Send AP's public key and receive component's public key
-    size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
-    int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
-    if (len == ERROR_RETURN) {
-        print_error("Could not send AP public key to component\n");
-        return ERROR_RETURN;
-    }
-
-    // Receive Components public key
-    comp_public_key* comp_key = (comp_public_key*) receive_buffer;
-    unsigned char comp_pb_key[X25519_KEY_LEN];
-    memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
-
-    // Generate the AES key using the TRNG
-    uint8_t aes_key[AES_KEY_SIZE];
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
-        aes_key[i] = (uint8_t)GenerateAndUseRandomID();
-    }
-
-    // Set External AES Key
-    MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
-
-    // Generate the shared secret using x25519 key agreement
-    uint8_t shared_secret[X25519_KEY_LEN];
-    x25519(shared_secret, ap_private_key, comp_pb_key);
-
-    // Encrypt the AES key using the shared secret
-    uint8_t encrypted_aes_key[AES_KEY_SIZE];
-    //Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
-    volatile uint8_t dummy = 0;
-    for (int i = 0; i < AES_KEY_SIZE; i++) {
-        encrypted_aes_key[i] = aes_key[i] ^ shared_secret[i];
-        //Ensures that either way some xor operation occurs.
-        dummy ^= encrypted_aes_key[i];
-    }
-
-    // Send the encrypted AES key to the component
-    memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
-    size_t aes_key_packet_size = AES_KEY_SIZE;
-    len = issue_cmd(addr, transmit_buffer, receive_buffer, aes_key_packet_size);
-    if (len == ERROR_RETURN) {
-        print_error("Failed to send encrypted AES key to component\n");
-        return ERROR_RETURN;
-    }
-    return SUCCESS_RETURN;
-}
-
 /******************************* POST BOOT FUNCTIONALITY *********************************/
 /*
  * @brief Secure Send 
@@ -690,6 +548,148 @@ int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packe
         return ERROR_RETURN;
     }
     return len;
+}
+
+/**
+ * @brief exchange_hash_key
+ * 
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
+ * 
+ * Exchange new hash key with components using Public Key encryption
+*/
+int exchange_hash_key() {
+    // Generate the AES key using the TRNG
+    size_t HASH_KEY_SIZE = sizeof(KEY);
+    uint32_t random_id = GenerateAndUseRandomID();
+    uint32_to_uint8_array(random_id, KEY);
+
+    for (unsigned i = 0; i < flash_status.component_cnt; i++) {
+        // Set the I2C address of the component
+        i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
+        
+        // Buffers for board link communication
+        uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+        uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+
+        // Generate x25519 key pair for the application processor
+        unsigned char ap_public_key[X25519_KEY_LEN];
+        unsigned char ap_private_key[X25519_KEY_LEN];
+        x25519_base(ap_public_key, ap_private_key);
+
+        // Prepare the packet
+        ap_public_key_packet packet;
+        packet.opcode = COMPONENT_AP_HASH_KEY_EXCHANGE;
+        memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
+        memcpy(transmit_buffer, &packet, sizeof(packet));
+
+        // Send AP's public key and receive component's public key
+        size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
+        int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
+        if (len == ERROR_RETURN) {
+            print_error("Could not send AP public key to component\n");
+            return ERROR_RETURN;
+        }
+
+        // Receive Components public key
+        comp_public_key* comp_key = (comp_public_key*) receive_buffer;
+        unsigned char comp_pb_key[X25519_KEY_LEN];
+        memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
+
+        // Generate the shared secret using x25519 key agreement
+        uint8_t shared_secret[X25519_KEY_LEN];
+        x25519(shared_secret, ap_private_key, comp_pb_key);
+
+        // Encrypt the AES key using the shared secret
+        uint8_t encrypted_hash_key[HASH_KEY_SIZE];
+        
+        // Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
+        volatile uint8_t dummy = 0;
+        for (int i = 0; i < HASH_KEY_SIZE; i++) {
+            encrypted_hash_key[i] = KEY[i] ^ shared_secret[i];
+            //Ensures that either way some xor operation occurs.
+            dummy ^= encrypted_hash_key[i];
+        }
+
+        // Send the encrypted HASH key to the component
+        memcpy(transmit_buffer, encrypted_hash_key, sizeof(encrypted_hash_key));
+        size_t hash_key_packet_size = HASH_KEY_SIZE;
+        len = issue_cmd(addr, transmit_buffer, receive_buffer, hash_key_packet_size);
+        if (len == ERROR_RETURN) {
+            print_error("Failed to send encrypted AES key to component\n");
+            return ERROR_RETURN;
+        } 
+    }
+    return SUCCESS_RETURN;
+}
+
+/**
+ * @brief exchange_aes_key
+ * 
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
+ * 
+ * Exchange new aes_key key with components using Public Key encryption
+*/
+int exchange_aes_key(i2c_addr_t addr) {
+    // Buffers for board link communication
+    uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
+    uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
+
+    // Generate x25519 key pair for the application processor
+    unsigned char ap_public_key[X25519_KEY_LEN];
+    unsigned char ap_private_key[X25519_KEY_LEN];
+    x25519_base(ap_public_key, ap_private_key);
+
+    // Prepare the packet
+    ap_public_key_packet packet;
+    packet.opcode = COMPONENT_AP_KEY_EXCHANGE;
+    memcpy(packet.public_key, ap_public_key, sizeof(ap_public_key));
+    memcpy(transmit_buffer, &packet, sizeof(packet));
+
+    // Send AP's public key and receive component's public key
+    size_t ap_pb_key_packet_size = sizeof(uint8_t) + X25519_KEY_LEN;
+    int len = issue_cmd(addr, transmit_buffer, receive_buffer, ap_pb_key_packet_size);
+    if (len == ERROR_RETURN) {
+        print_error("Could not send AP public key to component\n");
+        return ERROR_RETURN;
+    }
+
+    // Receive Components public key
+    comp_public_key* comp_key = (comp_public_key*) receive_buffer;
+    unsigned char comp_pb_key[X25519_KEY_LEN];
+    memcpy(comp_pb_key, comp_key->public_key, sizeof(comp_pb_key));
+
+    // Generate the AES key using the TRNG
+    uint8_t aes_key[AES_KEY_SIZE];
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        aes_key[i] = (uint8_t)GenerateAndUseRandomID();
+    }
+
+    // Set External AES Key
+    MXC_AES_SetExtKey(aes_key, MXC_AES_128BITS);
+
+    // Generate the shared secret using x25519 key agreement
+    uint8_t shared_secret[X25519_KEY_LEN];
+    x25519(shared_secret, ap_private_key, comp_pb_key);
+
+    // Encrypt the AES key using the shared secret
+    uint8_t encrypted_aes_key[AES_KEY_SIZE];
+    //Add a dummy xor so that this completes in constant time, and doesn't get removed by the compiler
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < AES_KEY_SIZE; i++) {
+        encrypted_aes_key[i] = aes_key[i] ^ shared_secret[i];
+        //Ensures that either way some xor operation occurs.
+        dummy ^= encrypted_aes_key[i];
+    }
+
+    // Send the encrypted AES key to the component
+    memcpy(transmit_buffer, encrypted_aes_key, sizeof(encrypted_aes_key));
+    size_t aes_key_packet_size = AES_KEY_SIZE;
+    len = issue_cmd(addr, transmit_buffer, receive_buffer, aes_key_packet_size);
+    if (len == ERROR_RETURN) {
+        print_error("Failed to send encrypted AES key to component\n");
+        return ERROR_RETURN;
+    }
+    return SUCCESS_RETURN;
 }
 
 /******************************** COMPONENT COMMS **********************************/
