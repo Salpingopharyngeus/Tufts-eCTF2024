@@ -374,7 +374,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     // Extract the random number
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-    print_info("RECEIVED RANDOM NUMBER: %u", random_number);
+    print_info("RECEIVED RANDOM NUMBER from 0x%02X: %u", address, random_number);
 
     int seen = searchUint32Buffer(random_number_hist, random_number);
     if(seen){
