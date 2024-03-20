@@ -375,7 +375,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
     print_info("RECEIVED RANDOM NUMBER: %u", random_number);
-    
+
     int seen = searchUint32Buffer(random_number_hist, random_number);
     if(seen){
         print_error("ERROR: POTENTIAL REPLAY ATTACK!");
@@ -412,7 +412,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
 
     // Check hash for integrity and authenticity of the message
     if(!hash_equal(received_hash, check_hash) || random_number != getValue(&dict, address)){
-        print("INVALID PACKET FROM COMPONENT!");
+        print_info("INVALID PACKET FROM COMPONENT!");
         for (unsigned i = 0; i < flash_status.component_cnt; i++) {
             print_info("P>0x%08x\n", flash_status.component_ids[i]);
         }
