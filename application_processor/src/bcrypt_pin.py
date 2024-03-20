@@ -15,7 +15,7 @@ def hash_pin_in_file(file_path):
         match = pin_pattern.search(content)
         if match:
             pin = match.group(1).encode('utf-8')
-            hashed_pin = hashpw(pin, gensalt(6)).decode('utf-8')
+            hashed_pin = hashpw(pin, gensalt(7)).decode('utf-8')
             # Replace the pin with its bcrypt hash
             content = pin_pattern.sub(f'#define AP_PIN "{hashed_pin}"', content)
 
@@ -24,7 +24,7 @@ def hash_pin_in_file(file_path):
         match = token_pattern.search(content)
         if match:
             token = match.group(1).encode('utf-8')
-            hashed_token = hashpw(token, gensalt(6)).decode('utf-8')
+            hashed_token = hashpw(token, gensalt(7)).decode('utf-8')
             # Replace the token with its bcrypt hash
             content = token_pattern.sub(f'#define AP_TOKEN "{hashed_token}"', content)
 
