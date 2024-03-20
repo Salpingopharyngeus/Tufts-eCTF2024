@@ -134,7 +134,14 @@ uint8_t KEY[4];
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
-//buffer conversion function:
+/**
+ * @brief uint32_to_uint8_array
+ * 
+ * @param value: uint32_t, uint32_t number value
+ * @param byte_array: uint8_t*, uint8_t buffer result of conversion
+ * 
+ * Convert a uint32_t number to a uint8_t buffer representation
+*/
 void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
     // Ensure the byte_array has space for 4 bytes.
     byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
@@ -160,6 +167,157 @@ uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
 }
 
 /**
+ * @brief uint8_to_uint32
+ * 
+ * @param uint8_buffer: uint8_t*, uint8_t buffer to be converted
+ * @param uint8_buffer_size: size_t, size of uint8_t buffer
+ * @param uint32_buffer: uint32_t*, uint32_t buffer to store output
+ * @param num_elements: size_t, number of elements
+ * 
+ * Convert a uint8_t buffer to a uint32_t buffer
+*/
+void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
+    // Check if the buffer sizes are compatible
+    if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
+        // Handle mismatched buffer sizes
+        fprintf(stderr, "Buffer sizes are not compatible\n");
+        return;
+    }
+    
+    // Copy bytes from the uint8_t buffer to the uint32_t buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Reinterpret the memory layout of the next set of bytes as a uint32_t value
+        uint32_t value = *((const uint32_t*)(uint8_buffer + i * sizeof(uint32_t)));
+        // Store the uint32_t value in the uint32_t buffer
+        uint32_buffer[i] = value;
+    }
+}
+
+/**
+ * @brief uint32_to_uint8
+ * 
+ * @param uint32_buffer: uint32_t*, uint32_t buffer to be converted
+ * @param num_elements: size_t, number of elements
+ * @param uint8_buffer: uint8_t*, uint8_t buffer to store output
+ * @param uint8_buffer_size: size_t, size of uint8_t buffer
+ * 
+ * Convert a uint32_t buffer to a uint8_t buffer
+*/
+void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
+    // Ensure the provided uint8_buffer has enough space
+    size_t required_size = num_elements * sizeof(uint32_t);
+    if (uint8_buffer_size < required_size) {
+        return;
+    }
+
+    // Iterate over each uint32_t value in the buffer
+    for (size_t i = 0; i < num_elements; i++) {
+        // Extract the bytes from the uint32_t value
+        uint32_t value = uint32_buffer[i];
+        for (size_t j = 0; j < sizeof(uint32_t); j++) {
+            // Store each byte of the uint32_t value in the uint8_t buffer
+            uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
+        }
+    }
+}
+
+/**
+ * @brief exchange_hash_key
+ * 
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
+ * 
+ * Exchange new hash key with components using Public Key encryption
+*/
+void exchange_hash_key() {
+    size_t HASH_KEY_SIZE = sizeof(KEY);
+    // Accept AP's Public Key
+    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
+    unsigned char ap_pb_key[X25519_KEY_LEN];
+    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+
+    // Generate x25519 key pair for the component
+    unsigned char comp_pb_key[X25519_KEY_LEN];
+    unsigned char comp_pr_key[X25519_KEY_LEN];
+    x25519_base(comp_pb_key, comp_pr_key);
+
+    // Send component's public key to the AP
+    comp_public_key comp_key;
+    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
+    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
+    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
+
+    // Receive encrypted AES key from AP
+    memset(receive_buffer, 0, sizeof(receive_buffer));
+    wait_and_receive_packet(receive_buffer);
+
+    uint8_t encrypted_hash_key[HASH_KEY_SIZE];
+    memcpy(encrypted_hash_key, receive_buffer, sizeof(encrypted_hash_key));
+
+    // Generate the shared secret using x25519 key agreement
+    uint8_t shared_secret[X25519_KEY_LEN];
+    x25519(shared_secret, comp_pr_key, ap_pb_key);
+
+    // Decrypt the AES key using the shared secret
+    uint8_t decrypted_hash_key[HASH_KEY_SIZE];
+    // Adds the dummy so that this xor occurs in constant time.
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < HASH_KEY_SIZE; i++) {
+        decrypted_hash_key[i] = encrypted_hash_key[i] ^ shared_secret[i];
+        dummy ^= decrypted_hash_key[i];
+    }
+    memcpy(KEY, decrypted_hash_key, HASH_KEY_SIZE);
+}
+
+/**
+ * @brief exchange_aes_key
+ * 
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
+ * 
+ * Exchange new aes_key key with components using Public Key encryption
+*/
+void exchange_aes_key() {
+    // Accept AP's Public Key
+    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
+    unsigned char ap_pb_key[X25519_KEY_LEN];
+    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
+
+    // Generate x25519 key pair for the component
+    unsigned char comp_pb_key[X25519_KEY_LEN];
+    unsigned char comp_pr_key[X25519_KEY_LEN];
+    x25519_base(comp_pb_key, comp_pr_key);
+
+    // Send component's public key to the AP
+    comp_public_key comp_key;
+    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
+    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
+    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
+
+    // Receive encrypted AES key from AP
+    memset(receive_buffer, 0, sizeof(receive_buffer));
+    wait_and_receive_packet(receive_buffer);
+
+    uint8_t encrypted_aes_key[AES_KEY_SIZE];
+    memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
+
+    // Generate the shared secret using x25519 key agreement
+    uint8_t shared_secret[X25519_KEY_LEN];
+    x25519(shared_secret, comp_pr_key, ap_pb_key);
+
+    // Decrypt the AES key using the shared secret
+    uint8_t decrypted_aes_key[AES_KEY_SIZE];
+    
+    // Adds the dummy so that this xor occurs in constant time.
+    volatile uint8_t dummy = 0;
+    for (int i = 0; i < 16; i++) {
+        decrypted_aes_key[i] = encrypted_aes_key[i] ^ shared_secret[i];
+        dummy ^= decrypted_aes_key[i];
+    }
+
+    // Set the decrypted AES key as the external key for the component
+    MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
+}
+
+/**
  * @brief send_error
  * 
  * Send error packet back to AP.
@@ -167,6 +325,7 @@ uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
 void send_error(){
     send_packet_and_ack(ERROR_RETURN, transmit_buffer);
 }
+
 /**
  * @brief hash_equal
  * 
@@ -266,6 +425,7 @@ int secure_receive(uint8_t* buffer) {
     uint32_t random_number;
     memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
 
+    // Check if random number is already seen
     int seen = searchUint32Buffer(random_number_hist, random_number);
     if(seen){
         return ERROR_RETURN;
@@ -303,17 +463,6 @@ int secure_receive(uint8_t* buffer) {
     if(!hash_equal(received_hash, check_hash)){
         return ERROR_RETURN;
     }
-    
-    // Extract the original message
-    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    // memcpy(original_message, buffer, data_len);
-    // original_message[data_len] = '\0'; // Null-terminate the string
-
-    // print_debug("Original message: \n");
-    // print_debug("%s\n", original_message);
-    // print_debug("----------------------------------------\n");
-
-    // secure_send(original_message, data_len);
 
     // Return length of original data
     return data_len;
@@ -353,124 +502,6 @@ void boot() {
 #endif
 }
 
-void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
-    // Check if the buffer sizes are compatible
-    if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
-        // Handle mismatched buffer sizes
-        fprintf(stderr, "Buffer sizes are not compatible\n");
-        return;
-    }
-    
-    // Copy bytes from the uint8_t buffer to the uint32_t buffer
-    for (size_t i = 0; i < num_elements; i++) {
-        // Reinterpret the memory layout of the next set of bytes as a uint32_t value
-        uint32_t value = *((const uint32_t*)(uint8_buffer + i * sizeof(uint32_t)));
-        // Store the uint32_t value in the uint32_t buffer
-        uint32_buffer[i] = value;
-    }
-}
-
-void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
-    // Ensure the provided uint8_buffer has enough space
-    size_t required_size = num_elements * sizeof(uint32_t);
-    if (uint8_buffer_size < required_size) {
-        return;
-    }
-
-    // Iterate over each uint32_t value in the buffer
-    for (size_t i = 0; i < num_elements; i++) {
-        // Extract the bytes from the uint32_t value
-        uint32_t value = uint32_buffer[i];
-        for (size_t j = 0; j < sizeof(uint32_t); j++) {
-            // Store each byte of the uint32_t value in the uint8_t buffer
-            uint8_buffer[i * sizeof(uint32_t) + j] = (uint8_t)(value >> (j * 8));
-        }
-    }
-}
-
-void exchange_hash_key() {
-    size_t HASH_KEY_SIZE = sizeof(KEY);
-    // Accept AP's Public Key
-    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
-    unsigned char ap_pb_key[X25519_KEY_LEN];
-    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
-
-    // Generate x25519 key pair for the component
-    unsigned char comp_pb_key[X25519_KEY_LEN];
-    unsigned char comp_pr_key[X25519_KEY_LEN];
-    x25519_base(comp_pb_key, comp_pr_key);
-
-    // Send component's public key to the AP
-    comp_public_key comp_key;
-    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
-    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
-    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
-
-    // Receive encrypted AES key from AP
-    memset(receive_buffer, 0, sizeof(receive_buffer));
-    wait_and_receive_packet(receive_buffer);
-
-    uint8_t encrypted_hash_key[HASH_KEY_SIZE];
-    memcpy(encrypted_hash_key, receive_buffer, sizeof(encrypted_hash_key));
-
-    // Generate the shared secret using x25519 key agreement
-    uint8_t shared_secret[X25519_KEY_LEN];
-    x25519(shared_secret, comp_pr_key, ap_pb_key);
-
-    // Decrypt the AES key using the shared secret
-    uint8_t decrypted_hash_key[HASH_KEY_SIZE];
-    // Adds the dummy so that this xor occurs in constant time.
-    volatile uint8_t dummy = 0;
-    for (int i = 0; i < HASH_KEY_SIZE; i++) {
-        decrypted_hash_key[i] = encrypted_hash_key[i] ^ shared_secret[i];
-        //Meaning either way this xor is happening too.
-        dummy ^= decrypted_hash_key[i];
-    }
-    memcpy(KEY, decrypted_hash_key, HASH_KEY_SIZE);
-}
-
-void exchange_aes_key() {
-    // Accept AP's Public Key
-    ap_public_key* ap_key = (ap_public_key*) receive_buffer;
-    unsigned char ap_pb_key[X25519_KEY_LEN];
-    memcpy(ap_pb_key, ap_key->public_key, sizeof(ap_pb_key));
-
-    // Generate x25519 key pair for the component
-    unsigned char comp_pb_key[X25519_KEY_LEN];
-    unsigned char comp_pr_key[X25519_KEY_LEN];
-    x25519_base(comp_pb_key, comp_pr_key);
-
-    // Send component's public key to the AP
-    comp_public_key comp_key;
-    memcpy(comp_key.public_key, comp_pb_key, sizeof(comp_pb_key));
-    memcpy(transmit_buffer, &comp_key, sizeof(comp_key));
-    send_packet_and_ack(sizeof(comp_key), transmit_buffer);
-
-    // Receive encrypted AES key from AP
-    memset(receive_buffer, 0, sizeof(receive_buffer));
-    wait_and_receive_packet(receive_buffer);
-
-    uint8_t encrypted_aes_key[AES_KEY_SIZE];
-    memcpy(encrypted_aes_key, receive_buffer, sizeof(encrypted_aes_key));
-
-    // Generate the shared secret using x25519 key agreement
-    uint8_t shared_secret[X25519_KEY_LEN];
-    x25519(shared_secret, comp_pr_key, ap_pb_key);
-
-    // Decrypt the AES key using the shared secret
-    uint8_t decrypted_aes_key[AES_KEY_SIZE];
-    
-    // Adds the dummy so that this xor occurs in constant time.
-    volatile uint8_t dummy = 0;
-    for (int i = 0; i < 16; i++) {
-        decrypted_aes_key[i] = encrypted_aes_key[i] ^ shared_secret[i];
-        //Meaning either way this xor is happening too.
-        dummy ^= decrypted_aes_key[i];
-    }
-
-    // Set the decrypted AES key as the external key for the component
-    MXC_AES_SetExtKey(decrypted_aes_key, MXC_AES_128BITS);
-}
 // Handle a transaction from the AP
 void component_process_cmd() {
     // Output to application processor dependent on command received
@@ -569,7 +600,6 @@ void process_validate() {
     send_packet_and_ack(sizeof(validate_message), transmit_buffer);
 }
 
-// Modify the process_attest function to encrypt the len variable
 void process_attest() {
     // The AP requested attestation. Respond with the attestation data
     uint8_t transmit[MAX_I2C_MESSAGE_LEN-1];
@@ -617,7 +647,6 @@ void process_attest() {
     transmit[0] = EXACT_SIZE;
     memcpy(transmit+1, uint8_transmit_buffer, sizeof(uint8_transmit_buffer));
 
-    //send_packet_and_ack(uint8_buffer_size, uint8_transmit_buffer);
     send_packet_and_ack(sizeof(transmit), transmit);
 }
 

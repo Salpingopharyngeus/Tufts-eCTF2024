@@ -159,6 +159,16 @@ uint8_t KEY[4];
 
 /********************************* UTILITY FUNCTIONS  **********************************/
 
+/**
+ * @brief uint8_to_uint32
+ * 
+ * @param uint8_buffer: uint8_t*, uint8_t buffer to be converted
+ * @param uint8_buffer_size: size_t, size of uint8_t buffer
+ * @param uint32_buffer: uint32_t*, uint32_t buffer to store output
+ * @param num_elements: size_t, number of elements
+ * 
+ * Convert a uint8_t buffer to a uint32_t buffer
+*/
 void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint32_t* uint32_buffer, size_t num_elements) {
     // Check if the buffer sizes are compatible
     if (uint8_buffer_size % sizeof(uint32_t) != 0 || uint8_buffer_size / sizeof(uint32_t) != num_elements) {
@@ -176,6 +186,16 @@ void uint8_to_uint32(const uint8_t* uint8_buffer, size_t uint8_buffer_size, uint
     }
 }
 
+/**
+ * @brief uint32_to_uint8
+ * 
+ * @param uint32_buffer: uint32_t*, uint32_t buffer to be converted
+ * @param num_elements: size_t, number of elements
+ * @param uint8_buffer: uint8_t*, uint8_t buffer to store output
+ * @param uint8_buffer_size: size_t, size of uint8_t buffer
+ * 
+ * Convert a uint32_t buffer to a uint8_t buffer
+*/
 void uint32_to_uint8(const uint32_t* uint32_buffer, size_t num_elements, uint8_t* uint8_buffer, size_t uint8_buffer_size) {
     // Ensure the provided uint8_buffer has enough space
     size_t required_size = num_elements * sizeof(uint32_t);
@@ -210,7 +230,14 @@ uint32_t uint8_array_to_uint32(const uint8_t* byte_array) {
     return value;
 }
 
-//buffer conversion function:
+/**
+ * @brief uint32_to_uint8_array
+ * 
+ * @param value: uint32_t, uint32_t number value
+ * @param byte_array: uint8_t*, uint8_t buffer result of conversion
+ * 
+ * Convert a uint32_t number to a uint8_t buffer representation
+*/
 void uint32_to_uint8_array(uint32_t value, uint8_t* byte_array) {
     // Ensure the byte_array has space for 4 bytes.
     byte_array[0] = (value >> 24) & 0xFF; // Extracts the first byte.
@@ -287,296 +314,13 @@ void attach_random_num(command_message* command, i2c_addr_t addr){
     addOrUpdate(&dict, addr, random_num);
 }
 
-/******************************* POST BOOT FUNCTIONALITY *********************************/
-/*
- * @brief Secure Send 
- * 
- * @param address: i2c_addr_t, I2C address of recipient
- * @param buffer: uint8_t*, pointer to data to be send
- * @param len: uint8_t, size of data to be sent 
- * 
- * Securely send data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
-
-*/
-
-int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
-    initDictionary(&dict);
-    
-    // Set Maximum Packet Size for Secure Send
-    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
-
-    // Ensure length of data to send does not exceed limits
-    if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
-        print_error("Message too long");
-        return ERROR_RETURN;
-    }
-
-    // Create secure packet
-    uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
-    uint32_t random_number = GenerateAndUseRandomID();
-    memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
-
-    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; 
-    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); 
-    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
-    memcpy(temp_buffer, buffer, len);
-
-    size_t key_len = strlen(TEAM_ALIAS);
-
-    // Build Authenication Hash
-    size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
-    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
-    memset(data_key_randnum, 0, data_key_randnum_len);
-    if (!data_key_randnum) {
-        print_error("Memory allocation failed for data_key_randnum");
-        return ERROR_RETURN;
-    }
-    memcpy(data_key_randnum, buffer, len);
-    memcpy(data_key_randnum + len, TEAM_ALIAS, key_len);
-    memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
-
-    uint8_t hash_out[HASH_SIZE];
-    md5hash(data_key_randnum, data_key_randnum_len, hash_out);
-    free(data_key_randnum);
-
-    // Add security attributes to packet
-    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authenication hash
-    temp_buffer[data_len_position] = len; // add data length
-    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
-
-    // Update random number assignment for component
-    addOrUpdate(&dict, address, random_number);
-
-
-    // Send the packet
-    return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
-}
-
 /**
- * @brief Secure Receive
+ * @brief exchange_hash_key
  * 
- * @param address: i2c_addr_t, I2C address of sender
- * @param buffer: uint8_t*, pointer to buffer to receive data to
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
  * 
- * @return int: number of bytes received, negative if error
- * 
- * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
- * This function must be implemented by your team to align with the security requirements.
+ * Exchange new hash key with components using Public Key encryption
 */
-int secure_receive(i2c_addr_t address, uint8_t* buffer) {
-    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
-
-    uint8_t len = poll_and_receive_packet(address, buffer); 
-
-    // Extract the random number
-    uint32_t random_number;
-    memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
-
-    int seen = searchUint32Buffer(random_number_hist, random_number);
-    if(seen){
-        print_error("ERROR: POTENTIAL REPLAY ATTACK!");
-        return ERROR_RETURN;
-    }else{
-        // Save assigned random_number from AP
-        appendToUint32Buffer(random_number_hist, random_number);
-    }
-
-    // Extract the data length
-    uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
-
-    // Extract the hash
-    uint8_t received_hash[HASH_SIZE];
-    memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
-
-    // Recreate authkey hash to check authenticity of receive_buffer
-    size_t key_len = strlen(TEAM_ALIAS);
-
-    size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
-    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
-    memset(data_key_randnum, 0, data_key_randnum_len);
-    if (!data_key_randnum) {
-        print_error("Memory allocation failed for data_key_randnum");
-        return ERROR_RETURN;
-    }
-    memcpy(data_key_randnum, buffer, data_len);
-    memcpy(data_key_randnum + data_len, TEAM_ALIAS, key_len);
-    memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
-
-    uint8_t check_hash[HASH_SIZE];
-    md5hash(data_key_randnum, data_key_randnum_len, check_hash);
-    free(data_key_randnum);
-
-    // Check hash for integrity and authenticity of the message
-    if(!hash_equal(received_hash, check_hash)){
-        print_error("Could not validate Component\n");
-        return ERROR_RETURN;
-    }
-
-    // Extract the original message
-    // uint8_t original_message[data_len + 1]; // Add one for the null terminator
-    // memcpy(original_message, buffer, data_len);
-    // original_message[data_len] = '\0'; // Null-terminate the string
-
-    // print_debug("Original message: ");
-    // print_debug("%s", original_message);
-    // print_debug("----------------------------------------\n");
-
-    // Return number of bytes of original data
-    return data_len;
-}
-
-// TEST FUNCTIONS
-// int issue_secure_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, uint8_t len) {
-
-//     // Send message
-//     int result = secure_send(addr, transmit, len);
-//     if (result == ERROR_RETURN) {
-//         return ERROR_RETURN;
-//     }
-    
-//     // Receive message
-//     int received_bytes = secure_receive(addr, receive);
-//     if (received_bytes == ERROR_RETURN) {
-//         return ERROR_RETURN;
-//     }
-//     return received_bytes;
-//     //return result;
-// }
-
-// int test_secure_send() {
-//     print_debug("test secure send called");
-//     // Buffers for board link communication
-//     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
-//     uint8_t transmit_buffer[MAX_I2C_MESSAGE_LEN];
-    
-//     // Send validate command to each component
-//     for (unsigned i = 0; i < flash_status.component_cnt; i++) {
-//         // Set the I2C address of the component
-//         i2c_addr_t addr = component_id_to_i2c_addr(flash_status.component_ids[i]);
-
-//         char* test_message = "Hello, this is a test message";
-//         size_t len = strlen(test_message);
-//         memcpy(transmit_buffer, test_message, len);
-
-//         // run secure_send
-//         int code = issue_secure_cmd(addr, transmit_buffer, receive_buffer, (uint8_t)len);
-
-//         if (code == ERROR_RETURN) {
-//             print_error("Failed secure send\n");
-//             return ERROR_RETURN;
-//         }
-//     }
-//     freeDictionary(&dict);
-//     return SUCCESS_RETURN;
-// }
-
-/**
- * @brief Get Provisioned IDs
- *
- * @param uint32_t* buffer
- *
- * @return int: number of ids
- *
- * Return the currently provisioned IDs and the number of provisioned IDs
- * for the current AP. This functionality is utilized in POST_BOOT
- * functionality. This function must be implemented by your team.
- */
-int get_provisioned_ids(uint32_t *buffer) {
-    memcpy(buffer, flash_status.component_ids,
-           flash_status.component_cnt * sizeof(uint32_t));
-    return flash_status.component_cnt;
-}
-
-/********************************* UTILITIES **********************************/
-
-
-// Initialize the device
-// This must be called on startup to initialize the flash and i2c interfaces
-void init() {
-    /*
-     Disabling the peripheral clock disables functionality while also saving power. 
-     Associated register states are retained but read and write access is blocked.
-    */ 
-    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
-    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
-    //MXC_SYS_ClockEnable()
-    // Enable global interrupts
-    __enable_irq();
-
-    // Validate device checksum
-    uint8_t usn[MXC_SYS_USN_LEN];
-    int usn_error = MXC_SYS_GetUSN(usn, NULL);
-
-    if (usn_error != E_NO_ERROR) {
-        printf("Invalid Component Hardware Device: Not MAX78000");
-        valid_device = false;
-        //MXC_SYS_Reset_Periph(MXC_SYS_RESET0_SYS);
-        return ERROR_RETURN;
-
-    } else {
-        valid_device = true;
-        printf("Valid Component Hardware Device: MAX78000");        
-    }
-
-    // Setup Flash
-    flash_simple_init();
-
-    // Test application has been booted before
-    flash_simple_read(FLASH_ADDR, (uint32_t *)&flash_status,
-                      sizeof(flash_entry));
-
-    // Write Component IDs from flash if first boot e.g. flash unwritten
-    if (flash_status.flash_magic != FLASH_MAGIC) {
-        print_debug("First boot, setting flash!\n");
-
-        flash_status.flash_magic = FLASH_MAGIC;
-        flash_status.component_cnt = COMPONENT_CNT;
-        uint32_t component_ids[COMPONENT_CNT] = {COMPONENT_IDS};
-        memcpy(flash_status.component_ids, component_ids,
-               COMPONENT_CNT * sizeof(uint32_t));
-
-        flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
-                           sizeof(flash_entry));
-    }
-
-    // Initialize board link interface
-    board_link_init();
-
-    // initiliaze dictionary to keep track of sent random numbers
-    initDictionary(&dict);
-    // Initialize buffer to keep track of history of used random numbers
-    random_number_hist = createUint32Buffer(10);
-    uint32_t initial_key = 1234567890;
-    uint32_to_uint8_array(initial_key, KEY);
-}
-
-/**
- * @brief issue_cmd
- * 
- * @param addr: i2c_addr_t, I2C address of receiver
- * @param transmit: uint8_t*, pointer to buffer to transmit data
- * @param receive: uint8_t*, pointer to buffer to receive data to
- * 
- * @return int: number of bytes received, negative if error
- * 
- * Send a command to a component and receive the result
-*/
-int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
-
-    int result = send_packet(addr, packet_size, transmit);
-    if (result == ERROR_RETURN) {
-        return ERROR_RETURN;
-    }
-
-    int len = poll_and_receive_packet(addr, receive);
-    if (len == ERROR_RETURN) {
-        return ERROR_RETURN;
-    }
-    return len;
-}
-
-/******************************** COMPONENT COMMS **********************************/
 int exchange_hash_key() {
     // Generate the AES key using the TRNG
     size_t HASH_KEY_SIZE = sizeof(KEY);
@@ -642,6 +386,13 @@ int exchange_hash_key() {
     return SUCCESS_RETURN;
 }
 
+/**
+ * @brief exchange_aes_key
+ * 
+ * @return int: SUCCESS_RETURN or ERROR_RETURN
+ * 
+ * Exchange new aes_key key with components using Public Key encryption
+*/
 int exchange_aes_key(i2c_addr_t addr) {
     // Buffers for board link communication
     uint8_t receive_buffer[MAX_I2C_MESSAGE_LEN];
@@ -704,6 +455,244 @@ int exchange_aes_key(i2c_addr_t addr) {
     }
     return SUCCESS_RETURN;
 }
+
+/******************************* POST BOOT FUNCTIONALITY *********************************/
+/*
+ * @brief Secure Send 
+ * 
+ * @param address: i2c_addr_t, I2C address of recipient
+ * @param buffer: uint8_t*, pointer to data to be send
+ * @param len: uint8_t, size of data to be sent 
+ * 
+ * Securely send data over I2C. This function is utilized in POST_BOOT functionality.
+ * This function must be implemented by your team to align with the security requirements.
+
+*/
+
+int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
+    initDictionary(&dict);
+    
+    // Set Maximum Packet Size for Secure Send
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+
+    // Ensure length of data to send does not exceed limits
+    if (len > MAX_PACKET_SIZE - HASH_SIZE - sizeof(uint8_t) - sizeof(uint32_t)) {
+        print_error("Message too long");
+        return ERROR_RETURN;
+    }
+
+    // Create secure packet
+    uint8_t temp_buffer[MAX_PACKET_SIZE]; // Declare without initialization
+    uint32_t random_number = GenerateAndUseRandomID();
+    memset(temp_buffer, 0, MAX_PACKET_SIZE); // Initialize buffer to zero
+
+    size_t hash_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE; 
+    size_t data_len_position = MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t); 
+    size_t random_number_position = MAX_PACKET_SIZE - sizeof(uint32_t);
+    memcpy(temp_buffer, buffer, len);
+
+    size_t key_len = strlen(TEAM_ALIAS);
+
+    // Build Authenication Hash
+    size_t data_key_randnum_len = len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, len);
+    memcpy(data_key_randnum + len, TEAM_ALIAS, key_len);
+    memcpy(data_key_randnum + len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+
+    uint8_t hash_out[HASH_SIZE];
+    md5hash(data_key_randnum, data_key_randnum_len, hash_out);
+    free(data_key_randnum);
+
+    // Add security attributes to packet
+    memcpy(temp_buffer + hash_position, hash_out, HASH_SIZE); // add authenication hash
+    temp_buffer[data_len_position] = len; // add data length
+    memcpy(temp_buffer + random_number_position, &random_number, sizeof(uint32_t)); // add random number
+
+    // Update random number assignment for component
+    addOrUpdate(&dict, address, random_number);
+
+    // Send the packet
+    return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
+}
+
+/**
+ * @brief Secure Receive
+ * 
+ * @param address: i2c_addr_t, I2C address of sender
+ * @param buffer: uint8_t*, pointer to buffer to receive data to
+ * 
+ * @return int: number of bytes received, negative if error
+ * 
+ * Securely receive data over I2C. This function is utilized in POST_BOOT functionality.
+ * This function must be implemented by your team to align with the security requirements.
+*/
+int secure_receive(i2c_addr_t address, uint8_t* buffer) {
+    size_t MAX_PACKET_SIZE = MAX_I2C_MESSAGE_LEN - 1;
+
+    uint8_t len = poll_and_receive_packet(address, buffer); 
+
+    // Extract the random number
+    uint32_t random_number;
+    memcpy(&random_number, buffer + MAX_PACKET_SIZE - sizeof(uint32_t), sizeof(uint32_t));
+
+    int seen = searchUint32Buffer(random_number_hist, random_number);
+    if(seen){
+        print_error("ERROR: POTENTIAL REPLAY ATTACK!");
+        return ERROR_RETURN;
+    }else{
+        // Save assigned random_number from AP
+        appendToUint32Buffer(random_number_hist, random_number);
+    }
+
+    // Extract the data length
+    uint8_t data_len = buffer[MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t)];
+
+    // Extract the hash
+    uint8_t received_hash[HASH_SIZE];
+    memcpy(received_hash, buffer + MAX_PACKET_SIZE - sizeof(uint32_t) - sizeof(uint8_t) - HASH_SIZE, HASH_SIZE);
+
+    // Recreate authkey hash to check authenticity of receive_buffer
+    size_t key_len = strlen(TEAM_ALIAS);
+
+    size_t data_key_randnum_len = data_len + key_len + sizeof(uint32_t);
+    uint8_t* data_key_randnum = malloc(data_key_randnum_len);
+    memset(data_key_randnum, 0, data_key_randnum_len);
+    if (!data_key_randnum) {
+        print_error("Memory allocation failed for data_key_randnum");
+        return ERROR_RETURN;
+    }
+    memcpy(data_key_randnum, buffer, data_len);
+    memcpy(data_key_randnum + data_len, TEAM_ALIAS, key_len);
+    memcpy(data_key_randnum + data_len + sizeof(uint32_t), &random_number, sizeof(uint32_t));
+
+    uint8_t check_hash[HASH_SIZE];
+    md5hash(data_key_randnum, data_key_randnum_len, check_hash);
+    free(data_key_randnum);
+
+    // Check hash for integrity and authenticity of the message
+    if(!hash_equal(received_hash, check_hash)){
+        print_error("Could not validate Component\n");
+        return ERROR_RETURN;
+    }
+
+    // Return number of bytes of original data
+    return data_len;
+}
+
+/**
+ * @brief Get Provisioned IDs
+ *
+ * @param uint32_t* buffer
+ *
+ * @return int: number of ids
+ *
+ * Return the currently provisioned IDs and the number of provisioned IDs
+ * for the current AP. This functionality is utilized in POST_BOOT
+ * functionality. This function must be implemented by your team.
+ */
+int get_provisioned_ids(uint32_t *buffer) {
+    memcpy(buffer, flash_status.component_ids,
+           flash_status.component_cnt * sizeof(uint32_t));
+    return flash_status.component_cnt;
+}
+
+/********************************* UTILITIES **********************************/
+
+
+// Initialize the device
+// This must be called on startup to initialize the flash and i2c interfaces
+void init() {
+    /*
+     Disabling the peripheral clock disables functionality while also saving power. 
+     Associated register states are retained but read and write access is blocked.
+    */ 
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_SMPHR);
+    MXC_SYS_ClockDisable(MXC_SYS_PERIPH_CLOCK_CPU1);
+
+    // Enable global interrupts
+    __enable_irq();
+
+    // Validate device checksum
+    uint8_t usn[MXC_SYS_USN_LEN];
+    int usn_error = MXC_SYS_GetUSN(usn, NULL);
+
+    if (usn_error != E_NO_ERROR) {
+        printf("Invalid Component Hardware Device: Not MAX78000");
+        valid_device = false;
+        return ERROR_RETURN;
+
+    } else {
+        valid_device = true;
+        printf("Valid Component Hardware Device: MAX78000");        
+    }
+
+    // Setup Flash
+    flash_simple_init();
+
+    // Test application has been booted before
+    flash_simple_read(FLASH_ADDR, (uint32_t *)&flash_status,
+                      sizeof(flash_entry));
+
+    // Write Component IDs from flash if first boot e.g. flash unwritten
+    if (flash_status.flash_magic != FLASH_MAGIC) {
+        print_debug("First boot, setting flash!\n");
+
+        flash_status.flash_magic = FLASH_MAGIC;
+        flash_status.component_cnt = COMPONENT_CNT;
+        uint32_t component_ids[COMPONENT_CNT] = {COMPONENT_IDS};
+        memcpy(flash_status.component_ids, component_ids,
+               COMPONENT_CNT * sizeof(uint32_t));
+
+        flash_simple_write(FLASH_ADDR, (uint32_t *)&flash_status,
+                           sizeof(flash_entry));
+    }
+
+    // Initialize board link interface
+    board_link_init();
+
+    // initiliaze dictionary to keep track of sent random numbers
+    initDictionary(&dict);
+
+    // Initialize buffer to keep track of history of used random numbers
+    random_number_hist = createUint32Buffer(10);
+
+    // Initialize starter hash key 
+    uint32_t initial_key = 1234567890;
+    uint32_to_uint8_array(initial_key, KEY);
+}
+
+/**
+ * @brief issue_cmd
+ * 
+ * @param addr: i2c_addr_t, I2C address of receiver
+ * @param transmit: uint8_t*, pointer to buffer to transmit data
+ * @param receive: uint8_t*, pointer to buffer to receive data to
+ * 
+ * @return int: number of bytes received, negative if error
+ * 
+ * Send a command to a component and receive the result
+*/
+int issue_cmd(i2c_addr_t addr, uint8_t* transmit, uint8_t* receive, size_t packet_size) {
+
+    int result = send_packet(addr, packet_size, transmit);
+    if (result == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
+
+    int len = poll_and_receive_packet(addr, receive);
+    if (len == ERROR_RETURN) {
+        return ERROR_RETURN;
+    }
+    return len;
+}
+
+/******************************** COMPONENT COMMS **********************************/
 
 int validate_components() {
     exchange_hash_key();
@@ -882,7 +871,6 @@ int attest_component(uint32_t component_id) {
     // Convert uint8_t receive buffer to uint32_t transmit buffer
     uint32_t uint32_receive_buffer[PADDED_SIZE / sizeof(uint32_t)];
     memset(uint32_receive_buffer, 0, PADDED_SIZE / sizeof(uint32_t));
-    //uint8_to_uint32(remaining_buffer, sizeof(remaining_buffer), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
     uint8_to_uint32(attestation_data, sizeof(attestation_data), uint32_receive_buffer, sizeof(uint32_receive_buffer)/sizeof(uint32_t));
 
     uint32_t decrypted[PADDED_SIZE / sizeof(uint32_t)]; // Decrypted data buffer
@@ -1097,12 +1085,6 @@ int main() {
             print_error("Invalid Device!");
             break;
         }
-        // if (first_hash_exchange){
-        //     if (strncmp(buf, "list", 4) != 0){
-        //          exchange_hash_key();
-        //     }
-        //     first_hash_exchange = false;   
-        // }
         // Execute requested command
         if (!strncmp(buf, "list", 4)) {
             scan_components();
