@@ -348,6 +348,8 @@ int secure_send(uint8_t address, uint8_t* buffer, uint8_t len) {
     // Update random number assignment for component
     addOrUpdate(&dict, address, random_number);
 
+    print_info("RANDOM NUMBER ASSIGNED TO 0x%08x: %u", address, random_number);
+
     // Send the packet
     return send_packet(address, MAX_PACKET_SIZE, temp_buffer);
 }
@@ -411,7 +413,7 @@ int secure_receive(i2c_addr_t address, uint8_t* buffer) {
         for (unsigned i = 0; i < flash_status.component_cnt; i++) {
             print_info("P>0x%08x\n", flash_status.component_ids[i]);
         }
-        print_info("address: 0x%02X\n", address);
+        print_info("address: 0x%08x\n", address);
         print_info("EXPECTED RANDOM NUMBER: %u", getValue(&dict, address));
         print_info("RECEIVED RANDOM NUMBER: %u", random_number);
         print_info("\nRECEIVED HASH: ");
